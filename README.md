@@ -2,7 +2,7 @@
 
 ![](EasyHttp.jpg)
 
-[点击此处下载Demo](https://raw.githubusercontent.com/getActivity/ToastUtils/master/EasyHttp.apk)
+[点击此处下载Demo](https://raw.githubusercontent.com/getActivity/EasyHttp/master/EasyHttp.apk)
 
 #### 集成步骤
 
@@ -42,7 +42,7 @@
 
 #### 初始化
 
-> 需要配置请求处理，具体封装可以参考： [RequestHandler](https://github.com/getActivity/EasyHttp/blob/master/library/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
+> 需要配置请求处理，具体封装可以[点击此处参考](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
 
     EasyConfig.with(new OkHttpClient())
             // 是否打印日志
