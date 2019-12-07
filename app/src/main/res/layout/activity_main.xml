@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    tools:context=".MainActivity">
+
+    <com.hjq.bar.TitleBar
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:backButton="false"
+        app:title="https://github.com/getActivity/EasyHttp" />
+
+    <ProgressBar
+        android:id="@+id/pb_main_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/rg_language_languages"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <Button
+            android:id="@+id/btn_main_get"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Get请求" />
+
+        <Button
+            android:id="@+id/btn_main_post"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="Post请求" />
+
+        <Button
+            android:id="@+id/btn_main_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="下载文件" />
+    </LinearLayout>
+
+</LinearLayout>
