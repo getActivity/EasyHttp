@@ -4,7 +4,7 @@
 
 [点击此处下载Demo](https://raw.githubusercontent.com/getActivity/EasyHttp/master/EasyHttp.apk)
 
-#### 集成步骤
+#### Gradle 集成
 
     dependencies {
         implementation 'com.hjq:http:2.0'
@@ -25,18 +25,18 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
-#### 配置主机
+#### 服务器配置
 
 	public class RequestServer implements IRequestServer {
 	
 	    @Override
 	    public String getHost() {
-	        return "https://www.baidu.com";
+	        return "https://www.baidu.com/";
 	    }
 	
 	    @Override
 	    public String getPath() {
-	        return "/api/";
+	        return "api/";
 	    }
 	}
 
@@ -60,17 +60,17 @@
 #### 配置接口
 
 	public class LoginApi implements IRequestApi {
+
+	    @Override
+	    public String getApi() {
+	        return "user/login";
+	    }
 	
 	    /** 用户名 */
 	    private String userName;
 	    
 	    /** 登录密码 */
 	    private String password;
-	
-	    @Override
-	    public String getApi() {
-	        return "user/login";
-	    }
 	
 	    public LoginApi setUserName(String userName) {
 	        this.userName = userName;
@@ -234,6 +234,12 @@
 * 国际化框架：[MultiLanguages](https://github.com/getActivity/MultiLanguages)
 
 * 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
+
+#### 特别鸣谢
+
+[张鸿洋](https://github.com/hongyangAndroid)
+
+[WanAndroid](https://www.wanandroid.com/)
 
 #### Android技术讨论Q群：78797078
 
