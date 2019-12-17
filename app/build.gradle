@@ -7,8 +7,8 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 20
-        versionName "2.0"
+        versionCode 30
+        versionName "3.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -43,5 +43,5 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.1'
 
     // 内存泄漏捕捉：https://github.com/square/leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0-beta-3'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0'
 }

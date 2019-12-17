@@ -11,14 +11,14 @@ import com.hjq.http.config.IRequestApi;
  */
 public class SearchBlogsApi implements IRequestApi {
 
-    /** 搜索关键字 */
-    @HttpRename("k")
-    private String keyword;
-
     @Override
     public String getApi() {
         return "article/query/0/json";
     }
+
+    /** 搜索关键字 */
+    @HttpRename("k")
+    private String keyword;
 
     public SearchBlogsApi setKeyword(String keyword) {
         this.keyword = keyword;

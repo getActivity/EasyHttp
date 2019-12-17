@@ -2,6 +2,12 @@ package com.hjq.http.demo.http.response;
 
 import java.util.List;
 
+/**
+ *    author : Android 轮子哥
+ *    github : https://github.com/getActivity/EasyHttp
+ *    time   : 2019/11/18
+ *    desc   : 搜索结果
+ */
 public class SearchBean {
 
     /**

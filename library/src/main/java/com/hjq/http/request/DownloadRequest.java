@@ -6,13 +6,13 @@ import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
 import com.hjq.http.listener.OnDownloadListener;
+import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.HttpParams;
 
 import java.io.File;
 
-import okhttp3.Call;
 import okhttp3.Request;
 
 /**
@@ -23,14 +23,8 @@ import okhttp3.Request;
  */
 public final class DownloadRequest extends BaseRequest<DownloadRequest> {
 
-    /** 默认下载方式为 Get */
+    /** 下载方式 */
     private HttpMethod mMethod = HttpMethod.GET;
-
-    /** 下载回调对象 */
-    private DownloadCallback mDownloadCallback;
-
-    /** 下载请求对象 */
-    private Call mCall;
 
     /** 保存的文件 */
     private File mFile;
@@ -38,6 +32,8 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     private String mMD5;
     /** 下载监听回调 */
     private OnDownloadListener mListener;
+    /** 下载请求对象 */
+    private CallProxy mCallProxy;
 
     public DownloadRequest(Context context) {
         super(context);
@@ -107,19 +103,18 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
      * 开始下载
      */
     public DownloadRequest start() {
-        mCall = create();
-        mDownloadCallback = new DownloadCallback(mFile, mMD5, mListener);
-        mCall.enqueue(mDownloadCallback);
+        mCallProxy = new CallProxy(create());
+        /** 下载回调对象 */
+        mCallProxy.enqueue(new DownloadCallback(mCallProxy, mFile, mMD5, mListener));
         return this;
     }
 
     /**
      * 取消下载
      */
-    public DownloadRequest cancel() {
-        if (mCall != null) {
-            mCall.cancel();
+    public void cancel() {
+        if (mCallProxy != null) {
+            mCallProxy.cancel();
         }
-        return this;
     }
 }

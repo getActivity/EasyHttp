@@ -89,39 +89,44 @@ public final class EasyHttp {
     }
 
     /**
-     * 取消请求
+     * 根据 TAG 取消请求任务
      */
     public static void cancel(Object tag) {
-        if (tag != null) {
-            cancel(tag.toString());
-        } else {
-            cancel(null);
+        if (tag == null) {
+            return;
         }
-    }
 
-    public static void cancel(String tag) {
         OkHttpClient client = EasyConfig.getInstance().getClient();
 
         // 清除排队等候的任务
         for (Call call : client.dispatcher().queuedCalls()) {
-            if (tag != null) {
-                if (tag.equals(call.request().tag())) {
-                    call.cancel();
-                }
-            } else {
+            if (tag.equals(call.request().tag())) {
                 call.cancel();
             }
         }
 
         // 清除正在执行的任务
         for (Call call : client.dispatcher().runningCalls()) {
-            if (tag != null) {
-                if (tag.equals(call.request().tag())) {
-                    call.cancel();
-                }
-            } else {
+            if (tag.equals(call.request().tag())) {
                 call.cancel();
             }
+        }
+    }
+
+    /**
+     * 清除所有请求任务
+     */
+    public static void cancel() {
+        OkHttpClient client = EasyConfig.getInstance().getClient();
+
+        // 清除排队等候的任务
+        for (Call call : client.dispatcher().queuedCalls()) {
+            call.cancel();
+        }
+
+        // 清除正在执行的任务
+        for (Call call : client.dispatcher().runningCalls()) {
+            call.cancel();
         }
     }
 }

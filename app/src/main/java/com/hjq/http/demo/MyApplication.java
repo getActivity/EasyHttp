@@ -33,6 +33,8 @@ public class MyApplication extends Application {
                 .setServer(server)
                 // 设置请求处理策略
                 .setHandler(new RequestHandler())
+                // 设置请求重试次数
+                .setRetryCount(3)
                 // 添加全局请求参数
                 //.addParam("token", "6666666")
                 // 添加全局请求头

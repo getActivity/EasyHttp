@@ -1,7 +1,6 @@
 package com.hjq.http.request;
 
 import android.content.Context;
-import android.text.TextUtils;
 
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
@@ -56,10 +55,10 @@ public abstract class BaseRequest<T extends BaseRequest> {
         try {
             return api(api.newInstance());
         } catch (InstantiationException e) {
-            e.printStackTrace();
+            EasyLog.print(e);
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            e.printStackTrace();
+            EasyLog.print(e);
             throw new RuntimeException(e);
         }
     }
@@ -86,6 +85,18 @@ public abstract class BaseRequest<T extends BaseRequest> {
             }
         }
         return (T) this;
+    }
+
+    public T server(Class<? extends IRequestServer> api) {
+        try {
+            return server(api.newInstance());
+        } catch (InstantiationException e) {
+            EasyLog.print(e);
+            throw new RuntimeException(e);
+        } catch (IllegalAccessException e) {
+            EasyLog.print(e);
+            throw new RuntimeException(e);
+        }
     }
 
     public T server(String host) {
@@ -145,9 +156,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
                 // 获取字段的对象
                 Object object = field.get(mRequestApi);
 
-                String value;
                 // 前提是这个字段对象不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (object == null || TextUtils.isEmpty(value = object.toString())) {
+                if (object == null) {
                     break;
                 }
 
@@ -169,7 +179,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
                             }
                         }
                     } else {
-                        headers.put(key, value);
+                        headers.put(key, object.toString());
                     }
                 } else {
                     // 如果这个是一个普通的参数
@@ -177,16 +187,16 @@ public abstract class BaseRequest<T extends BaseRequest> {
                         Map map = ((Map) object);
                         for (Object o : map.keySet()) {
                             if (o != null && map.get(o) != null) {
-                                params.put(o.toString(), map.get(o).toString());
+                                params.put(o.toString(), map.get(o));
                             }
                         }
                     } else {
-                        params.put(key, value);
+                        params.put(key, object);
                     }
                 }
 
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                EasyLog.print(e);
             }
         }
 
@@ -204,7 +214,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
             }
 
             for (String key : params.getNames()) {
-                EasyLog.print(key, params.get(key));
+                EasyLog.print(key, params.get(key).toString());
             }
 
             if (!headers.isEmpty() || !params.isEmpty()) {
@@ -213,9 +223,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
         }
 
         String url = mRequestHost.getHost() + mRequestPath.getPath() + mRequestApi.getApi();
-        if (EasyLog.isEnable()) {
-            EasyLog.print("RequestUrl：" + url);
-        }
+        EasyLog.print("RequestUrl：" + url);
         return mClient.newCall(create(url, mTag, params, headers));
     }
 

@@ -10,13 +10,13 @@ import com.hjq.http.config.IRequestApi;
  */
 public class SearchAuthorApi implements IRequestApi {
 
-    /** 作者昵称，不支持模糊匹配 */
-    private String author;
-
     @Override
     public String getApi() {
         return "article/list/0/json";
     }
+
+    /** 作者昵称，不支持模糊匹配 */
+    private String author;
 
     public SearchAuthorApi setAuthor(String author) {
         this.author = author;

@@ -2,8 +2,6 @@ package com.hjq.http.config;
 
 import android.content.Context;
 
-import com.hjq.http.listener.OnHttpListener;
-
 import okhttp3.Call;
 import okhttp3.Response;
 
@@ -16,22 +14,37 @@ import okhttp3.Response;
 public interface IRequestHandler {
 
     /**
-     * 请求开始
+     * 请求开始时回调
+     *
+     * @param context           上下文对象
+     * @param call              执行对象
      */
     void requestStart(Context context, Call call);
 
     /**
-     * 请求结束
+     * 请求结束时回调
+     *
+     * @param context           上下文对象
+     * @param call              执行对象
      */
     void requestEnd(Context context, Call call);
 
     /**
-     * 请求成功
+     * 请求成功时回调
+     *
+     * @param context           上下文对象
+     * @param response          响应对象
+     * @param clazz             解析类型
+     * @return                  返回结果
+     * @throws Exception        回调失败方法
      */
-    Object requestSucceed(Context context, Call call, Response response, OnHttpListener listener) throws Exception;
+    Object requestSucceed(Context context, Response response, Class clazz) throws Exception;
 
     /**
      * 请求失败
+     * @param context           上下文对象
+     * @param e                 错误对象
+     * @return                  错误对象
      */
-    Exception requestFail(Context context, Call call, Exception e, OnHttpListener listener);
+    Exception requestFail(Context context, Exception e);
 }

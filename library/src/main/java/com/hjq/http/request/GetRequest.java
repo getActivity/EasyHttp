@@ -3,12 +3,12 @@ package com.hjq.http.request;
 import android.content.Context;
 
 import com.hjq.http.EasyConfig;
-import com.hjq.http.callback.CommonCallback;
+import com.hjq.http.callback.DefaultCallback;
 import com.hjq.http.listener.OnHttpListener;
+import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
-import okhttp3.Call;
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 
@@ -19,6 +19,8 @@ import okhttp3.Request;
  *    desc   : Get 请求
  */
 public final class GetRequest extends BaseRequest<GetRequest> {
+
+    private CallProxy mCallProxy;
 
     public GetRequest(Context context) {
         super(context);
@@ -39,24 +41,32 @@ public final class GetRequest extends BaseRequest<GetRequest> {
             }
         }
 
-        HttpUrl.Builder body = HttpUrl.get(url).newBuilder();
+        HttpUrl.Builder builder = HttpUrl.get(url).newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
             for (String key : params.getNames()) {
-                body.addEncodedQueryParameter(key, params.get(key));
+                builder.addEncodedQueryParameter(key, params.get(key).toString());
             }
         }
 
-        request.get().url(body.build());
+        request.get().url(builder.build());
         return request.build();
     }
 
     /**
      * 执行请求
      */
-    public void request(OnHttpListener listener) {
-        Call call = create();
-        EasyConfig.getInstance().getHandler().requestStart(getContext(), call);
-        call.enqueue(new CommonCallback(getContext(), listener));
+    public GetRequest request(OnHttpListener listener) {
+        mCallProxy = new CallProxy(create());
+        EasyConfig.getInstance().getHandler().requestStart(getContext(), mCallProxy);
+        mCallProxy.enqueue(new DefaultCallback(getContext(), mCallProxy, listener));
+        return this;
+    }
+
+    /**
+     * 取消请求
+     */
+    public void cancel() {
+        mCallProxy.cancel();
     }
 }

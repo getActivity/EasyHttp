@@ -7,7 +7,7 @@
 #### Gradle 集成
 
     dependencies {
-        implementation 'com.hjq:http:2.0'
+        implementation 'com.hjq:http:3.0'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -51,6 +51,8 @@
             .setServer(server)
             // 设置请求处理策略
             .setHandler(new RequestHandler())
+            // 设置请求重试次数
+            .setRetryCount(3)
             // 添加全局请求参数
             //.addParam("token", "6666666")
             // 添加全局请求头
@@ -97,24 +99,7 @@
 
 	* implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
 
-#### Get 请求
-
-    EasyHttp.get(this)
-            .api(new LoginApi()
-                    .setUserName("Android 轮子哥")
-                    .setPassword("123456"))
-            .request(new OnHttpListener<HttpData<LoginBean>>() {
-
-                @Override
-                public void onSucceed(HttpData<LoginBean> data) {
-                    ToastUtils.show("登录成功");
-                }
-
-                @Override
-                public void onFail(Exception e) {}
-            });
-
-#### Post 请求
+#### 发起请求
 
     EasyHttp.post(this)
             .api(new LoginApi()
@@ -235,7 +220,7 @@
 
 * 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
 
-#### 特别鸣谢
+#### 特别感谢
 
 [张鸿洋](https://github.com/hongyangAndroid)
 

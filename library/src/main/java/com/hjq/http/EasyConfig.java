@@ -39,8 +39,9 @@ public final class EasyConfig {
     private IRequestServer mServer;
     private IRequestHandler mHandler;
     private boolean mLogEnabled;
+    private int mRetryCount;
 
-    private HashMap<String, String> mParams;
+    private HashMap<String, Object> mParams;
     private HashMap<String, String> mHeaders;
 
     private OkHttpClient mHttpClient;
@@ -49,15 +50,13 @@ public final class EasyConfig {
         mServer = builder.mServer;
         mHandler = builder.mHandler;
 
-        mLogEnabled = builder.mLogEnabled;
         mParams = builder.mParams;
         mHeaders = builder.mHeaders;
 
         mHttpClient = builder.mClient;
-    }
 
-    public boolean isLog() {
-        return mLogEnabled;
+        mLogEnabled = builder.mLogEnabled;
+        mRetryCount = builder.mRetryCount;
     }
 
     public IRequestServer getServer() {
@@ -72,7 +71,7 @@ public final class EasyConfig {
         return mHttpClient;
     }
 
-    public HashMap<String, String> getParams() {
+    public HashMap<String, Object> getParams() {
         return mParams;
     }
 
@@ -88,6 +87,14 @@ public final class EasyConfig {
         mParams.put(key, value);
     }
 
+    public boolean isLog() {
+        return mLogEnabled;
+    }
+
+    public int getRetryCount() {
+        return mRetryCount;
+    }
+
     public static final class Builder {
 
         /** 服务器配置 */
@@ -99,12 +106,14 @@ public final class EasyConfig {
         private OkHttpClient mClient;
 
         /** 通用参数 */
-        private HashMap<String, String> mParams;
+        private HashMap<String, Object> mParams;
         /** 通用请求头 */
         private HashMap<String, String> mHeaders;
 
         /** 日志开关 */
         private boolean mLogEnabled = true;
+        /** 重试次数 */
+        private int mRetryCount;
 
         public Builder(OkHttpClient client) {
             mClient = client;
@@ -138,6 +147,14 @@ public final class EasyConfig {
 
         public Builder addParam(String key, String value) {
             mParams.put(key, value);
+            return this;
+        }
+
+        public Builder setRetryCount(int retryCount) {
+            if (retryCount < 0) {
+                throw new IllegalArgumentException("The number of retries must be greater than 0");
+            }
+            mRetryCount = retryCount;
             return this;
         }
 

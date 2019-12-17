@@ -2,6 +2,7 @@ package com.hjq.http.model;
 
 import com.hjq.http.EasyConfig;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Set;
 
@@ -13,18 +14,22 @@ import java.util.Set;
  */
 public final class HttpParams {
 
-    private HashMap<String, String> mParams = EasyConfig.getInstance().getParams();
+    private HashMap<String, Object> mParams = EasyConfig.getInstance().getParams();
+    private boolean mMultipart;
 
-    public void put(String key, String value) {
+    public void put(String key, Object value) {
         if (key != null && value != null) {
             if (mParams == EasyConfig.getInstance().getParams()) {
                 mParams = new HashMap<>(mParams);
             }
             mParams.put(key, value);
+            if (value instanceof File) {
+                mMultipart = true;
+            }
         }
     }
 
-    public String get(String key) {
+    public Object get(String key) {
         return mParams.get(key);
     }
 
@@ -34,5 +39,12 @@ public final class HttpParams {
 
     public Set<String> getNames() {
         return mParams.keySet();
+    }
+
+    /**
+     * 是否有文件上传
+     */
+    public boolean isMultipart() {
+        return mMultipart;
     }
 }

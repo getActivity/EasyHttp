@@ -1,7 +1,16 @@
 package com.hjq.http.demo;
 
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v4.content.ContextCompat;
+import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.widget.ProgressBar;
 
@@ -9,20 +18,30 @@ import com.hjq.http.EasyHttp;
 import com.hjq.http.demo.http.model.HttpData;
 import com.hjq.http.demo.http.request.SearchAuthorApi;
 import com.hjq.http.demo.http.request.SearchBlogsApi;
+import com.hjq.http.demo.http.request.UpdateImageApi;
 import com.hjq.http.demo.http.response.SearchBean;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
-import com.hjq.http.model.DownloadTask;
+import com.hjq.http.model.DownloadInfo;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.permissions.OnPermission;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.toast.ToastUtils;
 
+import org.json.JSONObject;
+
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.List;
 
-
+/**
+ *    author : Android 轮子哥
+ *    github : https://github.com/getActivity/EasyHttp
+ *    time   : 2019/05/19
+ *    desc   : 网络请求示例
+ */
 public class MainActivity extends BaseActivity implements View.OnClickListener, OnPermission {
 
     private ProgressBar mProgressBar;
@@ -36,6 +55,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
         findViewById(R.id.btn_main_get).setOnClickListener(this);
         findViewById(R.id.btn_main_post).setOnClickListener(this);
+        findViewById(R.id.btn_main_update).setOnClickListener(this);
         findViewById(R.id.btn_main_download).setOnClickListener(this);
 
         requestPermission();
@@ -72,7 +92,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         super.onRestart();
         if (XXPermissions.isHasPermission(this, Permission.Group.STORAGE)) {
             hasPermission(null, true);
-        }else {
+        } else {
             requestPermission();
         }
     }
@@ -87,12 +107,14 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         .request(new OnHttpListener<HttpData<SearchBean>>() {
 
                             @Override
-                            public void onSucceed(HttpData<SearchBean> data) {
+                            public void onSucceed(HttpData<SearchBean> result) {
                                 ToastUtils.show("请求成功");
                             }
 
                             @Override
-                            public void onFail(Exception e) {}
+                            public void onFail(Exception e) {
+                                ToastUtils.show(e.getMessage());
+                            }
                         });
                 break;
             case R.id.btn_main_post:
@@ -102,42 +124,66 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         .request(new OnHttpListener<HttpData<SearchBean>>() {
 
                             @Override
-                            public void onSucceed(HttpData<SearchBean> data) {
+                            public void onSucceed(HttpData<SearchBean> result) {
                                 ToastUtils.show("请求成功");
                             }
 
                             @Override
-                            public void onFail(Exception e) {}
+                            public void onFail(Exception e) {
+                                ToastUtils.show(e.getMessage());
+                            }
+                        });
+                break;
+            case R.id.btn_main_update:
+                File file = new File(Environment.getExternalStorageDirectory(), getString(R.string.app_name) + ".png");
+                // 生成图片到本地
+                drawableToFile(ContextCompat.getDrawable(this, R.mipmap.ic_launcher), file);
+
+                EasyHttp.post(this)
+                        .api(new UpdateImageApi()
+                                .setImage(file))
+                        .request(new OnHttpListener<JSONObject>() {
+
+                            @Override
+                            public void onSucceed(JSONObject result) {
+                                ToastUtils.show("上传成功");
+                            }
+
+                            @Override
+                            public void onFail(Exception e) {
+                                ToastUtils.show(e.getMessage());
+                            }
                         });
                 break;
             case R.id.btn_main_download:
                 EasyHttp.download(this)
                         .method(HttpMethod.GET)
-                        .file(new File(Environment.getExternalStorageDirectory(), "手机QQ.apk"))
-                        .url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
-                        .md5("47CBDF2A2940B7773DD1B63CBCFD86E1")
-                        //.url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
+                        .file(new File(Environment.getExternalStorageDirectory(), "微信.apk"))
+                        //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
+                        .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
+                        .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
                         .listener(new OnDownloadListener() {
 
                             @Override
-                            public void onDownloadStart(DownloadTask task) {
+                            public void onDownloadStart(DownloadInfo info) {
                                 mProgressBar.setVisibility(View.VISIBLE);
-                                ToastUtils.show("下载开始：" + task.getFile().getName());
+                                ToastUtils.show("下载开始：" + info.getFile().getName());
                             }
 
                             @Override
-                            public void onDownloadProgress(DownloadTask task) {
-                                mProgressBar.setProgress(task.getProgress());
+                            public void onDownloadProgress(DownloadInfo info) {
+                                mProgressBar.setProgress(info.getDownloadProgress());
                             }
 
                             @Override
-                            public void onDownloadComplete(DownloadTask task) {
+                            public void onDownloadComplete(DownloadInfo info) {
                                 mProgressBar.setVisibility(View.GONE);
-                                ToastUtils.show("下载完成：" + task.getFile().getPath());
+                                ToastUtils.show("下载完成：" + info.getFile().getPath());
+                                installApk(MainActivity.this, info.getFile());
                             }
 
                             @Override
-                            public void onDownloadError(DownloadTask task, Exception e) {
+                            public void onDownloadError(DownloadInfo info, Exception e) {
                                 mProgressBar.setVisibility(View.GONE);
                                 ToastUtils.show("下载出错：" + e.getMessage());
                             }
@@ -146,6 +192,66 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 break;
             default:
                 break;
+        }
+    }
+
+    /**
+     * 安装 Apk
+     */
+    private void installApk(final Context context, final File file) {
+        XXPermissions.with(MainActivity.this)
+                // 安装包权限
+                .permission(Permission.REQUEST_INSTALL_PACKAGES)
+                .request(new OnPermission() {
+                    @Override
+                    public void hasPermission(List<String> granted, boolean isAll) {
+                        if (isAll) {
+                            Intent intent = new Intent();
+                            intent.setAction(Intent.ACTION_VIEW);
+                            Uri uri;
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                            } else {
+                                uri = Uri.fromFile(file);
+                            }
+
+                            intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                            context.startActivity(intent);
+                        }
+                    }
+
+                    @Override
+                    public void noPermission(List<String> denied, boolean quick) {
+
+                    }
+                });
+    }
+
+    /**
+     * 将 Drawable 写入到文件中
+     */
+    private void drawableToFile(Drawable drawable, File file) {
+        if (drawable == null) {
+            return;
+        }
+
+        try {
+            if (file.exists()) {
+                file.delete();
+            }
+
+            if (!file.exists()) {
+                file.createNewFile();
+            }
+
+            FileOutputStream out;
+            out = new FileOutputStream(file);
+            ((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, out);
+            out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 }

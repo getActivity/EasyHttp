@@ -1,6 +1,6 @@
 package com.hjq.http.listener;
 
-import com.hjq.http.model.DownloadTask;
+import com.hjq.http.model.DownloadInfo;
 
 /**
  *    author : Android 轮子哥
@@ -13,20 +13,20 @@ public interface OnDownloadListener {
     /**
      * 开始下载
      */
-    void onDownloadStart(DownloadTask task);
+    void onDownloadStart(DownloadInfo info);
 
     /**
      * 下载进度改变
      */
-    void onDownloadProgress(DownloadTask task);
+    void onDownloadProgress(DownloadInfo info);
 
     /**
      * 完成下载
      */
-    void onDownloadComplete(DownloadTask task);
+    void onDownloadComplete(DownloadInfo info);
 
     /**
      * 下载出错
      */
-    void onDownloadError(DownloadTask task, Exception e);
+    void onDownloadError(DownloadInfo info, Exception e);
 }

@@ -23,7 +23,6 @@ import com.hjq.http.exception.ResultException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.exception.TokenException;
-import com.hjq.http.exception.UnknownException;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.toast.ToastUtils;
 
@@ -32,6 +31,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
@@ -86,92 +86,84 @@ public final class RequestHandler implements IRequestHandler {
         }
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    public Object requestSucceed(Context context, Call call, Response response, OnHttpListener listener) throws Exception {
-        try {
-
-            if (response.code() == 200) {
-
-                ResponseBody body = response.body();
-                if (body == null) {
-                    return null;
-                }
-
-                Class clazz = null;
-                Type type = ((ParameterizedType) listener.getClass().getGenericInterfaces()[0]).getActualTypeArguments()[0];
-
-                if (type instanceof Class) {
-                    clazz = (Class) type;
-                }
-
-                if (Response.class.equals(clazz)) {
-                    return response;
-                } else if (Bitmap.class.equals(clazz)) {
-                    // 如果这是一个 Bitmap 对象
-                    return BitmapFactory.decodeStream(body.byteStream());
-                } else {
-
-                    String string = body.string();
-
-                    if (EasyLog.isEnable()) {
-                        // 打印这个 Json
-                        EasyLog.json(string);
-                    }
-
-                    final Object result;
-                    if (String.class.equals(clazz)) {
-                        // 如果这是一个 String 对象
-                        result = string;
-                    } else if (JSONObject.class.equals(clazz)) {
-                        // 如果这是一个 JSONObject 对象
-                        result = new JSONObject(string);
-                    } else if (JSONArray.class.equals(clazz)) {
-                        // 如果这是一个 JSONArray 对象
-                        result = new JSONArray(string);
-                    } else {
-                        result = GSON.fromJson(string, getSuperclassTypeParameter(listener.getClass()));
-                        if (result instanceof HttpData) {
-                            HttpData model = (HttpData) result;
-                            if (model.getCode() == 0) {
-                                // 代表执行成功
-                                return result;
-                            } else if (model.getCode() == 1001) {
-                                // 代表登录失效，需要重新登录
-                                throw new TokenException(context.getString(R.string.http_account_error));
-                            } else {
-                                // 代表执行失败
-                                throw new ResultException(model.getMessage(), model);
-                            }
-                        }
-                    }
-                    return result;
-                }
-            }
-
-            // 返回结果读取异常
+    public Object requestSucceed(Context context, Response response, Class clazz) throws Exception {
+        if (!response.isSuccessful()) {
+            // 返回响应异常
             throw new ResponseException(context.getString(R.string.http_server_error), response);
+        }
 
+        ResponseBody body = response.body();
+        if (body == null) {
+            return null;
+        }
+
+        if (Response.class.equals(clazz)) {
+            return response;
+        }
+
+        if (Bitmap.class.equals(clazz)) {
+            // 如果这是一个 Bitmap 对象
+            return BitmapFactory.decodeStream(body.byteStream());
+        }
+
+        String text;
+        try {
+            text = body.string();
         } catch (IOException e) {
             // 返回结果读取异常
             throw new DataException(context.getString(R.string.http_data_explain_error), e);
-        } catch (JSONException e) {
-            // Json 解析异常
-            throw new DataException(context.getString(R.string.http_data_explain_error), e);
-        } catch (JsonSyntaxException e) {
-            // Gson 解析异常
-            throw new DataException(context.getString(R.string.http_data_explain_error), e);
-        } catch (Exception e) {
-            // 其他未知异常
-            throw new UnknownException(context.getString(R.string.http_unknown_error), e);
-        } finally {
-            // 请求完毕，关闭响应
-            response.close();
         }
+
+        // 打印这个 Json
+        EasyLog.json(text);
+
+        final Object result;
+        if (String.class.equals(clazz)) {
+            // 如果这是一个 String 对象
+            result = text;
+        } else if (JSONObject.class.equals(clazz)) {
+            try {
+                // 如果这是一个 JSONObject 对象
+                result = new JSONObject(text);
+            } catch (JSONException e) {
+                throw new DataException(context.getString(R.string.http_data_explain_error), e);
+            }
+        } else if (JSONArray.class.equals(clazz)) {
+            try {
+                // 如果这是一个 JSONArray 对象
+                result = new JSONArray(text);
+            }catch (JSONException e) {
+                throw new DataException(context.getString(R.string.http_data_explain_error), e);
+            }
+        } else {
+
+            try {
+                result = GSON.fromJson(text, clazz);
+            } catch (JsonSyntaxException e) {
+                // 返回结果读取异常
+                throw new DataException(context.getString(R.string.http_data_explain_error), e);
+            }
+
+            if (result instanceof HttpData) {
+                HttpData model = (HttpData) result;
+                if (model.getCode() == 0) {
+                    // 代表执行成功
+                    return result;
+                } else if (model.getCode() == 1001) {
+                    // 代表登录失效，需要重新登录
+                    throw new TokenException(context.getString(R.string.http_account_error));
+                } else {
+                    // 代表执行失败
+                    throw new ResultException(model.getMessage(), model);
+                }
+            }
+        }
+        return result;
     }
 
     @Override
-    public Exception requestFail(Context context, Call call, Exception e, OnHttpListener listener) {
+    public Exception requestFail(Context context, Exception e) {
         // 判断这个异常是不是自己抛的
         if (e instanceof HttpException) {
             if (e instanceof TokenException) {
@@ -192,31 +184,15 @@ public final class RequestHandler implements IRequestHandler {
                     e = new NetworkException(context.getString(R.string.http_network_error), e);
                 }
             } else if (e instanceof IOException) {
-                e = new CancelException(context.getString(R.string.http_request_cancel), e);
+                //e = new CancelException(context.getString(R.string.http_request_cancel), e);
+                e = new CancelException("", e);
             }else {
                 e = new HttpException(e.getMessage(), e);
             }
         }
 
-        if (EasyLog.isEnable()) {
-            // 打印错误信息
-            e.printStackTrace();
-        }
-
-        String message = e.getMessage();
-        if (message != null && !"".equals(message)) {
-            // 弹出错误提示
-            ToastUtils.show(message);
-        }
+        // 打印错误信息
+        EasyLog.print(e);
         return e;
-    }
-
-    private Type getSuperclassTypeParameter(Class<?> subclass) {
-        Type superclass = subclass.getGenericInterfaces()[0];
-        if (superclass instanceof Class) {
-            throw new RuntimeException("Missing type parameter.");
-        }
-        ParameterizedType parameterized = (ParameterizedType) superclass;
-        return $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
     }
 }

@@ -99,7 +99,7 @@ public final class EasyUtils {
             }
             return sb.toString().toLowerCase();
         } catch (NoSuchAlgorithmException | IOException e) {
-            e.printStackTrace();
+            EasyLog.print(e);
         } finally {
             closeStream(dis);
         }
