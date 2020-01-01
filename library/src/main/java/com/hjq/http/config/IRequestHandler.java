@@ -2,6 +2,8 @@ package com.hjq.http.config;
 
 import android.content.Context;
 
+import java.lang.reflect.Type;
+
 import okhttp3.Call;
 import okhttp3.Response;
 
@@ -34,11 +36,11 @@ public interface IRequestHandler {
      *
      * @param context           上下文对象
      * @param response          响应对象
-     * @param clazz             解析类型
+     * @param type              解析类型
      * @return                  返回结果
      * @throws Exception        回调失败方法
      */
-    Object requestSucceed(Context context, Response response, Class clazz) throws Exception;
+    Object requestSucceed(Context context, Response response, Type type) throws Exception;
 
     /**
      * 请求失败

@@ -87,7 +87,7 @@ public final class RequestHandler implements IRequestHandler {
     }
 
     @Override
-    public Object requestSucceed(Context context, Response response, Class clazz) throws Exception {
+    public Object requestSucceed(Context context, Response response, Type type) throws Exception {
         if (!response.isSuccessful()) {
             // 返回响应异常
             throw new ResponseException(context.getString(R.string.http_server_error), response);
@@ -98,11 +98,11 @@ public final class RequestHandler implements IRequestHandler {
             return null;
         }
 
-        if (Response.class.equals(clazz)) {
+        if (Response.class.equals(type)) {
             return response;
         }
 
-        if (Bitmap.class.equals(clazz)) {
+        if (Bitmap.class.equals(type)) {
             // 如果这是一个 Bitmap 对象
             return BitmapFactory.decodeStream(body.byteStream());
         }
@@ -119,17 +119,17 @@ public final class RequestHandler implements IRequestHandler {
         EasyLog.json(text);
 
         final Object result;
-        if (String.class.equals(clazz)) {
+        if (String.class.equals(type)) {
             // 如果这是一个 String 对象
             result = text;
-        } else if (JSONObject.class.equals(clazz)) {
+        } else if (JSONObject.class.equals(type)) {
             try {
                 // 如果这是一个 JSONObject 对象
                 result = new JSONObject(text);
             } catch (JSONException e) {
                 throw new DataException(context.getString(R.string.http_data_explain_error), e);
             }
-        } else if (JSONArray.class.equals(clazz)) {
+        } else if (JSONArray.class.equals(type)) {
             try {
                 // 如果这是一个 JSONArray 对象
                 result = new JSONArray(text);
@@ -139,7 +139,7 @@ public final class RequestHandler implements IRequestHandler {
         } else {
 
             try {
-                result = GSON.fromJson(text, clazz);
+                result = GSON.fromJson(text, type);
             } catch (JsonSyntaxException e) {
                 // 返回结果读取异常
                 throw new DataException(context.getString(R.string.http_data_explain_error), e);

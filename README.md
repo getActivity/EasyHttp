@@ -7,7 +7,7 @@
 #### Gradle 集成
 
     dependencies {
-        implementation 'com.hjq:http:3.0'
+        implementation 'com.hjq:http:3.2'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }

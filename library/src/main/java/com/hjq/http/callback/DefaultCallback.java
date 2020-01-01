@@ -42,19 +42,7 @@ public final class DefaultCallback extends BaseCallback {
             type = ((ParameterizedType) mListener.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         }
 
-        Class clazz;
-        if (type instanceof Class) {
-            // 如果这个是简单的 Class（String、JSONObject、JSONArray）
-            clazz = (Class) type;
-        } else if (type instanceof ParameterizedType) {
-            // 如果这个是复杂的 Class（HttpData<Bean>）
-            clazz = (Class) ((ParameterizedType) type).getRawType();
-        } else {
-            // 如果这个是其他类型 Class，就直接用 Void 代替
-            clazz = Void.TYPE;
-        }
-
-        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, clazz);
+        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, type);
         EasyUtils.runOnUiThread(mListener != null, new Runnable() {
 
             @SuppressWarnings("unchecked")
