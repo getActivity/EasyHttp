@@ -28,7 +28,7 @@ public class MyApplication extends Application {
 
         EasyConfig.with(new OkHttpClient())
                 // 是否打印日志
-                .setLog(BuildConfig.DEBUG)
+                .setLogEnabled(BuildConfig.DEBUG)
                 // 设置服务器配置
                 .setServer(server)
                 // 设置请求处理策略

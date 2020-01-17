@@ -16,7 +16,7 @@ public final class EasyLog {
      * 日志开关
      */
     public static boolean isEnable() {
-        return EasyConfig.getInstance().isLog();
+        return EasyConfig.getInstance().isLogEnabled();
     }
 
     /**
@@ -32,7 +32,7 @@ public final class EasyLog {
      * 打印异常
      */
     public static void print(Throwable throwable) {
-        if (EasyConfig.getInstance().isLog()) {
+        if (EasyConfig.getInstance().isLogEnabled()) {
             throwable.printStackTrace();
         }
     }

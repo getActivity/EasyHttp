@@ -32,31 +32,84 @@ public final class EasyConfig {
         sConfig = config;
     }
 
-    public static EasyConfig.Builder with(OkHttpClient client) {
-        return new EasyConfig.Builder(client);
+    public static EasyConfig with(OkHttpClient client) {
+        return new EasyConfig(client);
     }
 
+    /** 服务器配置 */
     private IRequestServer mServer;
+    /** 请求拦截器 */
     private IRequestHandler mHandler;
-    private boolean mLogEnabled;
-    private int mRetryCount;
 
+    /** OkHttp 客户端 */
+    private OkHttpClient mClient;
+
+    /** 通用参数 */
     private HashMap<String, Object> mParams;
+    /** 通用请求头 */
     private HashMap<String, String> mHeaders;
 
-    private OkHttpClient mHttpClient;
+    /** 日志开关 */
+    private boolean mLogEnabled = true;
+    /** 重试次数 */
+    private int mRetryCount;
 
-    private EasyConfig(Builder builder) {
-        mServer = builder.mServer;
-        mHandler = builder.mHandler;
+    private EasyConfig(OkHttpClient client) {
+        mClient = client;
+        mParams = new HashMap<>();
+        mHeaders = new HashMap<>();
+    }
 
-        mParams = builder.mParams;
-        mHeaders = builder.mHeaders;
+    public EasyConfig setServer(String host) {
+        return setServer(new RequestServer(host));
+    }
 
-        mHttpClient = builder.mClient;
+    public EasyConfig setServer(IRequestServer server) {
+        mServer = server;
+        return this;
+    }
 
-        mLogEnabled = builder.mLogEnabled;
-        mRetryCount = builder.mRetryCount;
+    public EasyConfig setHandler(IRequestHandler handler) {
+        mHandler = handler;
+        return this;
+    }
+
+    public EasyConfig setClient(OkHttpClient client) {
+        mClient = client;
+        return this;
+    }
+
+    public EasyConfig setParams(HashMap<String, Object> params) {
+        mParams = params;
+        return this;
+    }
+
+    public EasyConfig setHeaders(HashMap<String, String> headers) {
+        mHeaders = headers;
+        return this;
+    }
+
+    public EasyConfig addHeader(String key, String value) {
+        mHeaders.put(key, value);
+        return this;
+    }
+
+    public EasyConfig addParam(String key, String value) {
+        mParams.put(key, value);
+        return this;
+    }
+
+    public EasyConfig setLogEnabled(boolean enabled) {
+        mLogEnabled = enabled;
+        return this;
+    }
+
+    public EasyConfig setRetryCount(int count) {
+        if (count < 0) {
+            throw new IllegalArgumentException("The number of retries must be greater than 0");
+        }
+        mRetryCount = count;
+        return this;
     }
 
     public IRequestServer getServer() {
@@ -68,7 +121,7 @@ public final class EasyConfig {
     }
 
     public OkHttpClient getClient() {
-        return mHttpClient;
+        return mClient;
     }
 
     public HashMap<String, Object> getParams() {
@@ -79,15 +132,7 @@ public final class EasyConfig {
         return mHeaders;
     }
 
-    public void addHeader(String key, String value) {
-        mHeaders.put(key, value);
-    }
-
-    public void addParam(String key, String value) {
-        mParams.put(key, value);
-    }
-
-    public boolean isLog() {
+    public boolean isLogEnabled() {
         return mLogEnabled;
     }
 
@@ -95,87 +140,23 @@ public final class EasyConfig {
         return mRetryCount;
     }
 
-    public static final class Builder {
-
-        /** 服务器配置 */
-        private IRequestServer mServer;
-        /** 请求拦截器 */
-        private IRequestHandler mHandler;
-
-        /** OkHttp 客户端 */
-        private OkHttpClient mClient;
-
-        /** 通用参数 */
-        private HashMap<String, Object> mParams;
-        /** 通用请求头 */
-        private HashMap<String, String> mHeaders;
-
-        /** 日志开关 */
-        private boolean mLogEnabled = true;
-        /** 重试次数 */
-        private int mRetryCount;
-
-        public Builder(OkHttpClient client) {
-            mClient = client;
-            mParams = new HashMap<>();
-            mHeaders = new HashMap<>();
+    public void into() {
+        if (mClient == null) {
+            throw new IllegalArgumentException("The OkHttp client object cannot be empty");
         }
-
-        public Builder setServer(String host) {
-            return setServer(new RequestServer(host));
-        }
-
-        public Builder setServer(IRequestServer server) {
-            mServer = server;
-            return this;
-        }
-
-        public Builder setHandler(IRequestHandler handler) {
-            mHandler = handler;
-            return this;
-        }
-
-        public Builder setLog(boolean enabled) {
-            mLogEnabled = enabled;
-            return this;
-        }
-
-        public Builder addHeader(String key, String value) {
-            mHeaders.put(key, value);
-            return this;
-        }
-
-        public Builder addParam(String key, String value) {
-            mParams.put(key, value);
-            return this;
-        }
-
-        public Builder setRetryCount(int retryCount) {
-            if (retryCount < 0) {
-                throw new IllegalArgumentException("The number of retries must be greater than 0");
+        if (mServer == null) {
+            throw new IllegalArgumentException("The host configuration cannot be empty");
+        } else {
+            try {
+                // 校验主机和路径的 url 是否合法
+                new URL(mServer.getHost() + mServer.getPath());
+            } catch (MalformedURLException e) {
+                throw new IllegalArgumentException("The configured host path url address is not correct");
             }
-            mRetryCount = retryCount;
-            return this;
         }
-
-        public void into() {
-            if (mClient == null) {
-                throw new IllegalArgumentException("The OkHttp client object cannot be empty");
-            }
-            if (mServer == null) {
-                throw new IllegalArgumentException("The host configuration cannot be empty");
-            } else {
-                try {
-                    // 校验主机和路径的 url 是否合法
-                    new URL(mServer.getHost() + mServer.getPath());
-                } catch (MalformedURLException e) {
-                    throw new IllegalArgumentException("The configured host path url address is not correct");
-                }
-            }
-            if (mHandler == null) {
-                throw new IllegalArgumentException("The object being processed by the request cannot be empty");
-            }
-            EasyConfig.setInstance(new EasyConfig(this));
+        if (mHandler == null) {
+            throw new IllegalArgumentException("The object being processed by the request cannot be empty");
         }
+        EasyConfig.setInstance(this);
     }
 }

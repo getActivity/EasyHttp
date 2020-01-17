@@ -11,8 +11,10 @@ import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestPath;
 import com.hjq.http.config.IRequestServer;
+import com.hjq.http.config.IRequestType;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
+import com.hjq.http.model.BodyType;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
@@ -39,6 +41,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
     /** 请求路径配置 */
     private IRequestPath mRequestPath = EasyConfig.getInstance().getServer();
+    /** 参数提交类型 */
+    private IRequestType mRequestType = EasyConfig.getInstance().getServer();
     /** 请求接口配置 */
     private IRequestApi mRequestApi;
 
@@ -70,18 +74,22 @@ public abstract class BaseRequest<T extends BaseRequest> {
     /**
      * 设置请求配置
      */
-    public T api(IRequestApi config) {
-        mRequestApi = config;
+    public T api(IRequestApi api) {
+        mRequestApi = api;
         // 判断这个接口是否实现了服务器配置
-        if (config instanceof IRequestServer) {
-            mRequestHost = (IRequestHost) config;
-            mRequestPath = (IRequestPath) config;
+        if (api instanceof IRequestServer) {
+            mRequestHost = (IRequestHost) api;
+            mRequestPath = (IRequestPath) api;
+            mRequestType = (IRequestType) api;
         } else {
-            if (config instanceof IRequestHost) {
-                mRequestHost = (IRequestHost) config;
+            if (api instanceof IRequestHost) {
+                mRequestHost = (IRequestHost) api;
             }
-            if (config instanceof IRequestPath) {
-                mRequestPath = (IRequestPath) config;
+            if (api instanceof IRequestPath) {
+                mRequestPath = (IRequestPath) api;
+            }
+            if (api instanceof IRequestType) {
+                mRequestType = (IRequestType) api;
             }
         }
         return (T) this;
@@ -109,6 +117,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
     public T server(IRequestServer server) {
         mRequestHost = server;
         mRequestPath = server;
+        mRequestType = server;
         return (T) this;
     }
 
@@ -224,12 +233,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
         String url = mRequestHost.getHost() + mRequestPath.getPath() + mRequestApi.getApi();
         EasyLog.print("RequestUrl：" + url);
-        return mClient.newCall(create(url, mTag, params, headers));
+        return mClient.newCall(create(url, mTag, params, headers, mRequestType.getType()));
     }
 
     protected Context getContext() {
         return mContext;
     }
 
-    protected abstract Request create(String url, String tag, HttpParams params, HttpHeaders headers);
+    protected abstract Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);
 }

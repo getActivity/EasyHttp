@@ -1,0 +1,17 @@
+package com.hjq.http.config;
+
+import com.hjq.http.model.BodyType;
+
+/**
+ *    author : Android 轮子哥
+ *    github : https://github.com/getActivity/EasyHttp
+ *    time   : 2020/01/01
+ *    desc   : 请求接口配置
+ */
+public interface IRequestType {
+
+    /**
+     * 参数提交类型
+     */
+    BodyType getType();
+}

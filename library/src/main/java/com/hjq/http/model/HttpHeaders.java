@@ -35,4 +35,8 @@ public final class HttpHeaders {
     public Set<String> getNames() {
         return mHeaders.keySet();
     }
+
+    public HashMap<String, String> getHeaders() {
+        return mHeaders;
+    }
 }

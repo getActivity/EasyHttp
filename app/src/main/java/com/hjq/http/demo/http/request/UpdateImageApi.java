@@ -26,6 +26,10 @@ public class UpdateImageApi implements IRequestHost, IRequestApi {
     /** 本地图片 */
     private File image;
 
+    public UpdateImageApi(File image) {
+        this.image = image;
+    }
+
     public UpdateImageApi setImage(File image) {
         this.image = image;
         return this;

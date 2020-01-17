@@ -2,31 +2,38 @@ package com.hjq.http.listener;
 
 import com.hjq.http.model.DownloadInfo;
 
+import okhttp3.Call;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2019/05/19
- *    desc   :
+ *    desc   : 下载监听器
  */
 public interface OnDownloadListener {
 
     /**
-     * 开始下载
-     */
-    void onDownloadStart(DownloadInfo info);
-
-    /**
      * 下载进度改变
      */
-    void onDownloadProgress(DownloadInfo info);
+    void onProgress(DownloadInfo info);
 
     /**
-     * 完成下载
+     * 下载完成
      */
-    void onDownloadComplete(DownloadInfo info);
+    void onComplete(DownloadInfo info);
 
     /**
      * 下载出错
      */
-    void onDownloadError(DownloadInfo info, Exception e);
+    void onError(DownloadInfo info, Exception e);
+
+    /**
+     * 下载开始
+     */
+    void onStart(Call call);
+
+    /**
+     * 下载结束
+     */
+    void onEnd(Call call);
 }

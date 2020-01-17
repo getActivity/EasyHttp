@@ -17,19 +17,25 @@ import okhttp3.Response;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2019/11/25
- *    desc   : 默认接口回调
+ *    desc   : 正常接口回调
  */
-public final class DefaultCallback extends BaseCallback {
+public final class NormalCallback extends BaseCallback {
 
     private Context mContext;
     private OnHttpListener mListener;
 
-    public DefaultCallback(Context context, CallProxy call, OnHttpListener listener) {
+    public NormalCallback(Context context, CallProxy call, OnHttpListener listener) {
         super(call);
         mContext = context;
         mListener = listener;
+
+        EasyUtils.runOnUiThread(mListener != null, () -> {
+            mListener.onStart(call);
+            EasyConfig.getInstance().getHandler().requestStart(context, call);
+        });
     }
 
+    @SuppressWarnings("unchecked")
     @Override
     protected void onResponse(Response response) throws Exception {
         Type type;
@@ -42,40 +48,22 @@ public final class DefaultCallback extends BaseCallback {
             type = ((ParameterizedType) mListener.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         }
 
-        Class clazz;
-        if (type instanceof Class) {
-            // 如果这个是简单的 Class（String、JSONObject、JSONArray）
-            clazz = (Class) type;
-        } else if (type instanceof ParameterizedType) {
-            // 如果这个是复杂的 Class（HttpData<Bean>）
-            clazz = (Class) ((ParameterizedType) type).getRawType();
-        } else {
-            // 如果这个是其他类型 Class，就直接用 Void 代替
-            clazz = Void.TYPE;
-        }
-
-        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, clazz);
-        EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-
-            @SuppressWarnings("unchecked")
-            @Override
-            public void run() {
-                mListener.onSucceed(result);
-            }
+        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, type);
+        EasyUtils.runOnUiThread(mListener != null, () -> {
+            mListener.onSucceed(result);
+            mListener.onEnd(getCall());
+            EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
         });
-        EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
     }
 
     @Override
     protected void onFailure(Exception e) {
         EasyLog.print(e);
         final Exception exception = EasyConfig.getInstance().getHandler().requestFail(mContext, e);
-        EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-            @Override
-            public void run() {
-                mListener.onFail(exception);
-            }
+        EasyUtils.runOnUiThread(mListener != null, () -> {
+            mListener.onFail(exception);
+            mListener.onEnd(getCall());
+            EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
         });
-        EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
     }
 }

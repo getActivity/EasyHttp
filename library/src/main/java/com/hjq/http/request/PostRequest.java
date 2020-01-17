@@ -2,12 +2,13 @@ package com.hjq.http.request;
 
 import android.content.Context;
 
-import com.hjq.http.EasyConfig;
-import com.hjq.http.callback.DefaultCallback;
+import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
+import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
+import com.hjq.http.model.JsonBody;
 import com.hjq.http.model.UpdateBody;
 
 import java.io.File;
@@ -33,7 +34,7 @@ public final class PostRequest extends BaseRequest<PostRequest> {
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers) {
+    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         Request.Builder request = new Request.Builder();
         request.url(url);
         if (tag != null) {
@@ -51,7 +52,6 @@ public final class PostRequest extends BaseRequest<PostRequest> {
         if (params.isMultipart()) {
             MultipartBody.Builder builder = new MultipartBody.Builder();
             builder.setType(MultipartBody.FORM);
-            // 添加参数
             if (!params.isEmpty()) {
                 for (String key : params.getNames()) {
                     Object object = params.get(key);
@@ -62,6 +62,8 @@ public final class PostRequest extends BaseRequest<PostRequest> {
                             // 文件名必须不能带中文，所以这里要编码
                             builder.addFormDataPart(key, URLEncoder.encode(file.getName()), new UpdateBody(file));
                         }
+                    } else if (object instanceof RequestBody) {
+                        builder.addFormDataPart(key, null, (RequestBody) object);
                     } else {
                         // 如果这是一个参数
                         builder.addFormDataPart(key, object.toString());
@@ -70,14 +72,21 @@ public final class PostRequest extends BaseRequest<PostRequest> {
             }
             body = builder.build();
         } else {
-            FormBody.Builder builder = new FormBody.Builder();
-            // 添加参数
-            if (!params.isEmpty()) {
-                for (String key : params.getNames()) {
-                    builder.add(key, params.get(key).toString());
+            if (type == BodyType.JSON) {
+                if (!params.isEmpty()) {
+                    body = new JsonBody(params.getParams());
+                } else {
+                    body = new JsonBody();
                 }
+            } else {
+                FormBody.Builder builder = new FormBody.Builder();
+                if (!params.isEmpty()) {
+                    for (String key : params.getNames()) {
+                        builder.add(key, params.get(key).toString());
+                    }
+                }
+                body = builder.build();
             }
-            body = builder.build();
         }
         request.post(body);
         return request.build();
@@ -88,8 +97,7 @@ public final class PostRequest extends BaseRequest<PostRequest> {
      */
     public PostRequest request(OnHttpListener listener) {
         mCallProxy = new CallProxy(create());
-        EasyConfig.getInstance().getHandler().requestStart(getContext(), mCallProxy);
-        mCallProxy.enqueue(new DefaultCallback(getContext(), mCallProxy, listener));
+        mCallProxy.enqueue(new NormalCallback(getContext(), mCallProxy, listener));
         return this;
     }
 

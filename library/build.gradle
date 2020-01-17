@@ -5,11 +5,17 @@ apply plugin: 'com.novoda.bintray-release'
 android {
     compileSdkVersion 26
 
+    // 使用 JDK 1.8
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
-        minSdkVersion 11
+        minSdkVersion 14
         targetSdkVersion 26
-        versionCode 30
-        versionName "3.0"
+        versionCode 50
+        versionName "5.0"
     }
 }
 
@@ -22,7 +28,7 @@ publish {
     userOrg = 'getactivity'//填写bintray用户名，注意大小写
     groupId = 'com.hjq'//定义的maven group id最终引用形式
     artifactId = 'http'//maven的artifact id
-    version = '3.0'//maven 上发布版本号
+    version = '5.0'//maven 上发布版本号
     description = 'Easy-to-use network request framework'//描述，自己定义
     website = "https://github.com/getActivity/EasyHttp"//项目在github中的地址
 }

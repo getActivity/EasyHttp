@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.Fragment;
 import android.content.Context;
+import android.view.View;
 
 import com.hjq.http.request.DownloadRequest;
 import com.hjq.http.request.GetRequest;
@@ -39,6 +40,10 @@ public final class EasyHttp {
         return new GetRequest(dialog.getContext()).tag(dialog);
     }
 
+    public static GetRequest get(View view) {
+        return new GetRequest(view.getContext()).tag(view);
+    }
+
     public static GetRequest get(Context context) {
         return new GetRequest(context).tag(context);
     }
@@ -61,6 +66,11 @@ public final class EasyHttp {
     public static PostRequest post(Dialog dialog) {
         return new PostRequest(dialog.getContext()).tag(dialog);
     }
+
+    public static PostRequest post(View view) {
+        return new PostRequest(view.getContext()).tag(view);
+    }
+
     public static PostRequest post(Context context) {
         return new PostRequest(context).tag(context);
     }
@@ -82,6 +92,10 @@ public final class EasyHttp {
 
     public static DownloadRequest download(Dialog dialog) {
         return new DownloadRequest(dialog.getContext()).tag(dialog);
+    }
+
+    public static DownloadRequest download(View view) {
+        return new DownloadRequest(view.getContext()).tag(view);
     }
 
     public static DownloadRequest download(Context context) {

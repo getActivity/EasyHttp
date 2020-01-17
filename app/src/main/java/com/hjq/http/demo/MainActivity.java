@@ -20,8 +20,8 @@ import com.hjq.http.demo.http.request.SearchAuthorApi;
 import com.hjq.http.demo.http.request.SearchBlogsApi;
 import com.hjq.http.demo.http.request.UpdateImageApi;
 import com.hjq.http.demo.http.response.SearchBean;
+import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
-import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.DownloadInfo;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.permissions.OnPermission;
@@ -29,12 +29,12 @@ import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.toast.ToastUtils;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.List;
+
+import okhttp3.Call;
 
 /**
  *    author : Android 轮子哥
@@ -104,16 +104,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 EasyHttp.get(this)
                         .api(new SearchAuthorApi()
                                 .setAuthor("鸿洋"))
-                        .request(new OnHttpListener<HttpData<SearchBean>>() {
+                        .request(new HttpCallback<HttpData<SearchBean>>(this) {
 
                             @Override
                             public void onSucceed(HttpData<SearchBean> result) {
                                 ToastUtils.show("请求成功");
-                            }
-
-                            @Override
-                            public void onFail(Exception e) {
-                                ToastUtils.show(e.getMessage());
                             }
                         });
                 break;
@@ -121,16 +116,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 EasyHttp.post(this)
                         .api(new SearchBlogsApi()
                                 .setKeyword("搬砖不再有"))
-                        .request(new OnHttpListener<HttpData<SearchBean>>() {
+                        .request(new HttpCallback<HttpData<SearchBean>>(this) {
 
                             @Override
                             public void onSucceed(HttpData<SearchBean> result) {
                                 ToastUtils.show("请求成功");
-                            }
-
-                            @Override
-                            public void onFail(Exception e) {
-                                ToastUtils.show(e.getMessage());
                             }
                         });
                 break;
@@ -140,18 +130,12 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 drawableToFile(ContextCompat.getDrawable(this, R.mipmap.ic_launcher), file);
 
                 EasyHttp.post(this)
-                        .api(new UpdateImageApi()
-                                .setImage(file))
-                        .request(new OnHttpListener<JSONObject>() {
+                        .api(new UpdateImageApi(file))
+                        .request(new HttpCallback<String>(this) {
 
                             @Override
-                            public void onSucceed(JSONObject result) {
+                            public void onSucceed(String result) {
                                 ToastUtils.show("上传成功");
-                            }
-
-                            @Override
-                            public void onFail(Exception e) {
-                                ToastUtils.show(e.getMessage());
                             }
                         });
                 break;
@@ -165,27 +149,31 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         .listener(new OnDownloadListener() {
 
                             @Override
-                            public void onDownloadStart(DownloadInfo info) {
+                            public void onStart(Call call) {
                                 mProgressBar.setVisibility(View.VISIBLE);
-                                ToastUtils.show("下载开始：" + info.getFile().getName());
+                                ToastUtils.show("下载开始");
                             }
 
                             @Override
-                            public void onDownloadProgress(DownloadInfo info) {
+                            public void onProgress(DownloadInfo info) {
                                 mProgressBar.setProgress(info.getDownloadProgress());
                             }
 
                             @Override
-                            public void onDownloadComplete(DownloadInfo info) {
-                                mProgressBar.setVisibility(View.GONE);
+                            public void onComplete(DownloadInfo info) {
                                 ToastUtils.show("下载完成：" + info.getFile().getPath());
                                 installApk(MainActivity.this, info.getFile());
                             }
 
                             @Override
-                            public void onDownloadError(DownloadInfo info, Exception e) {
-                                mProgressBar.setVisibility(View.GONE);
+                            public void onError(DownloadInfo info, Exception e) {
                                 ToastUtils.show("下载出错：" + e.getMessage());
+                            }
+
+                            @Override
+                            public void onEnd(Call call) {
+                                mProgressBar.setVisibility(View.GONE);
+                                ToastUtils.show("下载结束");
                             }
 
                         }).start();

@@ -38,6 +38,8 @@ public final class DownloadCallback extends BaseCallback {
         mFile = file;
         mMD5 = md5;
         mListener = listener;
+
+        EasyUtils.runOnUiThread(mListener != null, () -> mListener.onStart(getCall()));
     }
 
     @Override
@@ -49,20 +51,11 @@ public final class DownloadCallback extends BaseCallback {
 
         EasyUtils.createFolder(mFile.getParentFile());
 
-        EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-            @Override
-            public void run() {
-                mListener.onDownloadStart(mDownloadInfo);
-            }
-        });
-
         ResponseBody body = response.body();
         if (body == null) {
-            EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-                @Override
-                public void run() {
-                    mListener.onDownloadError(mDownloadInfo, new NullBodyException("The response body is empty"));
-                }
+            EasyUtils.runOnUiThread(mListener != null, () -> {
+                mListener.onError(mDownloadInfo, new NullBodyException("The response body is empty"));
+                mListener.onEnd(getCall());
             });
             return;
         }
@@ -70,12 +63,10 @@ public final class DownloadCallback extends BaseCallback {
         mDownloadInfo.setTotalLength(body.contentLength());
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
         if (mMD5 != null && !"".equals(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
-            EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-                @Override
-                public void run() {
-                    mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
-                    mListener.onDownloadComplete(mDownloadInfo);
-                }
+            EasyUtils.runOnUiThread(mListener != null, () -> {
+                mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
+                mListener.onComplete(mDownloadInfo);
+                mListener.onEnd(getCall());
             });
             return;
         }
@@ -89,12 +80,7 @@ public final class DownloadCallback extends BaseCallback {
             downloadSize += readLength;
             outputStream.write(bytes, 0, readLength);
             mDownloadInfo.setDownloadLength(downloadSize);
-            EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-                @Override
-                public void run() {
-                    mListener.onDownloadProgress(mDownloadInfo);
-                }
-            });
+            EasyUtils.runOnUiThread(mListener != null, () -> mListener.onProgress(mDownloadInfo));
             EasyLog.print(mFile.getPath() + " 正在下载" +
                     "，文件总字节：" + mDownloadInfo.getTotalLength() +
                     "，已下载字节：" + mDownloadInfo.getDownloadLength() +
@@ -102,15 +88,13 @@ public final class DownloadCallback extends BaseCallback {
         }
         outputStream.flush();
 
-        EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-            @Override
-            public void run() {
-                String fileMD5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
-                if (mMD5 != null && !"".equals(mMD5) && !mMD5.equalsIgnoreCase(fileMD5)) {
-                    onFailure(new MD5Exception("MD5 verify failure", fileMD5));
-                } else {
-                    mListener.onDownloadComplete(mDownloadInfo);
-                }
+        EasyUtils.runOnUiThread(mListener != null, () -> {
+            String fileMD5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
+            if (mMD5 != null && !"".equals(mMD5) && !mMD5.equalsIgnoreCase(fileMD5)) {
+                onFailure(new MD5Exception("MD5 verify failure", fileMD5));
+            } else {
+                mListener.onComplete(mDownloadInfo);
+                mListener.onEnd(getCall());
             }
         });
 
@@ -121,11 +105,9 @@ public final class DownloadCallback extends BaseCallback {
     @Override
     protected void onFailure(final Exception e) {
         EasyLog.print(e);
-        EasyUtils.runOnUiThread(mListener != null, new Runnable() {
-            @Override
-            public void run() {
-                mListener.onDownloadError(mDownloadInfo, e);
-            }
+        EasyUtils.runOnUiThread(mListener != null, () -> {
+            mListener.onError(mDownloadInfo, e);
+            mListener.onEnd(getCall());
         });
     }
 }

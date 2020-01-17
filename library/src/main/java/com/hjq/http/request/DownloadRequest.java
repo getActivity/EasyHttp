@@ -6,6 +6,7 @@ import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
 import com.hjq.http.listener.OnDownloadListener;
+import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
@@ -86,14 +87,14 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers) {
+    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         switch (mMethod) {
             case GET:
                 // 如果这个下载请求方式是 Get
-                return new GetRequest(getContext()).create(url, tag, params, headers);
+                return new GetRequest(getContext()).create(url, tag, params, headers, type);
             case POST:
                 // 如果这个下载请求方式是 Post
-                return new PostRequest(getContext()).create(url, tag, params, headers);
+                return new PostRequest(getContext()).create(url, tag, params, headers, type);
             default:
                 throw new IllegalStateException("are you ok?");
         }

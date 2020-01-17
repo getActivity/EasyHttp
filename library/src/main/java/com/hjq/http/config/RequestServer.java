@@ -6,7 +6,7 @@ import com.hjq.http.annotation.HttpIgnore;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2019/05/19
- *    desc   : 请求服务简单配置类
+ *    desc   : 服务器简单配置
  */
 public final class RequestServer implements IRequestServer {
 

@@ -16,7 +16,7 @@ import okio.Source;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2019/12/14
- *    desc   : 上传请求
+ *    desc   : 上传文件请求
  */
 public final class UpdateBody extends RequestBody {
 

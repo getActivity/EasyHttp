@@ -2,9 +2,9 @@ package com.hjq.http.request;
 
 import android.content.Context;
 
-import com.hjq.http.EasyConfig;
-import com.hjq.http.callback.DefaultCallback;
+import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
+import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
@@ -27,7 +27,7 @@ public final class GetRequest extends BaseRequest<GetRequest> {
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers) {
+    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         Request.Builder request = new Request.Builder();
 
         if (tag != null) {
@@ -58,8 +58,7 @@ public final class GetRequest extends BaseRequest<GetRequest> {
      */
     public GetRequest request(OnHttpListener listener) {
         mCallProxy = new CallProxy(create());
-        EasyConfig.getInstance().getHandler().requestStart(getContext(), mCallProxy);
-        mCallProxy.enqueue(new DefaultCallback(getContext(), mCallProxy, listener));
+        mCallProxy.enqueue(new NormalCallback(getContext(), mCallProxy, listener));
         return this;
     }
 

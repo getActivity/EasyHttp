@@ -2,6 +2,10 @@ package com.hjq.http.config;
 
 import android.content.Context;
 
+import com.hjq.http.listener.OnHttpListener;
+
+import java.lang.reflect.Type;
+
 import okhttp3.Call;
 import okhttp3.Response;
 
@@ -18,27 +22,31 @@ public interface IRequestHandler {
      *
      * @param context           上下文对象
      * @param call              执行对象
+     * @deprecated              请使用 {@link OnHttpListener }
      */
-    void requestStart(Context context, Call call);
+    @Deprecated
+    default void requestStart(Context context, Call call) {}
 
     /**
      * 请求结束时回调
      *
      * @param context           上下文对象
      * @param call              执行对象
+     * @deprecated              请使用 {@link OnHttpListener }
      */
-    void requestEnd(Context context, Call call);
+    @Deprecated
+    default void requestEnd(Context context, Call call) {}
 
     /**
      * 请求成功时回调
      *
      * @param context           上下文对象
      * @param response          响应对象
-     * @param clazz             解析类型
+     * @param type              解析类型
      * @return                  返回结果
      * @throws Exception        回调失败方法
      */
-    Object requestSucceed(Context context, Response response, Class clazz) throws Exception;
+    Object requestSucceed(Context context, Response response, Type type) throws Exception;
 
     /**
      * 请求失败

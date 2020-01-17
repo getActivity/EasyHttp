@@ -3,12 +3,18 @@ apply plugin: 'com.android.application'
 android {
     compileSdkVersion 28
 
+    // 支持 JDK 1.8
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
     defaultConfig {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 30
-        versionName "3.0"
+        versionCode 50
+        versionName "5.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -41,7 +47,4 @@ dependencies {
     implementation 'com.google.code.gson:gson:2.8.5'
     // OkHttp 网络框架：https://github.com/square/okhttp
     implementation 'com.squareup.okhttp3:okhttp:3.12.1'
-
-    // 内存泄漏捕捉：https://github.com/square/leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.0'
 }

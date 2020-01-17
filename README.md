@@ -6,8 +6,16 @@
 
 #### Gradle 集成
 
+	android {
+	    // 支持 JDK 1.8
+	    compileOptions {
+	        targetCompatibility JavaVersion.VERSION_1_8
+	        sourceCompatibility JavaVersion.VERSION_1_8
+	    }
+	}
+
     dependencies {
-        implementation 'com.hjq:http:3.0'
+        implementation 'com.hjq:http:5.0'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -38,15 +46,21 @@
 	    public String getPath() {
 	        return "api/";
 	    }
+
+	    @Override
+	    public BodyType getType() {
+			// 参数以 Json 格式提交（默认是表单）
+	        return BodyType.JSON;
+	    }
 	}
 
 #### 初始化
 
-> 需要配置请求处理，具体封装可以[点击此处参考](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
+> 需要配置请求结果处理，具体封装可以参考 [RequestHandler](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
 
     EasyConfig.with(new OkHttpClient())
             // 是否打印日志
-            .setLog(BuildConfig.DEBUG)
+            .setLogEnabled(BuildConfig.DEBUG)
             // 设置服务器配置
             .setServer(server)
             // 设置请求处理策略
@@ -93,27 +107,28 @@
 	
 	* @HttpRename：重新定义这个字段发送给后台的参数名称
 
-* 可为这个类多实现一些接口
+* 可为这个类多实现一些配置接口
 
 	* implements IRequestHost：实现这个接口之后可以重新指定这个请求的主机地址
 
 	* implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
 
+    * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
+
 #### 发起请求
+
+> 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/BaseActivity.java)
 
     EasyHttp.post(this)
             .api(new LoginApi()
                     .setUserName("Android 轮子哥")
                     .setPassword("123456"))
-            .request(new OnHttpListener<HttpData<LoginBean>>() {
+            .request(new HttpCallback<HttpData<LoginBean>>(activity) {
 
                 @Override
                 public void onSucceed(HttpData<LoginBean> data) {
                     ToastUtils.show("登录成功");
                 }
-
-                @Override
-                public void onFail(Exception e) {}
             });
 
 #### 下载文件
@@ -122,54 +137,45 @@
 
     EasyHttp.download(this)
             .method(HttpMethod.GET)
-            .file(new File(Environment.getExternalStorageDirectory(), "手机QQ.apk"))
-            .url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
-            .md5("47CBDF2A2940B7773DD1B63CBCFD86E1")
-            //.url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
+            .file(new File(Environment.getExternalStorageDirectory(), "微信.apk"))
+            .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
+            .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
             .listener(new OnDownloadListener() {
 
                 @Override
-                public void onDownloadStart(DownloadTask task) {
+                public void onStart(Call call) {
                     mProgressBar.setVisibility(View.VISIBLE);
-                    ToastUtils.show("下载开始：" + task.getFile().getName());
+                    ToastUtils.show("下载开始");
                 }
 
                 @Override
-                public void onDownloadProgress(DownloadTask task) {
-                    mProgressBar.setProgress(task.getProgress());
+                public void onProgress(DownloadInfo info) {
+                    mProgressBar.setProgress(info.getDownloadProgress());
                 }
 
                 @Override
-                public void onDownloadComplete(DownloadTask task) {
-                    mProgressBar.setVisibility(View.GONE);
-                    ToastUtils.show("下载完成：" + task.getFile().getPath());
+                public void onComplete(DownloadInfo info) {
+                    ToastUtils.show("下载完成：" + info.getFile().getPath());
+                    installApk(MainActivity.this, info.getFile());
                 }
 
                 @Override
-                public void onDownloadError(DownloadTask task, Exception e) {
-                    mProgressBar.setVisibility(View.GONE);
+                public void onError(DownloadInfo info, Exception e) {
                     ToastUtils.show("下载出错：" + e.getMessage());
+                }
+
+                @Override
+                public void onEnd(Call call) {
+                    mProgressBar.setVisibility(View.GONE);
+                    ToastUtils.show("下载结束");
                 }
 
             }).start();
 
-#### 生命周期管理
-
-> EasyHttp 默认不管理请求生命周期，需要在基类中进行取消与之关联的网络请求，这里只演示 BaseActivity，其他基类方式雷同。
-
-	public class BaseActivity extends AppCompatActivity {
-	
-	    @Override
-	    protected void onDestroy() {
-	        EasyHttp.cancel(this);
-	        super.onDestroy();
-	    }
-	}
-
 #### 关于 Http 明文请求
 
 > Android P 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
-如果当前应用的请求是 htttp 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
+如果当前应用的请求是 http 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
 
 > 在 res 下新建一个 xml 目录，然后创建一个名为：network_security_config.xml 文件 ，该文件内容如下
 

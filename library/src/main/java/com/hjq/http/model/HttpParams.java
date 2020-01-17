@@ -41,6 +41,10 @@ public final class HttpParams {
         return mParams.keySet();
     }
 
+    public HashMap<String, Object> getParams() {
+        return mParams;
+    }
+
     /**
      * 是否有文件上传
      */

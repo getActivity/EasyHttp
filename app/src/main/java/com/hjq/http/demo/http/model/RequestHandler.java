@@ -1,8 +1,6 @@
 package com.hjq.http.demo.http.model;
 
-import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
@@ -10,7 +8,6 @@ import android.net.NetworkInfo;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.internal.$Gson$Types;
 import com.hjq.http.EasyLog;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.demo.R;
@@ -23,22 +20,16 @@ import com.hjq.http.exception.ResultException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.exception.TokenException;
-import com.hjq.http.listener.OnHttpListener;
-import com.hjq.toast.ToastUtils;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
-import java.lang.reflect.GenericArrayType;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-import java.util.HashMap;
 
-import okhttp3.Call;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -52,42 +43,8 @@ public final class RequestHandler implements IRequestHandler {
 
     private static final Gson GSON = new Gson();
 
-    private HashMap<Call, ProgressDialog> mDialogs = new HashMap<>();
-
     @Override
-    public void requestStart(Context context, final Call call) {
-        if (context == null) {
-            return;
-        }
-
-        // 显示进度对话框
-        ProgressDialog dialog = new ProgressDialog(context);
-        dialog.setMessage(context.getString(R.string.http_loading));
-        dialog.setCancelable(true);
-        dialog.setCanceledOnTouchOutside(false);
-        dialog.setOnCancelListener(new DialogInterface.OnCancelListener() {
-            @Override
-            public void onCancel(DialogInterface dialog) {
-                if (call != null) {
-                    call.cancel();
-                }
-            }
-        });
-        mDialogs.put(call, dialog);
-        dialog.show();
-    }
-
-    @Override
-    public void requestEnd(Context context, Call call) {
-        ProgressDialog dialog = mDialogs.get(call);
-        if (dialog != null) {
-            dialog.dismiss();
-            mDialogs.remove(call);
-        }
-    }
-
-    @Override
-    public Object requestSucceed(Context context, Response response, Class clazz) throws Exception {
+    public Object requestSucceed(Context context, Response response, Type type) throws Exception {
         if (!response.isSuccessful()) {
             // 返回响应异常
             throw new ResponseException(context.getString(R.string.http_server_error), response);
@@ -98,11 +55,11 @@ public final class RequestHandler implements IRequestHandler {
             return null;
         }
 
-        if (Response.class.equals(clazz)) {
+        if (Response.class.equals(type)) {
             return response;
         }
 
-        if (Bitmap.class.equals(clazz)) {
+        if (Bitmap.class.equals(type)) {
             // 如果这是一个 Bitmap 对象
             return BitmapFactory.decodeStream(body.byteStream());
         }
@@ -119,17 +76,17 @@ public final class RequestHandler implements IRequestHandler {
         EasyLog.json(text);
 
         final Object result;
-        if (String.class.equals(clazz)) {
+        if (String.class.equals(type)) {
             // 如果这是一个 String 对象
             result = text;
-        } else if (JSONObject.class.equals(clazz)) {
+        } else if (JSONObject.class.equals(type)) {
             try {
                 // 如果这是一个 JSONObject 对象
                 result = new JSONObject(text);
             } catch (JSONException e) {
                 throw new DataException(context.getString(R.string.http_data_explain_error), e);
             }
-        } else if (JSONArray.class.equals(clazz)) {
+        } else if (JSONArray.class.equals(type)) {
             try {
                 // 如果这是一个 JSONArray 对象
                 result = new JSONArray(text);
@@ -139,7 +96,7 @@ public final class RequestHandler implements IRequestHandler {
         } else {
 
             try {
-                result = GSON.fromJson(text, clazz);
+                result = GSON.fromJson(text, type);
             } catch (JsonSyntaxException e) {
                 // 返回结果读取异常
                 throw new DataException(context.getString(R.string.http_data_explain_error), e);
