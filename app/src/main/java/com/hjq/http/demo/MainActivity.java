@@ -120,7 +120,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
                             @Override
                             public void onSucceed(HttpData<SearchBean> result) {
-                                ToastUtils.show("请求成功");
+                                ToastUtils.show("请求成功" + result.getData().getSize());
                             }
                         });
                 break;
