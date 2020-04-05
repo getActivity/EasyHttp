@@ -51,6 +51,8 @@ public final class EasyConfig {
 
     /** 日志开关 */
     private boolean mLogEnabled = true;
+    /** 日志 TAG */
+    private String mLogTag = "EasyHttp";
     /** 重试次数 */
     private int mRetryCount;
 
@@ -104,6 +106,11 @@ public final class EasyConfig {
         return this;
     }
 
+    public EasyConfig setLogTag(String tag) {
+        mLogTag = tag;
+        return this;
+    }
+
     public EasyConfig setRetryCount(int count) {
         if (count < 0) {
             throw new IllegalArgumentException("The number of retries must be greater than 0");
@@ -134,6 +141,10 @@ public final class EasyConfig {
 
     public boolean isLogEnabled() {
         return mLogEnabled;
+    }
+
+    public String getLogTag() {
+        return mLogTag;
     }
 
     public int getRetryCount() {

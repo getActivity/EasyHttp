@@ -23,16 +23,15 @@ public final class NormalCallback extends BaseCallback {
 
     private Context mContext;
     private OnHttpListener mListener;
+    private long mRequestTime;
 
     public NormalCallback(Context context, CallProxy call, OnHttpListener listener) {
         super(call);
         mContext = context;
         mListener = listener;
+        mRequestTime = System.currentTimeMillis();
 
-        EasyUtils.runOnUiThread(mListener != null, () -> {
-            mListener.onStart(call);
-            EasyConfig.getInstance().getHandler().requestStart(context, call);
-        });
+        EasyUtils.runOnUiThread(mListener != null, () -> mListener.onStart(call));
     }
 
     @SuppressWarnings("unchecked")
@@ -48,11 +47,11 @@ public final class NormalCallback extends BaseCallback {
             type = ((ParameterizedType) mListener.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         }
 
+        EasyLog.print("RequestTime：" + (System.currentTimeMillis() - mRequestTime) + " ms");
         final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, type);
         EasyUtils.runOnUiThread(mListener != null, () -> {
             mListener.onSucceed(result);
             mListener.onEnd(getCall());
-            EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
         });
     }
 
@@ -63,7 +62,6 @@ public final class NormalCallback extends BaseCallback {
         EasyUtils.runOnUiThread(mListener != null, () -> {
             mListener.onFail(exception);
             mListener.onEnd(getCall());
-            EasyConfig.getInstance().getHandler().requestEnd(mContext, getCall());
         });
     }
 }

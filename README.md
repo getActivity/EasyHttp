@@ -15,8 +15,8 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:5.0'
-	    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
+        implementation 'com.hjq:http:6.0'
+	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
 
@@ -71,7 +71,13 @@
             //.addParam("token", "6666666")
             // 添加全局请求头
             //.addHeader("time", "20191030")
+			// 启用配置
             .into();
+
+> 上述是创建配置，更新配置可以使用
+
+    EasyConfig.getInstance()
+            .addParam("token", data.getData().getToken());
 
 #### 配置接口
 
@@ -121,8 +127,8 @@
 
     EasyHttp.post(this)
             .api(new LoginApi()
-                    .setUserName("Android 轮子哥")
-                    .setPassword("123456"))
+            .setUserName("Android 轮子哥")
+            .setPassword("123456"))
             .request(new HttpCallback<HttpData<LoginBean>>(activity) {
 
                 @Override
@@ -215,6 +221,8 @@
 #### 作者的其他开源项目
 
 * 架构工程：[AndroidProject](https://github.com/getActivity/AndroidProject)
+
+* 日志框架：[Logcat](https://github.com/getActivity/Logcat)
 
 * 吐司框架：[ToastUtils](https://github.com/getActivity/ToastUtils)
 

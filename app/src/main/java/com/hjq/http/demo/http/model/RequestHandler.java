@@ -147,9 +147,6 @@ public final class RequestHandler implements IRequestHandler {
                 e = new HttpException(e.getMessage(), e);
             }
         }
-
-        // 打印错误信息
-        EasyLog.print(e);
         return e;
     }
 }

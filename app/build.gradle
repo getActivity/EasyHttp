@@ -13,8 +13,8 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 50
-        versionName "5.0"
+        versionCode 60
+        versionName "6.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -41,10 +41,12 @@ dependencies {
     // 吐司工具类：https://github.com/getActivity/ToastUtils
     implementation 'com.hjq:toast:8.0'
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.hjq:xxpermissions:6.0'
-
+    implementation 'com.hjq:xxpermissions:6.2'
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.8.5'
-    // OkHttp 网络框架：https://github.com/square/okhttp
-    implementation 'com.squareup.okhttp3:okhttp:3.12.1'
+    // OkHttp 框架：https://github.com/square/okhttp
+    // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
+    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
+    // 日志调试：https://github.com/getActivity/Logcat
+    debugImplementation 'com.hjq:logcat:6.0'
 }

@@ -29,8 +29,12 @@ public final class JsonBody extends RequestBody {
         this(new JSONObject(map));
     }
 
-    public JsonBody(JSONObject object) {
-        mJsonObject = object;
+    public JsonBody(JSONObject jsonObject) {
+        mJsonObject = jsonObject;
+    }
+
+    public JSONObject getJsonObject() {
+        return mJsonObject;
     }
 
     @Override

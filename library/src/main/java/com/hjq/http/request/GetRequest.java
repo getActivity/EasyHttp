@@ -2,6 +2,7 @@ package com.hjq.http.request;
 
 import android.content.Context;
 
+import com.hjq.http.EasyLog;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
@@ -48,8 +49,11 @@ public final class GetRequest extends BaseRequest<GetRequest> {
                 builder.addEncodedQueryParameter(key, params.get(key).toString());
             }
         }
-
-        request.get().url(builder.build());
+        HttpUrl link = builder.build();
+        request.get().url(link);
+        if (EasyLog.isEnable()) {
+            EasyLog.print("GetUrl " + link);
+        }
         return request.build();
     }
 

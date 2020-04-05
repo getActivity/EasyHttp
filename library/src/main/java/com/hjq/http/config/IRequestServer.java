@@ -13,7 +13,7 @@ public interface IRequestServer extends IRequestHost, IRequestPath, IRequestType
     @Override
     default BodyType getType() {
         // 默认以表单的方式提交
-        return BodyType.FROM;
+        return BodyType.FORM;
     }
 
     @Override

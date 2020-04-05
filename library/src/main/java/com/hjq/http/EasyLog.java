@@ -1,5 +1,6 @@
 package com.hjq.http;
 
+import android.text.TextUtils;
 import android.util.Log;
 
 /**
@@ -9,8 +10,6 @@ import android.util.Log;
  *    desc   : 网络请求打印类
  */
 public final class EasyLog {
-
-    private static final String TAG = "EasyHttp";
 
     /**
      * 日志开关
@@ -24,7 +23,7 @@ public final class EasyLog {
      */
     public static void print(String log) {
         if (isEnable()) {
-            Log.d(TAG, log != null ? log : "null");
+            Log.d(EasyConfig.getInstance().getLogTag(), log != null ? log : "null");
         }
     }
 
@@ -33,7 +32,7 @@ public final class EasyLog {
      */
     public static void print(Throwable throwable) {
         if (EasyConfig.getInstance().isLogEnabled()) {
-            throwable.printStackTrace();
+            Log.e(EasyConfig.getInstance().getLogTag(), throwable.getMessage(), throwable);
         }
     }
 
@@ -57,7 +56,7 @@ public final class EasyLog {
     public static void json(String json) {
         if (isEnable()) {
             String text = stringToJSON(json);
-            if (text != null && !"".equals(text)) {
+            if (!TextUtils.isEmpty(text)) {
                 // 打印 Json 数据最好换一行再打印会好看一点
                 text = " \n" + text;
 

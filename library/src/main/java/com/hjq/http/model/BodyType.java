@@ -11,7 +11,7 @@ public enum BodyType {
     /**
      * 表单提交
      */
-    FROM,
+    FORM,
 
     /**
      * JSON 提交

@@ -2,6 +2,7 @@ package com.hjq.http.request;
 
 import android.content.Context;
 
+import com.hjq.http.EasyLog;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
@@ -89,6 +90,34 @@ public final class PostRequest extends BaseRequest<PostRequest> {
             }
         }
         request.post(body);
+
+        if (EasyLog.isEnable()) {
+            EasyLog.print("PostUrl " + url);
+
+            if (!headers.isEmpty() || !params.isEmpty()) {
+                EasyLog.print();
+            }
+
+            for (String key : headers.getNames()) {
+                EasyLog.print(key, headers.get(key));
+            }
+
+            if (!headers.isEmpty() && !params.isEmpty()) {
+                EasyLog.print();
+            }
+
+            if (body instanceof JsonBody) {
+                EasyLog.json(((JsonBody) body).getJsonObject().toString());
+            } else {
+                for (String key : params.getNames()) {
+                    EasyLog.print(key, params.get(key).toString());
+                }
+            }
+
+            if (!headers.isEmpty() || !params.isEmpty()) {
+                EasyLog.print();
+            }
+        }
         return request.build();
     }
 

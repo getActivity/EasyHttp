@@ -18,26 +18,6 @@ import okhttp3.Response;
 public interface IRequestHandler {
 
     /**
-     * 请求开始时回调
-     *
-     * @param context           上下文对象
-     * @param call              执行对象
-     * @deprecated              请使用 {@link OnHttpListener }
-     */
-    @Deprecated
-    default void requestStart(Context context, Call call) {}
-
-    /**
-     * 请求结束时回调
-     *
-     * @param context           上下文对象
-     * @param call              执行对象
-     * @deprecated              请使用 {@link OnHttpListener }
-     */
-    @Deprecated
-    default void requestEnd(Context context, Call call) {}
-
-    /**
      * 请求成功时回调
      *
      * @param context           上下文对象

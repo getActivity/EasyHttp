@@ -27,7 +27,7 @@ public final class DownloadInfo {
 
     public long getTotalLength() {
         // 如果没有获取到下载内容的大小，就直接返回已下载字节大小
-        if (mTotalLength < 0) {
+        if (mTotalLength <= 0) {
             return mDownloadLength;
         }
         return mTotalLength;

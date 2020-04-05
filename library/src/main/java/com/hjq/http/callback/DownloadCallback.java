@@ -1,5 +1,7 @@
 package com.hjq.http.callback;
 
+import android.text.TextUtils;
+
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.MD5Exception;
@@ -23,6 +25,9 @@ import okhttp3.ResponseBody;
  */
 public final class DownloadCallback extends BaseCallback {
 
+    /** 文件 MD5 正则表达式 */
+    private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
+
     /** 下载任务 */
     private DownloadInfo mDownloadInfo;
     /** 保存的文件 */
@@ -44,9 +49,14 @@ public final class DownloadCallback extends BaseCallback {
 
     @Override
     protected void onResponse(Response response) throws Exception {
-        if (mMD5 == null || "".equals(mMD5)) {
+        // 如果没有指定文件的 md5 值
+        if (mMD5 == null) {
             // 获取响应头中的文件 MD5 值
-            mMD5 = response.header("Content-MD5");
+            String md5 = response.header("Content-MD5");
+            // 这个 md5 值必须是文件的 md5 值
+            if (!TextUtils.isEmpty(md5) && md5.matches(FILE_MD5_REGEX)) {
+                mMD5 = md5;
+            }
         }
 
         EasyUtils.createFolder(mFile.getParentFile());
@@ -62,7 +72,7 @@ public final class DownloadCallback extends BaseCallback {
 
         mDownloadInfo.setTotalLength(body.contentLength());
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
-        if (mMD5 != null && !"".equals(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
+        if (!TextUtils.isEmpty(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
             EasyUtils.runOnUiThread(mListener != null, () -> {
                 mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
                 mListener.onComplete(mDownloadInfo);
@@ -89,9 +99,9 @@ public final class DownloadCallback extends BaseCallback {
         outputStream.flush();
 
         EasyUtils.runOnUiThread(mListener != null, () -> {
-            String fileMD5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
-            if (mMD5 != null && !"".equals(mMD5) && !mMD5.equalsIgnoreCase(fileMD5)) {
-                onFailure(new MD5Exception("MD5 verify failure", fileMD5));
+            String md5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
+            if (!TextUtils.isEmpty(mMD5) && !mMD5.equalsIgnoreCase(md5)) {
+                onFailure(new MD5Exception("MD5 verify failure", md5));
             } else {
                 mListener.onComplete(mDownloadInfo);
                 mListener.onEnd(getCall());

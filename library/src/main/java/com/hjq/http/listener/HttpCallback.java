@@ -10,38 +10,38 @@ import okhttp3.Call;
  */
 public class HttpCallback<T> implements OnHttpListener<T> {
 
-    private OnHttpListener mListener;
+    private OnHttpListener mSource;
 
-    public HttpCallback(OnHttpListener listener) {
-        mListener = listener;
+    public HttpCallback(OnHttpListener source) {
+        mSource = source;
     }
 
     @Override
     public void onStart(Call call) {
-        if (mListener != null) {
-            mListener.onStart(call);
+        if (mSource != null) {
+            mSource.onStart(call);
         }
     }
 
     @SuppressWarnings("unchecked")
     @Override
     public void onSucceed(T result) {
-        if (mListener != null) {
-            mListener.onSucceed(result);
+        if (mSource != null) {
+            mSource.onSucceed(result);
         }
     }
 
     @Override
     public void onFail(Exception e) {
-        if (mListener != null) {
-            mListener.onFail(e);
+        if (mSource != null) {
+            mSource.onFail(e);
         }
     }
 
     @Override
     public void onEnd(Call call) {
-        if (mListener != null) {
-            mListener.onEnd(call);
+        if (mSource != null) {
+            mSource.onEnd(call);
         }
     }
 }

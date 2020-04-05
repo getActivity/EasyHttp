@@ -13,6 +13,11 @@ import okhttp3.Call;
 public interface OnDownloadListener {
 
     /**
+     * 下载开始
+     */
+    void onStart(Call call);
+
+    /**
      * 下载进度改变
      */
     void onProgress(DownloadInfo info);
@@ -26,11 +31,6 @@ public interface OnDownloadListener {
      * 下载出错
      */
     void onError(DownloadInfo info, Exception e);
-
-    /**
-     * 下载开始
-     */
-    void onStart(Call call);
 
     /**
      * 下载结束

@@ -59,10 +59,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
         try {
             return api(api.newInstance());
         } catch (InstantiationException e) {
-            EasyLog.print(e);
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            EasyLog.print(e);
             throw new RuntimeException(e);
         }
     }
@@ -76,21 +74,14 @@ public abstract class BaseRequest<T extends BaseRequest> {
      */
     public T api(IRequestApi api) {
         mRequestApi = api;
-        // 判断这个接口是否实现了服务器配置
-        if (api instanceof IRequestServer) {
+        if (api instanceof IRequestHost) {
             mRequestHost = (IRequestHost) api;
+        }
+        if (api instanceof IRequestPath) {
             mRequestPath = (IRequestPath) api;
+        }
+        if (api instanceof IRequestType) {
             mRequestType = (IRequestType) api;
-        } else {
-            if (api instanceof IRequestHost) {
-                mRequestHost = (IRequestHost) api;
-            }
-            if (api instanceof IRequestPath) {
-                mRequestPath = (IRequestPath) api;
-            }
-            if (api instanceof IRequestType) {
-                mRequestType = (IRequestType) api;
-            }
         }
         return (T) this;
     }
@@ -99,10 +90,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
         try {
             return server(api.newInstance());
         } catch (InstantiationException e) {
-            EasyLog.print(e);
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
-            EasyLog.print(e);
             throw new RuntimeException(e);
         }
     }
@@ -146,6 +135,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
     public Call create() {
 
+        final BodyType type = mRequestType.getType();
+
         final HttpParams params = new HttpParams();
         final HttpHeaders headers = new HttpHeaders();
 
@@ -167,7 +158,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
                 // 前提是这个字段对象不能为空（基本数据类型有默认的值，而对象默认的值为 null）
                 if (object == null) {
-                    break;
+                    continue;
                 }
 
                 // 获取字段的名称
@@ -178,8 +169,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     key = field.getName();
                 }
 
+                // 如果这是一个请求头参数
                 if (field.isAnnotationPresent(HttpHeader.class)) {
-                    // 如果这个是一个请求头参数
                     if (object instanceof Map) {
                         Map map = ((Map) object);
                         for (Object o : map.keySet()) {
@@ -194,10 +185,19 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     // 如果这个是一个普通的参数
                     if (object instanceof Map) {
                         Map map = ((Map) object);
-                        for (Object o : map.keySet()) {
-                            if (o != null && map.get(o) != null) {
-                                params.put(o.toString(), map.get(o));
-                            }
+                        switch (type) {
+                            case FORM:
+                                for (Object o : map.keySet()) {
+                                    if (o != null && map.get(o) != null) {
+                                        params.put(o.toString(), map.get(o));
+                                    }
+                                }
+                                break;
+                            case JSON:
+                                params.put(key, map);
+                                break;
+                            default:
+                                break;
                         }
                     } else {
                         params.put(key, object);
@@ -209,31 +209,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
             }
         }
 
-        if (EasyLog.isEnable()) {
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
-            }
-
-            for (String key : headers.getNames()) {
-                EasyLog.print(key, headers.get(key));
-            }
-
-            if (!headers.isEmpty() && !params.isEmpty()) {
-                EasyLog.print();
-            }
-
-            for (String key : params.getNames()) {
-                EasyLog.print(key, params.get(key).toString());
-            }
-
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
-            }
-        }
-
         String url = mRequestHost.getHost() + mRequestPath.getPath() + mRequestApi.getApi();
-        EasyLog.print("RequestUrl：" + url);
-        return mClient.newCall(create(url, mTag, params, headers, mRequestType.getType()));
+        return mClient.newCall(create(url, mTag, params, headers, type));
     }
 
     protected Context getContext() {
