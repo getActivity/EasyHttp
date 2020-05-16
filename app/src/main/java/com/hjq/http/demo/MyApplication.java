@@ -28,13 +28,13 @@ public class MyApplication extends Application {
 
         EasyConfig.with(new OkHttpClient())
                 // 是否打印日志
-                .setLogEnabled(BuildConfig.DEBUG)
+                //.setLogEnabled(BuildConfig.DEBUG)
                 // 设置服务器配置
                 .setServer(server)
                 // 设置请求处理策略
-                .setHandler(new RequestHandler())
+                .setHandler(new RequestHandler(this))
                 // 设置请求重试次数
-                .setRetryCount(3)
+                .setRetryCount(1)
                 // 添加全局请求参数
                 //.addParam("token", "6666666")
                 // 添加全局请求头

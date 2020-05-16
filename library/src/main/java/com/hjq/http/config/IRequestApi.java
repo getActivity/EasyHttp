@@ -11,5 +11,5 @@ public interface IRequestApi {
     /**
      * 请求接口
      */
-   String getApi();
+    String getApi();
 }

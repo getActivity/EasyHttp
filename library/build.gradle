@@ -13,21 +13,21 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 60
-        versionName "6.0"
+        versionCode 65
+        versionName "6.5"
     }
 }
 
 dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.10'
-    implementation 'com.android.support:support-fragment:26.0.0'
+    implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
 }
 
 publish {
     userOrg = 'getactivity'
     groupId = 'com.hjq'
     artifactId = 'http'
-    version = '6.0'
+    version = '6.5'
     description = 'Easy-to-use network request framework'
     website = "https://github.com/getActivity/EasyHttp"
 }

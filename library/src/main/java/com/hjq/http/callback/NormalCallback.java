@@ -1,6 +1,6 @@
 package com.hjq.http.callback;
 
-import android.content.Context;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
@@ -21,17 +21,17 @@ import okhttp3.Response;
  */
 public final class NormalCallback extends BaseCallback {
 
-    private Context mContext;
+    private LifecycleOwner mLifecycle;
     private OnHttpListener mListener;
     private long mRequestTime;
 
-    public NormalCallback(Context context, CallProxy call, OnHttpListener listener) {
-        super(call);
-        mContext = context;
+    public NormalCallback(LifecycleOwner lifecycleOwner, CallProxy call, OnHttpListener listener) {
+        super(lifecycleOwner, call);
+        mLifecycle = lifecycleOwner;
         mListener = listener;
         mRequestTime = System.currentTimeMillis();
 
-        EasyUtils.runOnUiThread(mListener != null, () -> mListener.onStart(call));
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> mListener.onStart(call));
     }
 
     @SuppressWarnings("unchecked")
@@ -48,8 +48,8 @@ public final class NormalCallback extends BaseCallback {
         }
 
         EasyLog.print("RequestTime：" + (System.currentTimeMillis() - mRequestTime) + " ms");
-        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mContext, response, type);
-        EasyUtils.runOnUiThread(mListener != null, () -> {
+        final Object result = EasyConfig.getInstance().getHandler().requestSucceed(mLifecycle, response, type);
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
             mListener.onSucceed(result);
             mListener.onEnd(getCall());
         });
@@ -58,8 +58,8 @@ public final class NormalCallback extends BaseCallback {
     @Override
     protected void onFailure(Exception e) {
         EasyLog.print(e);
-        final Exception exception = EasyConfig.getInstance().getHandler().requestFail(mContext, e);
-        EasyUtils.runOnUiThread(mListener != null, () -> {
+        final Exception exception = EasyConfig.getInstance().getHandler().requestFail(mLifecycle, e);
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
             mListener.onFail(exception);
             mListener.onEnd(getCall());
         });

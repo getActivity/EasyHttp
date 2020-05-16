@@ -1,5 +1,7 @@
 package com.hjq.http.demo.http.request;
 
+import androidx.annotation.Keep;
+
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.config.IRequestApi;
 
@@ -9,7 +11,8 @@ import com.hjq.http.config.IRequestApi;
  *    time   : 2019/06/07
  *    desc   : 搜索文章
  */
-public class SearchBlogsApi implements IRequestApi {
+@Keep
+public final class SearchBlogsApi implements IRequestApi {
 
     @Override
     public String getApi() {

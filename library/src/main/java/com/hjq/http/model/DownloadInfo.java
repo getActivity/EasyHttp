@@ -10,11 +10,19 @@ import java.io.File;
  */
 public final class DownloadInfo {
 
-    /** 文件对象 */
+    /**
+     * 文件对象
+     */
     private final File mFile;
-    /** 总字节数 */
+
+    /**
+     * 总字节数
+     */
     private long mTotalLength;
-    /** 已下载字节数 */
+
+    /**
+     * 已下载字节数
+     */
     private long mDownloadLength;
 
     public DownloadInfo(File file) {

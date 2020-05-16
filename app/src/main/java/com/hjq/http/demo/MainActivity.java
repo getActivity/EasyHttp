@@ -9,10 +9,11 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
-import android.support.v4.content.ContextCompat;
-import android.support.v4.content.FileProvider;
 import android.view.View;
 import android.widget.ProgressBar;
+
+import androidx.core.content.ContextCompat;
+import androidx.core.content.FileProvider;
 
 import com.hjq.http.EasyHttp;
 import com.hjq.http.demo.http.model.HttpData;
@@ -57,7 +58,6 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
         findViewById(R.id.btn_main_post).setOnClickListener(this);
         findViewById(R.id.btn_main_update).setOnClickListener(this);
         findViewById(R.id.btn_main_download).setOnClickListener(this);
-
         requestPermission();
     }
 

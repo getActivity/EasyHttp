@@ -1,12 +1,9 @@
 package com.hjq.http.config;
 
-import android.content.Context;
-
-import com.hjq.http.listener.OnHttpListener;
+import androidx.lifecycle.LifecycleOwner;
 
 import java.lang.reflect.Type;
 
-import okhttp3.Call;
 import okhttp3.Response;
 
 /**
@@ -20,19 +17,20 @@ public interface IRequestHandler {
     /**
      * 请求成功时回调
      *
-     * @param context           上下文对象
-     * @param response          响应对象
-     * @param type              解析类型
-     * @return                  返回结果
-     * @throws Exception        回调失败方法
+     * @param lifecycle 有生命周期的对象（例如 Activity、Fragment）
+     * @param response  响应对象
+     * @param type      解析类型
+     * @return 返回结果
+     * @throws Exception 回调失败方法
      */
-    Object requestSucceed(Context context, Response response, Type type) throws Exception;
+    Object requestSucceed(LifecycleOwner lifecycle, Response response, Type type) throws Exception;
 
     /**
      * 请求失败
-     * @param context           上下文对象
-     * @param e                 错误对象
-     * @return                  错误对象
+     *
+     * @param lifecycle 有生命周期的对象（例如 Activity、Fragment）
+     * @param e         错误对象
+     * @return 错误对象
      */
-    Exception requestFail(Context context, Exception e);
+    Exception requestFail(LifecycleOwner lifecycle, Exception e);
 }

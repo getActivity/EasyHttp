@@ -1,5 +1,7 @@
 package com.hjq.http.demo.http.response;
 
+import androidx.annotation.Keep;
+
 import java.util.List;
 
 /**
@@ -8,7 +10,8 @@ import java.util.List;
  *    time   : 2019/11/18
  *    desc   : 搜索结果
  */
-public class SearchBean {
+@Keep
+public final class SearchBean {
 
     /**
      * curPage : 1
@@ -60,7 +63,7 @@ public class SearchBean {
         /**
          * apkLink :
          * audit : 1
-         * author : 鸿洋
+         *    author : 鸿洋
          * chapterId : 249
          * chapterName : 干货资源
          * collect : false

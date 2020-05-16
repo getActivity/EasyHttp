@@ -1,7 +1,8 @@
 package com.hjq.http.request;
 
-import android.content.Context;
+import androidx.lifecycle.LifecycleOwner;
 
+import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
@@ -13,7 +14,8 @@ import com.hjq.http.model.JsonBody;
 import com.hjq.http.model.UpdateBody;
 
 import java.io.File;
-import java.net.URLEncoder;
+import java.io.InputStream;
+import java.util.List;
 
 import okhttp3.FormBody;
 import okhttp3.MultipartBody;
@@ -30,8 +32,8 @@ public final class PostRequest extends BaseRequest<PostRequest> {
 
     private CallProxy mCallProxy;
 
-    public PostRequest(Context context) {
-        super(context);
+    public PostRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
@@ -56,18 +58,34 @@ public final class PostRequest extends BaseRequest<PostRequest> {
             if (!params.isEmpty()) {
                 for (String key : params.getNames()) {
                     Object object = params.get(key);
-                    // 如果这是一个文件
                     if (object instanceof File) {
-                        File file = (File) object;
-                        if (file.exists() && file.isFile()) {
-                            // 文件名必须不能带中文，所以这里要编码
-                            builder.addFormDataPart(key, URLEncoder.encode(file.getName()), new UpdateBody(file));
+                        // 如果这是一个文件
+                        MultipartBody.Part part = UpdateBody.createPart(key, (File) object);
+                        if (part != null) {
+                            builder.addPart(part);
+                        }
+                    } else if (object instanceof InputStream) {
+                        // 如果这是一个输入流
+                        MultipartBody.Part part = UpdateBody.createPart(key, (InputStream) object);
+                        if (part != null) {
+                            builder.addPart(part);
                         }
                     } else if (object instanceof RequestBody) {
+                        // 如果这是一个自定义 RequestBody
                         builder.addFormDataPart(key, null, (RequestBody) object);
                     } else {
-                        // 如果这是一个参数
-                        builder.addFormDataPart(key, object.toString());
+                        if (object instanceof List && isFileList((List) object)) {
+                            // 上传文件列表
+                            for (Object item : (List) object) {
+                                MultipartBody.Part part = UpdateBody.createPart(key, (File) item);
+                                if (part != null) {
+                                    builder.addPart(part);
+                                }
+                            }
+                        } else {
+                            // 如果这是一个普通参数
+                            builder.addFormDataPart(key, object.toString());
+                        }
                     }
                 }
             }
@@ -91,8 +109,9 @@ public final class PostRequest extends BaseRequest<PostRequest> {
         }
         request.post(body);
 
-        if (EasyLog.isEnable()) {
-            EasyLog.print("PostUrl " + url);
+        if (EasyConfig.getInstance().isLogEnabled()) {
+
+            EasyLog.print("PostUrl", url);
 
             if (!headers.isEmpty() || !params.isEmpty()) {
                 EasyLog.print();
@@ -122,11 +141,27 @@ public final class PostRequest extends BaseRequest<PostRequest> {
     }
 
     /**
+     * 判断一下这个集合装载的类型是不是 File
+     */
+    private boolean isFileList(List list) {
+        if (list != null && !list.isEmpty()) {
+            for (Object object : list) {
+                if (!(object instanceof File)) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /**
      * 执行请求
      */
     public PostRequest request(OnHttpListener listener) {
         mCallProxy = new CallProxy(create());
-        mCallProxy.enqueue(new NormalCallback(getContext(), mCallProxy, listener));
+        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, listener));
         return this;
     }
 

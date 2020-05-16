@@ -1,9 +1,8 @@
 package com.hjq.http.request;
 
-import android.content.Context;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
-import com.hjq.http.EasyLog;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
@@ -34,25 +33,39 @@ import okhttp3.Request;
 @SuppressWarnings("unchecked")
 public abstract class BaseRequest<T extends BaseRequest> {
 
-    /** Http 客户端 */
+    /**
+     * Http 客户端
+     */
     private OkHttpClient mClient = EasyConfig.getInstance().getClient();
 
-    /** 请求主机配置 */
+    /**
+     * 请求主机配置
+     */
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
-    /** 请求路径配置 */
+    /**
+     * 请求路径配置
+     */
     private IRequestPath mRequestPath = EasyConfig.getInstance().getServer();
-    /** 参数提交类型 */
+    /**
+     * 参数提交类型
+     */
     private IRequestType mRequestType = EasyConfig.getInstance().getServer();
-    /** 请求接口配置 */
+    /**
+     * 请求接口配置
+     */
     private IRequestApi mRequestApi;
 
-    /** 请求的上下文 */
-    private Context mContext;
-    /** 请求标记 */
+    /**
+     * 请求的上下文
+     */
+    private LifecycleOwner mLifecycleOwner;
+    /**
+     * 请求标记
+     */
     private String mTag;
 
-    public BaseRequest(Context context) {
-        mContext = context;
+    public BaseRequest(LifecycleOwner lifecycle) {
+        mLifecycleOwner = lifecycle;
     }
 
     public T api(Class<? extends IRequestApi> api) {
@@ -146,20 +159,10 @@ public abstract class BaseRequest<T extends BaseRequest> {
             // 允许访问私有字段
             field.setAccessible(true);
 
-            // 如果这个字段需要忽略，则进行忽略
-            if (field.isAnnotationPresent(HttpIgnore.class)) {
-                continue;
-            }
-
             try {
 
                 // 获取字段的对象
-                Object object = field.get(mRequestApi);
-
-                // 前提是这个字段对象不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (object == null) {
-                    continue;
-                }
+                Object value = field.get(mRequestApi);
 
                 // 获取字段的名称
                 String key;
@@ -169,22 +172,34 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     key = field.getName();
                 }
 
+                // 如果这个字段需要忽略，则进行忽略
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (field.isAnnotationPresent(HttpIgnore.class) || value == null) {
+                    if (field.isAnnotationPresent(HttpHeader.class)) {
+                        headers.remove(key);
+                    } else {
+                        params.remove(key);
+                    }
+                    // 遍历下一个字段
+                    continue;
+                }
+
                 // 如果这是一个请求头参数
                 if (field.isAnnotationPresent(HttpHeader.class)) {
-                    if (object instanceof Map) {
-                        Map map = ((Map) object);
+                    if (value instanceof Map) {
+                        Map map = ((Map) value);
                         for (Object o : map.keySet()) {
                             if (o != null && map.get(o) != null) {
                                 headers.put(o.toString(), map.get(o).toString());
                             }
                         }
                     } else {
-                        headers.put(key, object.toString());
+                        headers.put(key, value.toString());
                     }
                 } else {
                     // 如果这个是一个普通的参数
-                    if (object instanceof Map) {
-                        Map map = ((Map) object);
+                    if (value instanceof Map) {
+                        Map map = ((Map) value);
                         switch (type) {
                             case FORM:
                                 for (Object o : map.keySet()) {
@@ -200,12 +215,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
                                 break;
                         }
                     } else {
-                        params.put(key, object);
+                        params.put(key, value);
                     }
                 }
 
             } catch (IllegalAccessException e) {
-                EasyLog.print(e);
+                e.printStackTrace();
             }
         }
 
@@ -213,8 +228,8 @@ public abstract class BaseRequest<T extends BaseRequest> {
         return mClient.newCall(create(url, mTag, params, headers, type));
     }
 
-    protected Context getContext() {
-        return mContext;
+    public LifecycleOwner getLifecycleOwner() {
+        return mLifecycleOwner;
     }
 
     protected abstract Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);

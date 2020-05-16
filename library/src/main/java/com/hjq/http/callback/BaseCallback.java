@@ -1,7 +1,13 @@
 package com.hjq.http.callback;
 
+import androidx.lifecycle.Lifecycle;
+import androidx.lifecycle.LifecycleOwner;
+
 import com.hjq.http.EasyConfig;
+import com.hjq.http.EasyLog;
+import com.hjq.http.EasyUtils;
 import com.hjq.http.model.CallProxy;
+import com.hjq.http.model.HttpLifecycle;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -18,13 +24,23 @@ import okhttp3.Response;
  */
 public abstract class BaseCallback implements Callback {
 
-    /** 请求任务对象 */
+    /**
+     * 请求任务对象
+     */
     private CallProxy mCall;
-    /** 当前重试次数 */
+    /**
+     * 当前重试次数
+     */
     private int mRetryCount;
+    /**
+     * 生命周期管理
+     */
+    private LifecycleOwner mLifecycleOwner;
 
-    BaseCallback(CallProxy call) {
+    BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
         mCall = call;
+        mLifecycleOwner = lifecycleOwner;
+        HttpLifecycle.with(lifecycleOwner);
     }
 
     CallProxy getCall() {
@@ -48,13 +64,29 @@ public abstract class BaseCallback implements Callback {
     public void onFailure(Call call, IOException e) {
         // 服务器请求超时重试
         if (e instanceof SocketTimeoutException && mRetryCount < EasyConfig.getInstance().getRetryCount()) {
-            mRetryCount++;
-            Call newCall = call.clone();
-            mCall.setCall(newCall);
-            newCall.enqueue(this);
+            // 设置延迟 1 秒后重试该请求
+            EasyUtils.postDelayed(() -> {
+                // 前提是宿主还没有被销毁
+                if (isLifecycleActive()) {
+                    mRetryCount++;
+                    Call newCall = call.clone();
+                    mCall.setCall(newCall);
+                    newCall.enqueue(BaseCallback.this);
+                    EasyLog.print("请求超时，正在延迟重试，重试次数：" + mRetryCount + "/" + EasyConfig.getInstance().getRetryCount());
+                } else {
+                    EasyLog.print("宿主已被销毁，无法对请求进行重试");
+                }
+            }, 1000);
             return;
         }
         onFailure(e);
+    }
+
+    /**
+     * 判断宿主是否处于活动状态
+     */
+    protected boolean isLifecycleActive() {
+        return mLifecycleOwner.getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED;
     }
 
     protected abstract void onResponse(Response response) throws Exception;

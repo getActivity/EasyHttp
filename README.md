@@ -1,5 +1,7 @@
 # 网络请求框架
 
+> 码云地址：[Gitee](https://gitee.com/getActivity/EasyHttp)
+
 ![](EasyHttp.jpg)
 
 [点击此处下载Demo](https://raw.githubusercontent.com/getActivity/EasyHttp/master/EasyHttp.apk)
@@ -15,7 +17,7 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:6.0'
+        implementation 'com.hjq:http:6.5'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -28,10 +30,6 @@
     <!-- 访问网络状态 -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-
-    <!-- 外部存储读写权限 -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 #### 服务器配置
 
@@ -71,7 +69,7 @@
             //.addParam("token", "6666666")
             // 添加全局请求头
             //.addHeader("time", "20191030")
-			// 启用配置
+            // 启用配置
             .into();
 
 > 上述是创建配置，更新配置可以使用
@@ -81,7 +79,8 @@
 
 #### 配置接口
 
-	public class LoginApi implements IRequestApi {
+	@Keep
+	public final class LoginApi implements IRequestApi {
 
 	    @Override
 	    public String getApi() {
@@ -204,19 +203,6 @@
 	-keep interface okhttp3.** { *; }
 	-dontwarn okhttp3.**
 	-dontwarn okio.**
-	
-	# 保护 IRequestApi 类字段名不被混淆
-	-keepclassmembernames class * implements com.hjq.http.config.IRequestApi {
-	    <fields>;
-	}
-	# 保护 Bean 类不被混淆（请注意修改包名路径）
-	-keepclassmembernames class xxx.xxx.xxx.xxx.xxx.response.** {
-	    <fields>;
-	}
-	# 保护模型类的字段不被混淆（请注意修改包名路径）
-	-keepclassmembernames class xxx.xxx.xxx.xxx.xxx.xxx.HttpData {
-	    <fields>;
-	}
 
 #### 作者的其他开源项目
 

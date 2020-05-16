@@ -1,5 +1,7 @@
 package com.hjq.http.demo.http.request;
 
+import androidx.annotation.Keep;
+
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHost;
 
@@ -11,7 +13,8 @@ import java.io.File;
  *    time   : 2019/12/14
  *    desc   : 上传图片
  */
-public class UpdateImageApi implements IRequestHost, IRequestApi {
+@Keep
+public final class UpdateImageApi implements IRequestHost, IRequestApi {
 
     @Override
     public String getHost() {

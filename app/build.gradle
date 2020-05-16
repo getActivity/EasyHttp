@@ -13,13 +13,14 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 60
-        versionName "6.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        versionCode 65
+        versionName "6.5"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         debug {
@@ -33,13 +34,18 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':library')
 
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
+
+
+    implementation 'androidx.appcompat:appcompat:1.1.0'
+    implementation 'com.google.android.material:material:1.1.0'
 
     // 标题栏：https://github.com/getActivity/TitleBar
     implementation 'com.hjq:titlebar:6.0'
     // 吐司工具类：https://github.com/getActivity/ToastUtils
-    implementation 'com.hjq:toast:8.0'
+    implementation 'com.hjq:toast:8.2'
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.hjq:xxpermissions:6.2'
     // Json 解析框架：https://github.com/google/gson
@@ -48,5 +54,5 @@ dependencies {
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     implementation 'com.squareup.okhttp3:okhttp:3.12.10'
     // 日志调试：https://github.com/getActivity/Logcat
-    debugImplementation 'com.hjq:logcat:6.0'
+    debugImplementation 'com.hjq:logcat:6.5'
 }

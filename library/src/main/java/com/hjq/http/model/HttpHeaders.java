@@ -24,6 +24,15 @@ public final class HttpHeaders {
         }
     }
 
+    public void remove(String key) {
+        if (key != null) {
+            if (mHeaders == EasyConfig.getInstance().getHeaders()) {
+                mHeaders = new HashMap<>(mHeaders);
+            }
+            mHeaders.remove(key);
+        }
+    }
+
     public String get(String key) {
         return mHeaders.get(key);
     }

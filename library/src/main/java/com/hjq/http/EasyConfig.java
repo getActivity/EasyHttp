@@ -1,7 +1,9 @@
 package com.hjq.http;
 
+import com.hjq.http.config.ILogStrategy;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestServer;
+import com.hjq.http.config.LogStrategy;
 import com.hjq.http.config.RequestServer;
 
 import java.net.MalformedURLException;
@@ -36,24 +38,44 @@ public final class EasyConfig {
         return new EasyConfig(client);
     }
 
-    /** 服务器配置 */
+    /**
+     * 服务器配置
+     */
     private IRequestServer mServer;
-    /** 请求拦截器 */
+    /**
+     * 请求拦截器
+     */
     private IRequestHandler mHandler;
+    /**
+     * 日志打印策略
+     */
+    private ILogStrategy mLogStrategy;
 
-    /** OkHttp 客户端 */
+    /**
+     * OkHttp 客户端
+     */
     private OkHttpClient mClient;
 
-    /** 通用参数 */
+    /**
+     * 通用参数
+     */
     private HashMap<String, Object> mParams;
-    /** 通用请求头 */
+    /**
+     * 通用请求头
+     */
     private HashMap<String, String> mHeaders;
 
-    /** 日志开关 */
+    /**
+     * 日志开关
+     */
     private boolean mLogEnabled = true;
-    /** 日志 TAG */
+    /**
+     * 日志 TAG
+     */
     private String mLogTag = "EasyHttp";
-    /** 重试次数 */
+    /**
+     * 重试次数
+     */
     private int mRetryCount;
 
     private EasyConfig(OkHttpClient client) {
@@ -101,6 +123,11 @@ public final class EasyConfig {
         return this;
     }
 
+    public EasyConfig setLogStrategy(ILogStrategy strategy) {
+        mLogStrategy = strategy;
+        return this;
+    }
+
     public EasyConfig setLogEnabled(boolean enabled) {
         mLogEnabled = enabled;
         return this;
@@ -139,8 +166,12 @@ public final class EasyConfig {
         return mHeaders;
     }
 
+    public ILogStrategy getLogStrategy() {
+        return mLogStrategy;
+    }
+
     public boolean isLogEnabled() {
-        return mLogEnabled;
+        return mLogEnabled && mLogStrategy != null;
     }
 
     public String getLogTag() {
@@ -167,6 +198,9 @@ public final class EasyConfig {
         }
         if (mHandler == null) {
             throw new IllegalArgumentException("The object being processed by the request cannot be empty");
+        }
+        if (mLogStrategy == null) {
+            mLogStrategy = new LogStrategy();
         }
         EasyConfig.setInstance(this);
     }

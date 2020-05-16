@@ -2,6 +2,8 @@ package com.hjq.http.callback;
 
 import android.text.TextUtils;
 
+import androidx.lifecycle.LifecycleOwner;
+
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.MD5Exception;
@@ -25,26 +27,39 @@ import okhttp3.ResponseBody;
  */
 public final class DownloadCallback extends BaseCallback {
 
-    /** 文件 MD5 正则表达式 */
+    /**
+     * 文件 MD5 正则表达式
+     */
     private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
 
-    /** 下载任务 */
+    /**
+     * 下载任务
+     */
     private DownloadInfo mDownloadInfo;
-    /** 保存的文件 */
+
+    /**
+     * 保存的文件
+     */
     private File mFile;
-    /** 校验的 MD5 */
+
+    /**
+     * 校验的 MD5
+     */
     private String mMD5;
-    /** 下载监听回调 */
+
+    /**
+     * 下载监听回调
+     */
     private OnDownloadListener mListener;
 
-    public DownloadCallback(CallProxy call, File file, String md5, OnDownloadListener listener) {
-        super(call);
+    public DownloadCallback(LifecycleOwner lifecycleOwner, CallProxy call, File file, String md5, OnDownloadListener listener) {
+        super(lifecycleOwner, call);
         mDownloadInfo = new DownloadInfo(file);
         mFile = file;
         mMD5 = md5;
         mListener = listener;
 
-        EasyUtils.runOnUiThread(mListener != null, () -> mListener.onStart(getCall()));
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> mListener.onStart(getCall()));
     }
 
     @Override
@@ -60,10 +75,9 @@ public final class DownloadCallback extends BaseCallback {
         }
 
         EasyUtils.createFolder(mFile.getParentFile());
-
         ResponseBody body = response.body();
         if (body == null) {
-            EasyUtils.runOnUiThread(mListener != null, () -> {
+            EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
                 mListener.onError(mDownloadInfo, new NullBodyException("The response body is empty"));
                 mListener.onEnd(getCall());
             });
@@ -73,7 +87,7 @@ public final class DownloadCallback extends BaseCallback {
         mDownloadInfo.setTotalLength(body.contentLength());
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
         if (!TextUtils.isEmpty(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
-            EasyUtils.runOnUiThread(mListener != null, () -> {
+            EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
                 mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
                 mListener.onComplete(mDownloadInfo);
                 mListener.onEnd(getCall());
@@ -90,7 +104,7 @@ public final class DownloadCallback extends BaseCallback {
             downloadSize += readLength;
             outputStream.write(bytes, 0, readLength);
             mDownloadInfo.setDownloadLength(downloadSize);
-            EasyUtils.runOnUiThread(mListener != null, () -> mListener.onProgress(mDownloadInfo));
+            EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> mListener.onProgress(mDownloadInfo));
             EasyLog.print(mFile.getPath() + " 正在下载" +
                     "，文件总字节：" + mDownloadInfo.getTotalLength() +
                     "，已下载字节：" + mDownloadInfo.getDownloadLength() +
@@ -98,7 +112,7 @@ public final class DownloadCallback extends BaseCallback {
         }
         outputStream.flush();
 
-        EasyUtils.runOnUiThread(mListener != null, () -> {
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
             String md5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
             if (!TextUtils.isEmpty(mMD5) && !mMD5.equalsIgnoreCase(md5)) {
                 onFailure(new MD5Exception("MD5 verify failure", md5));
@@ -115,7 +129,7 @@ public final class DownloadCallback extends BaseCallback {
     @Override
     protected void onFailure(final Exception e) {
         EasyLog.print(e);
-        EasyUtils.runOnUiThread(mListener != null, () -> {
+        EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
             mListener.onError(mDownloadInfo, e);
             mListener.onEnd(getCall());
         });

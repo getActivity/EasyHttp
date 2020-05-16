@@ -1,6 +1,6 @@
 package com.hjq.http.request;
 
-import android.content.Context;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.RequestApi;
@@ -24,20 +24,30 @@ import okhttp3.Request;
  */
 public final class DownloadRequest extends BaseRequest<DownloadRequest> {
 
-    /** 下载方式 */
+    /**
+     * 下载方式
+     */
     private HttpMethod mMethod = HttpMethod.GET;
 
-    /** 保存的文件 */
+    /**
+     * 保存的文件
+     */
     private File mFile;
-    /** 校验的 MD5 */
+    /**
+     * 校验的 MD5
+     */
     private String mMD5;
-    /** 下载监听回调 */
+    /**
+     * 下载监听回调
+     */
     private OnDownloadListener mListener;
-    /** 下载请求对象 */
+    /**
+     * 下载请求对象
+     */
     private CallProxy mCallProxy;
 
-    public DownloadRequest(Context context) {
-        super(context);
+    public DownloadRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     /**
@@ -91,10 +101,10 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
         switch (mMethod) {
             case GET:
                 // 如果这个下载请求方式是 Get
-                return new GetRequest(getContext()).create(url, tag, params, headers, type);
+                return new GetRequest(getLifecycleOwner()).create(url, tag, params, headers, type);
             case POST:
                 // 如果这个下载请求方式是 Post
-                return new PostRequest(getContext()).create(url, tag, params, headers, type);
+                return new PostRequest(getLifecycleOwner()).create(url, tag, params, headers, type);
             default:
                 throw new IllegalStateException("are you ok?");
         }
@@ -106,7 +116,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     public DownloadRequest start() {
         mCallProxy = new CallProxy(create());
         /** 下载回调对象 */
-        mCallProxy.enqueue(new DownloadCallback(mCallProxy, mFile, mMD5, mListener));
+        mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMD5, mListener));
         return this;
     }
 

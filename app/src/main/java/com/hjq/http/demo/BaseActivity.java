@@ -1,15 +1,21 @@
 package com.hjq.http.demo;
 
 import android.app.ProgressDialog;
-import android.support.v7.app.AppCompatActivity;
 
-import com.hjq.http.EasyHttp;
+import androidx.appcompat.app.AppCompatActivity;
+
 import com.hjq.http.demo.http.model.HttpData;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.toast.ToastUtils;
 
 import okhttp3.Call;
 
+/**
+ *    author : Android 轮子哥
+ *    github : https://github.com/getActivity/EasyHttp
+ *    time   : 2019/05/19
+ *    desc   : 基类封装
+ */
 public class BaseActivity extends AppCompatActivity implements OnHttpListener {
 
     /** 加载对话框 */
@@ -74,11 +80,5 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener {
     @Override
     public void onEnd(Call call) {
         hideDialog();
-    }
-
-    @Override
-    protected void onDestroy() {
-        EasyHttp.cancel(this);
-        super.onDestroy();
     }
 }

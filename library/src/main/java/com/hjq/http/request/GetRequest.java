@@ -1,6 +1,6 @@
 package com.hjq.http.request;
 
-import android.content.Context;
+import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
 import com.hjq.http.callback.NormalCallback;
@@ -23,8 +23,8 @@ public final class GetRequest extends BaseRequest<GetRequest> {
 
     private CallProxy mCallProxy;
 
-    public GetRequest(Context context) {
-        super(context);
+    public GetRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
@@ -51,9 +51,8 @@ public final class GetRequest extends BaseRequest<GetRequest> {
         }
         HttpUrl link = builder.build();
         request.get().url(link);
-        if (EasyLog.isEnable()) {
-            EasyLog.print("GetUrl " + link);
-        }
+
+        EasyLog.print("GetUrl", link.toString());
         return request.build();
     }
 
@@ -62,7 +61,7 @@ public final class GetRequest extends BaseRequest<GetRequest> {
      */
     public GetRequest request(OnHttpListener listener) {
         mCallProxy = new CallProxy(create());
-        mCallProxy.enqueue(new NormalCallback(getContext(), mCallProxy, listener));
+        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, listener));
         return this;
     }
 
