@@ -3,13 +3,23 @@ package com.hjq.http;
 import android.os.Handler;
 import android.os.Looper;
 
+import com.hjq.http.annotation.HttpIgnore;
+import com.hjq.http.annotation.HttpRename;
+
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Field;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import okhttp3.RequestBody;
 
 /**
  *    author : Android 轮子哥
@@ -104,5 +114,78 @@ public final class EasyUtils {
             closeStream(dis);
         }
         return null;
+    }
+
+    /**
+     * 判断对象是否为 Bean 类
+     */
+    public static boolean isBeanType(Object object) {
+        // Number：Long、Integer、Short、Double、Float、Byte
+        // CharSequence：String、StringBuilder、StringBuilder
+        return !(object instanceof Number || object instanceof CharSequence ||
+                object instanceof Boolean || object instanceof List ||
+                object instanceof Map || object instanceof File ||
+                object instanceof InputStream || object instanceof RequestBody ||
+                object instanceof Character);
+    }
+
+    /**
+     * Bean 类转 HashMap
+     */
+    public static HashMap<String, Object> beanToHashMap(Object object) {
+        HashMap<String, Object> data = null;
+
+        Field[] fields = object.getClass().getDeclaredFields();
+        for (Field field : fields) {
+            // 允许访问私有字段
+            field.setAccessible(true);
+            try {
+
+                // 获取字段的对象
+                Object value = field.get(object);
+
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (value == null) {
+                    // 遍历下一个字段
+                    continue;
+                }
+
+                // 获取字段的名称
+                String key;
+                if (field.isAnnotationPresent(HttpRename.class)) {
+                    key = field.getAnnotation(HttpRename.class).value();
+                } else {
+                    key = field.getName();
+                    // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉
+                    // 如果使用静态内部类则不会出现这个问题
+                    if (object.getClass().toString().startsWith(field.getType().toString())) {
+                        //"class com.hjq.http.demo.http.request.SearchBlogsApi$TestBean".startsWith("class com.hjq.http.demo.http.request.SearchBlogsApi")
+                        continue;
+                    }
+                }
+
+                // 如果这个字段需要忽略，则进行忽略
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (field.isAnnotationPresent(HttpIgnore.class)) {
+                    // 遍历下一个字段
+                    continue;
+                }
+
+                if (data == null) {
+                    data = new HashMap<>(fields.length);
+                }
+
+                if (isBeanType(value)) {
+                    data.put(key, beanToHashMap(value));
+                } else {
+                    data.put(key, value);
+                }
+
+            } catch (IllegalAccessException e) {
+                e.printStackTrace();
+            }
+        }
+
+        return data;
     }
 }

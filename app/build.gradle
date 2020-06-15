@@ -13,18 +13,18 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 65
-        versionName "6.5"
+        versionCode 68
+        versionName "6.8"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
     buildTypes {
-        release {
+        debug {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug {
-            minifyEnabled false
+        release {
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -43,16 +43,16 @@ dependencies {
     implementation 'com.google.android.material:material:1.1.0'
 
     // 标题栏：https://github.com/getActivity/TitleBar
-    implementation 'com.hjq:titlebar:6.0'
+    implementation 'com.hjq:titlebar:6.5'
     // 吐司工具类：https://github.com/getActivity/ToastUtils
     implementation 'com.hjq:toast:8.2'
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.hjq:xxpermissions:6.2'
+    implementation 'com.hjq:xxpermissions:6.5'
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.8.5'
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     implementation 'com.squareup.okhttp3:okhttp:3.12.10'
     // 日志调试：https://github.com/getActivity/Logcat
-    debugImplementation 'com.hjq:logcat:6.5'
+    debugImplementation 'com.hjq:logcat:6.8'
 }

@@ -3,6 +3,7 @@ package com.hjq.http.request;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
+import com.hjq.http.EasyUtils;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
@@ -155,14 +156,17 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
         Field[] fields = mRequestApi.getClass().getDeclaredFields();
         for (Field field : fields) {
-
             // 允许访问私有字段
             field.setAccessible(true);
-
             try {
-
                 // 获取字段的对象
                 Object value = field.get(mRequestApi);
+
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (value == null) {
+                    // 遍历下一个字段
+                    continue;
+                }
 
                 // 获取字段的名称
                 String key;
@@ -170,11 +174,15 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     key = field.getAnnotation(HttpRename.class).value();
                 } else {
                     key = field.getName();
+                    // 规避非静态内部类持有的外部类对象
+                    if (mRequestApi.getClass().toString().startsWith(field.getType().toString())) {
+                        continue;
+                    }
                 }
 
                 // 如果这个字段需要忽略，则进行忽略
                 // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (field.isAnnotationPresent(HttpIgnore.class) || value == null) {
+                if (field.isAnnotationPresent(HttpIgnore.class)) {
                     if (field.isAnnotationPresent(HttpHeader.class)) {
                         headers.remove(key);
                     } else {
@@ -197,25 +205,29 @@ public abstract class BaseRequest<T extends BaseRequest> {
                         headers.put(key, value.toString());
                     }
                 } else {
-                    // 如果这个是一个普通的参数
-                    if (value instanceof Map) {
-                        Map map = ((Map) value);
-                        switch (type) {
-                            case FORM:
+                    switch (type) {
+                        case FORM:
+                            if (value instanceof Map) {
+                                Map map = ((Map) value);
                                 for (Object o : map.keySet()) {
                                     if (o != null && map.get(o) != null) {
                                         params.put(o.toString(), map.get(o));
                                     }
                                 }
-                                break;
-                            case JSON:
-                                params.put(key, map);
-                                break;
-                            default:
-                                break;
-                        }
-                    } else {
-                        params.put(key, value);
+                            } else {
+                                params.put(key, value);
+                            }
+                            break;
+                        case JSON:
+                            // 如果这是一个 Bean 参数
+                            if (EasyUtils.isBeanType(value)) {
+                                params.put(key, EasyUtils.beanToHashMap(value));
+                            } else {
+                                params.put(key, value);
+                            }
+                            break;
+                        default:
+                            break;
                     }
                 }
 

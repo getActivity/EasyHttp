@@ -80,7 +80,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     public void noPermission(List<String> denied, boolean quick) {
         if (quick) {
             ToastUtils.show("授权失败，请手动授予权限");
-            XXPermissions.gotoPermissionSettings(this, true);
+            XXPermissions.startPermissionActivity(this, true);
         } else {
             ToastUtils.show("请先授予权限");
             requestPermission();
@@ -90,7 +90,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (XXPermissions.isHasPermission(this, Permission.Group.STORAGE)) {
+        if (XXPermissions.hasPermission(this, Permission.Group.STORAGE)) {
             hasPermission(null, true);
         } else {
             requestPermission();

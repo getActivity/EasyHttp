@@ -43,7 +43,7 @@ public final class NormalCallback extends BaseCallback {
             // 如果这个监听对象是直接实现了接口
             type = ((ParameterizedType) types[0]).getActualTypeArguments()[0];
         } else {
-            // 如果这个监听对象有通过类继承
+            // 如果这个监听对象是通过类继承
             type = ((ParameterizedType) mListener.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
         }
 

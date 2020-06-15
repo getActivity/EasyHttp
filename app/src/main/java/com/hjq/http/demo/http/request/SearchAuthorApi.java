@@ -1,7 +1,5 @@
 package com.hjq.http.demo.http.request;
 
-import androidx.annotation.Keep;
-
 import com.hjq.http.config.IRequestApi;
 
 /**
@@ -10,7 +8,6 @@ import com.hjq.http.config.IRequestApi;
  *    time   : 2019/11/18
  *    desc   : 按照作者昵称搜索文章
  */
-@Keep
 public final class SearchAuthorApi implements IRequestApi {
 
     @Override

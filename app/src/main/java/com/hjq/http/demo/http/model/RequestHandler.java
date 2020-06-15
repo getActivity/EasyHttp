@@ -71,7 +71,7 @@ public final class RequestHandler implements IRequestHandler {
 
         if (!response.isSuccessful()) {
             // 返回响应异常
-            throw new ResponseException(mApplication.getString(R.string.http_server_error), response);
+            throw new ResponseException(mApplication.getString(R.string.http_response_error) + "，responseCode：" + response.code() + "，message：" + response.message(), response);
         }
 
         ResponseBody body = response.body();

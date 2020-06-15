@@ -1,7 +1,5 @@
 package com.hjq.http.demo.http.response;
 
-import androidx.annotation.Keep;
-
 import java.util.List;
 
 /**
@@ -10,7 +8,6 @@ import java.util.List;
  *    time   : 2019/11/18
  *    desc   : 搜索结果
  */
-@Keep
 public final class SearchBean {
 
     /**

@@ -2,9 +2,9 @@
 
 > 码云地址：[Gitee](https://gitee.com/getActivity/EasyHttp)
 
-![](EasyHttp.jpg)
+> [点击此处下载Demo](EasyHttp.apk)
 
-[点击此处下载Demo](https://raw.githubusercontent.com/getActivity/EasyHttp/master/EasyHttp.apk)
+![](EasyHttp.jpg)
 
 #### Gradle 集成
 
@@ -17,7 +17,7 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:6.5'
+        implementation 'com.hjq:http:6.8'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -47,7 +47,7 @@
 
 	    @Override
 	    public BodyType getType() {
-			// 参数以 Json 格式提交（默认是表单）
+	        // 参数以 Json 格式提交（默认是表单）
 	        return BodyType.JSON;
 	    }
 	}
@@ -203,6 +203,11 @@
 	-keep interface okhttp3.** { *; }
 	-dontwarn okhttp3.**
 	-dontwarn okio.**
+
+	# 不混淆这个包下的字段名
+    -keepclassmembernames class com.hjq.http.demo.http.** {
+        <fields>;
+    }
 
 #### 作者的其他开源项目
 
