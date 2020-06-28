@@ -114,10 +114,10 @@ public final class UpdateBody extends RequestBody {
                 // 文件名必须不能带中文，所以这里要编码
                 return MultipartBody.Part.createFormData(key, URLEncoder.encode(file.getName()), new UpdateBody(file));
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                EasyLog.print(e);
             }
         } else {
-            EasyLog.print("文件不存在，将被忽略上传：" + file.getPath());
+            EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
         }
         return null;
     }
@@ -129,7 +129,7 @@ public final class UpdateBody extends RequestBody {
         try {
             return MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key));
         } catch (IOException e) {
-            e.printStackTrace();
+            EasyLog.print(e);
         }
         return null;
     }

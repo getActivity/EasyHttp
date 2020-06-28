@@ -17,7 +17,7 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:6.8'
+        implementation 'com.hjq:http:6.9'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -79,7 +79,6 @@
 
 #### 配置接口
 
-	@Keep
 	public final class LoginApi implements IRequestApi {
 
 	    @Override
@@ -112,13 +111,14 @@
 	
 	* @HttpRename：重新定义这个字段发送给后台的参数名称
 
-* 可为这个类多实现一些配置接口
+* 可在这个类实现一些接口
 
 	* implements IRequestHost：实现这个接口之后可以重新指定这个请求的主机地址
 
 	* implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
 
-    * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
+	* implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
+
 
 #### 发起请求
 
@@ -208,6 +208,21 @@
     -keepclassmembernames class com.hjq.http.demo.http.** {
         <fields>;
     }
+    
+#### 对比 Retrofit 
+
+|  功能  | Retrofit 框架  | EasyHttp 框架 |
+| :----: | :------: |  :-----: |
+|    动态 URL   | 不支持 | 支持 |
+|    全局参数   |  不支持  | 支持 |
+|    超时重试   | 不支持 | 支持 |
+|    极速下载   | 不支持 | 支持 |
+|    下载校验   | 不支持 | 支持 |
+|    注解数量   |  25 个  | 3 个 |
+|    上传文件   | RequestBody | File / InputStream |
+|    请求管理  |  需要封装  | 自动管控 |
+
+#### 具体用法可以[点击这里查看](HelpDoc.md)
 
 #### 作者的其他开源项目
 

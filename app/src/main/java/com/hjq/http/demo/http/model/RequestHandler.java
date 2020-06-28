@@ -110,7 +110,7 @@ public final class RequestHandler implements IRequestHandler {
             try {
                 // 如果这是一个 JSONArray 对象
                 result = new JSONArray(text);
-            }catch (JSONException e) {
+            } catch (JSONException e) {
                 throw new DataException(mApplication.getString(R.string.http_data_explain_error), e);
             }
         } else {
@@ -175,7 +175,7 @@ public final class RequestHandler implements IRequestHandler {
             } else if (e instanceof IOException) {
                 //e = new CancelException(context.getString(R.string.http_request_cancel), e);
                 e = new CancelException("", e);
-            }else {
+            } else {
                 e = new HttpException(e.getMessage(), e);
             }
         }

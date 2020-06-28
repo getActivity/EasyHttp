@@ -86,7 +86,7 @@ public final class DownloadCallback extends BaseCallback {
 
         mDownloadInfo.setTotalLength(body.contentLength());
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
-        if (!TextUtils.isEmpty(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
+        if (!TextUtils.isEmpty(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMd5(mFile))) {
             EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
                 mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
                 mListener.onComplete(mDownloadInfo);
@@ -113,7 +113,7 @@ public final class DownloadCallback extends BaseCallback {
         outputStream.flush();
 
         EasyUtils.runOnUiThread(mListener != null && isLifecycleActive(), () -> {
-            String md5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
+            String md5 = EasyUtils.getFileMd5(mDownloadInfo.getFile());
             if (!TextUtils.isEmpty(mMD5) && !mMD5.equalsIgnoreCase(md5)) {
                 onFailure(new MD5Exception("MD5 verify failure", md5));
             } else {

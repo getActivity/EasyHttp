@@ -2,13 +2,8 @@ package com.hjq.http.model;
 
 import com.hjq.http.EasyConfig;
 
-import java.io.File;
-import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
-
-import okhttp3.RequestBody;
 
 /**
  *    author : Android 轮子哥
@@ -19,6 +14,8 @@ import okhttp3.RequestBody;
 public final class HttpParams {
 
     private HashMap<String, Object> mParams = EasyConfig.getInstance().getParams();
+
+    /** 是否有流参数 */
     private boolean mMultipart;
 
     public void put(String key, Object value) {
@@ -27,26 +24,6 @@ public final class HttpParams {
                 mParams = new HashMap<>(mParams);
             }
             mParams.put(key, value);
-            if (value instanceof File || value instanceof InputStream || value instanceof RequestBody) {
-                mMultipart = true;
-            } else if (value instanceof List) {
-                List list = (List) value;
-                if (!list.isEmpty()) {
-                    // 判断一下这个集合装载的类型是不是 File
-                    boolean isFileList = true;
-                    for (Object object : list) {
-                        if (!(object instanceof File)) {
-                            isFileList = false;
-                            break;
-                        }
-                    }
-                    // 如果是的话就设置成上传多个文件
-                    if (isFileList) {
-                        // 标记成有流参数
-                        mMultipart = true;
-                    }
-                }
-            }
         }
     }
 
@@ -75,10 +52,11 @@ public final class HttpParams {
         return mParams;
     }
 
-    /**
-     * 是否有流参数
-     */
     public boolean isMultipart() {
         return mMultipart;
+    }
+
+    public void setMultipart(boolean multipart) {
+        mMultipart = multipart;
     }
 }

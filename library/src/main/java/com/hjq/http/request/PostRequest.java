@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
+import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
@@ -40,6 +41,9 @@ public final class PostRequest extends BaseRequest<PostRequest> {
     protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         Request.Builder request = new Request.Builder();
         request.url(url);
+
+        EasyLog.print("PostUrl", url);
+
         if (tag != null) {
             request.tag(tag);
         }
@@ -74,7 +78,7 @@ public final class PostRequest extends BaseRequest<PostRequest> {
                         // 如果这是一个自定义 RequestBody
                         builder.addFormDataPart(key, null, (RequestBody) object);
                     } else {
-                        if (object instanceof List && isFileList((List) object)) {
+                        if (object instanceof List && EasyUtils.isFileList((List) object)) {
                             // 上传文件列表
                             for (Object item : (List) object) {
                                 MultipartBody.Part part = UpdateBody.createPart(key, (File) item);
@@ -89,7 +93,13 @@ public final class PostRequest extends BaseRequest<PostRequest> {
                     }
                 }
             }
-            body = builder.build();
+            try {
+                body = builder.build();
+            } catch (IllegalStateException ignore) {
+                // 如果里面没有任何参数会抛出异常
+                // java.lang.IllegalStateException: Multipart body must have at least one part.
+                body = new FormBody.Builder().build();
+            }
         } else {
             if (type == BodyType.JSON) {
                 if (!params.isEmpty()) {
@@ -110,8 +120,6 @@ public final class PostRequest extends BaseRequest<PostRequest> {
         request.post(body);
 
         if (EasyConfig.getInstance().isLogEnabled()) {
-
-            EasyLog.print("PostUrl", url);
 
             if (!headers.isEmpty() || !params.isEmpty()) {
                 EasyLog.print();
@@ -137,23 +145,8 @@ public final class PostRequest extends BaseRequest<PostRequest> {
                 EasyLog.print();
             }
         }
-        return request.build();
-    }
 
-    /**
-     * 判断一下这个集合装载的类型是不是 File
-     */
-    private boolean isFileList(List list) {
-        if (list != null && !list.isEmpty()) {
-            for (Object object : list) {
-                if (!(object instanceof File)) {
-                    return false;
-                }
-            }
-            return true;
-        } else {
-            return false;
-        }
+        return request.build();
     }
 
     /**

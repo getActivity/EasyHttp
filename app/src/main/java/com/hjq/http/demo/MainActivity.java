@@ -16,6 +16,7 @@ import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
 import com.hjq.http.EasyHttp;
+import com.hjq.http.EasyLog;
 import com.hjq.http.demo.http.model.HttpData;
 import com.hjq.http.demo.http.request.SearchAuthorApi;
 import com.hjq.http.demo.http.request.SearchBlogsApi;
@@ -108,7 +109,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
                             @Override
                             public void onSucceed(HttpData<SearchBean> result) {
-                                ToastUtils.show("请求成功");
+                                ToastUtils.show("请求成功，请看日志");
                             }
                         });
                 break;
@@ -120,7 +121,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
 
                             @Override
                             public void onSucceed(HttpData<SearchBean> result) {
-                                ToastUtils.show("请求成功");
+                                ToastUtils.show("请求成功，请看日志");
                             }
                         });
                 break;
@@ -239,7 +240,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             ((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, out);
             out.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            EasyLog.print(e);
         }
     }
 }

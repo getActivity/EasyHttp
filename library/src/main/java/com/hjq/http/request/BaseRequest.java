@@ -3,6 +3,7 @@ package com.hjq.http.request;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
+import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
@@ -19,6 +20,7 @@ import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
 import java.lang.reflect.Field;
+import java.util.List;
 import java.util.Map;
 
 import okhttp3.Call;
@@ -149,24 +151,31 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
     public Call create() {
 
-        final BodyType type = mRequestType.getType();
+        BodyType type = mRequestType.getType();
 
-        final HttpParams params = new HttpParams();
-        final HttpHeaders headers = new HttpHeaders();
+        HttpParams params = new HttpParams();
+        HttpHeaders headers = new HttpHeaders();
 
         Field[] fields = mRequestApi.getClass().getDeclaredFields();
+
+        params.setMultipart(EasyUtils.isMultipart(fields));
+        // 如果参数中包含流参数并且当前请求方式不是表单的话
+        if (type != BodyType.FORM && params.isMultipart()) {
+            // 就强制设置成以表单形式提交参数
+            type = BodyType.FORM;
+        }
+
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
+            // 规避非静态内部类持有的外部类对象
+            if (mRequestApi.getClass().toString().startsWith(field.getType().toString())) {
+                continue;
+            }
+
             try {
                 // 获取字段的对象
                 Object value = field.get(mRequestApi);
-
-                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (value == null) {
-                    // 遍历下一个字段
-                    continue;
-                }
 
                 // 获取字段的名称
                 String key;
@@ -174,20 +183,21 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     key = field.getAnnotation(HttpRename.class).value();
                 } else {
                     key = field.getName();
-                    // 规避非静态内部类持有的外部类对象
-                    if (mRequestApi.getClass().toString().startsWith(field.getType().toString())) {
-                        continue;
-                    }
                 }
 
                 // 如果这个字段需要忽略，则进行忽略
-                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
                 if (field.isAnnotationPresent(HttpIgnore.class)) {
                     if (field.isAnnotationPresent(HttpHeader.class)) {
                         headers.remove(key);
                     } else {
                         params.remove(key);
                     }
+                    // 遍历下一个字段
+                    continue;
+                }
+
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (EasyUtils.isEmpty(value)) {
                     // 遍历下一个字段
                     continue;
                 }
@@ -219,10 +229,18 @@ public abstract class BaseRequest<T extends BaseRequest> {
                             }
                             break;
                         case JSON:
-                            // 如果这是一个 Bean 参数
-                            if (EasyUtils.isBeanType(value)) {
-                                params.put(key, EasyUtils.beanToHashMap(value));
+                            if (EasyUtils.isCollectionType(value)) {
+                                // 如果这是一个集合参数
+                                if (value instanceof List) {
+                                    params.put(key, EasyUtils.listToJsonArray(((List) value)));
+                                } else if (value instanceof Map) {
+                                    params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
+                                }
+                            } else if (EasyUtils.isBeanType(value)) {
+                                // 如果这是一个 Bean 参数
+                                params.put(key, EasyUtils.mapToJsonObject(EasyUtils.beanToHashMap(value)));
                             } else {
+                                // 如果这是一个普通的参数
                                 params.put(key, value);
                             }
                             break;
@@ -232,7 +250,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
                 }
 
             } catch (IllegalAccessException e) {
-                e.printStackTrace();
+                EasyLog.print(e);
             }
         }
 
