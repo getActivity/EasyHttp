@@ -13,8 +13,8 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 69
-        versionName "6.9"
+        versionCode 80
+        versionName "8.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -34,7 +34,7 @@ dependencies {
     implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation project(':library')
 
-    testImplementation 'junit:junit:4.12'
+    testImplementation 'junit:junit:4.13'
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 
@@ -45,7 +45,7 @@ dependencies {
     // 标题栏：https://github.com/getActivity/TitleBar
     implementation 'com.hjq:titlebar:6.5'
     // 吐司工具类：https://github.com/getActivity/ToastUtils
-    implementation 'com.hjq:toast:8.3'
+    implementation 'com.hjq:toast:8.6'
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.hjq:xxpermissions:6.5'
     // Json 解析框架：https://github.com/google/gson
@@ -54,5 +54,5 @@ dependencies {
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     implementation 'com.squareup.okhttp3:okhttp:3.12.10'
     // 日志调试：https://github.com/getActivity/Logcat
-    debugImplementation 'com.hjq:logcat:6.8'
+    debugImplementation 'com.hjq:logcat:8.2'
 }

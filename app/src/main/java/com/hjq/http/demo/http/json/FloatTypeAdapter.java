@@ -8,7 +8,7 @@ import java.io.IOException;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2020/05/05
- *    desc   : float / Float 解析适配器 {@link com.google.gson.internal.bind.TypeAdapters#FLOAT}
+ *    desc   : float / Float 类型解析适配器，参考：{@link com.google.gson.internal.bind.TypeAdapters#FLOAT}
  */
 public class FloatTypeAdapter extends DoubleTypeAdapter {
 

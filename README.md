@@ -17,7 +17,7 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:6.9'
+        implementation 'com.hjq:http:8.0'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -119,6 +119,7 @@
 
 	* implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
 
+* 具体用法可以[点击这里查看](HelpDoc.md)
 
 #### 发起请求
 
@@ -213,7 +214,7 @@
 
 |  功能  | Retrofit 框架  | EasyHttp 框架 |
 | :----: | :------: |  :-----: |
-|    动态 URL   | 不支持 | 支持 |
+|    动态 Host   | 不支持 | 支持 |
 |    全局参数   |  不支持  | 支持 |
 |    超时重试   | 不支持 | 支持 |
 |    极速下载   | 不支持 | 支持 |
@@ -221,8 +222,6 @@
 |    注解数量   |  25 个  | 3 个 |
 |    上传文件   | RequestBody | File / InputStream |
 |    请求管理  |  需要封装  | 自动管控 |
-
-#### 具体用法可以[点击这里查看](HelpDoc.md)
 
 #### 作者的其他开源项目
 

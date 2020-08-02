@@ -13,8 +13,8 @@ android {
     defaultConfig {
         minSdkVersion 14
         targetSdkVersion 26
-        versionCode 69
-        versionName "6.9"
+        versionCode 80
+        versionName "8.0"
     }
 }
 
@@ -27,7 +27,7 @@ publish {
     userOrg = 'getactivity'
     groupId = 'com.hjq'
     artifactId = 'http'
-    version = '6.9'
+    version = '8.0'
     description = 'Easy-to-use network request framework'
     website = "https://github.com/getActivity/EasyHttp"
 }

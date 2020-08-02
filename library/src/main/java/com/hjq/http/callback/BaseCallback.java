@@ -64,7 +64,7 @@ public abstract class BaseCallback implements Callback {
     public void onFailure(Call call, IOException e) {
         // 服务器请求超时重试
         if (e instanceof SocketTimeoutException && mRetryCount < EasyConfig.getInstance().getRetryCount()) {
-            // 设置延迟 1 秒后重试该请求
+            // 设置延迟 N 秒后重试该请求
             EasyUtils.postDelayed(() -> {
                 // 前提是宿主还没有被销毁
                 if (isLifecycleActive()) {
@@ -76,7 +76,7 @@ public abstract class BaseCallback implements Callback {
                 } else {
                     EasyLog.print("宿主已被销毁，无法对请求进行重试");
                 }
-            }, 1000);
+            }, EasyConfig.getInstance().getRetryTime());
             return;
         }
         onFailure(e);

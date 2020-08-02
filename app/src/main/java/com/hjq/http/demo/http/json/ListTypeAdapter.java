@@ -15,7 +15,7 @@ import java.util.List;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2020/05/05
- *    desc   : List 解析适配器
+ *    desc   : List 类型解析适配器
  */
 public class ListTypeAdapter implements JsonDeserializer<List> {
 
@@ -36,7 +36,7 @@ public class ListTypeAdapter implements JsonDeserializer<List> {
             }
             return list;
         } else {
-            // 和接口类型不符，直接返回 null
+            // 类型不符，直接返回 null
             return null;
         }
     }

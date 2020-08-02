@@ -73,7 +73,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
      */
 
     @Override
-    public void hasPermission(List<String> granted, boolean isAll) {
+    public void hasPermission(List<String> granted, boolean all) {
 
     }
 
@@ -104,7 +104,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             case R.id.btn_main_get:
                 EasyHttp.get(this)
                         .api(new SearchAuthorApi()
-                        .setAuthor("鸿洋"))
+                                .setAuthor("鸿洋"))
                         .request(new HttpCallback<HttpData<SearchBean>>(this) {
 
                             @Override
@@ -116,7 +116,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             case R.id.btn_main_post:
                 EasyHttp.post(this)
                         .api(new SearchBlogsApi()
-                        .setKeyword("搬砖不再有"))
+                                .setKeyword("搬砖不再有"))
                         .request(new HttpCallback<HttpData<SearchBean>>(this) {
 
                             @Override

@@ -38,45 +38,30 @@ public final class EasyConfig {
         return new EasyConfig(client);
     }
 
-    /**
-     * 服务器配置
-     */
+    /** 服务器配置 */
     private IRequestServer mServer;
-    /**
-     * 请求拦截器
-     */
+    /** 请求拦截器 */
     private IRequestHandler mHandler;
-    /**
-     * 日志打印策略
-     */
+    /**  日志打印策略 */
     private ILogStrategy mLogStrategy;
 
-    /**
-     * OkHttp 客户端
-     */
+    /** OkHttp 客户端 */
     private OkHttpClient mClient;
 
-    /**
-     * 通用参数
-     */
+    /** 通用参数 */
     private HashMap<String, Object> mParams;
-    /**
-     * 通用请求头
-     */
+    /** 通用请求头 */
     private HashMap<String, String> mHeaders;
 
-    /**
-     * 日志开关
-     */
+    /** 日志开关 */
     private boolean mLogEnabled = true;
-    /**
-     * 日志 TAG
-     */
+    /** 日志 TAG */
     private String mLogTag = "EasyHttp";
-    /**
-     * 重试次数
-     */
+
+    /** 重试次数 */
     private int mRetryCount;
+    /** 重试时间 */
+    private long mRetryTime = 1000;
 
     private EasyConfig(OkHttpClient client) {
         mClient = client;
@@ -140,10 +125,19 @@ public final class EasyConfig {
 
     public EasyConfig setRetryCount(int count) {
         if (count < 0) {
+            // 重试次数必须大于0
             throw new IllegalArgumentException("The number of retries must be greater than 0");
         }
         mRetryCount = count;
         return this;
+    }
+
+    public void setRetryTime(long time) {
+        if (time < 0) {
+            // 重试时间必须大于0
+            throw new IllegalArgumentException("The retry time must be greater than 0");
+        }
+        mRetryTime = time;
     }
 
     public IRequestServer getServer() {
@@ -180,6 +174,10 @@ public final class EasyConfig {
 
     public int getRetryCount() {
         return mRetryCount;
+    }
+
+    public long getRetryTime() {
+        return mRetryTime;
     }
 
     public void into() {

@@ -229,13 +229,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
                             }
                             break;
                         case JSON:
-                            if (EasyUtils.isCollectionType(value)) {
-                                // 如果这是一个集合参数
-                                if (value instanceof List) {
-                                    params.put(key, EasyUtils.listToJsonArray(((List) value)));
-                                } else if (value instanceof Map) {
-                                    params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
-                                }
+                            if (value instanceof List) {
+                                // 如果这是一个 List 参数
+                                params.put(key, EasyUtils.listToJsonArray(((List) value)));
+                            } else if (value instanceof Map) {
+                                // 如果这是一个 Map 参数
+                                params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
                             } else if (EasyUtils.isBeanType(value)) {
                                 // 如果这是一个 Bean 参数
                                 params.put(key, EasyUtils.mapToJsonObject(EasyUtils.beanToHashMap(value)));

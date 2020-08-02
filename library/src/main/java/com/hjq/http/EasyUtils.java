@@ -132,14 +132,8 @@ public final class EasyUtils {
         return !(object instanceof Number || object instanceof CharSequence ||
                 object instanceof Boolean || object instanceof File ||
                 object instanceof InputStream || object instanceof RequestBody ||
-                object instanceof Character);
-    }
-
-    /**
-     * 判断对象是否为集合类
-     */
-    public static boolean isCollectionType(Object object) {
-        return object instanceof List || object instanceof Map;
+                object instanceof Character || object instanceof JSONObject ||
+                object instanceof JSONArray);
     }
 
     /**
@@ -190,9 +184,7 @@ public final class EasyUtils {
         if (object == null) {
             return true;
         }
-        if (object instanceof String && ((String) object).isEmpty()) {
-            return true;
-        } else if (object instanceof List && ((List) object).isEmpty()) {
+        if (object instanceof List && ((List) object).isEmpty()) {
             return true;
         } else if (object instanceof Map && ((Map) object).isEmpty()) {
             return true;
@@ -208,12 +200,10 @@ public final class EasyUtils {
         JSONArray jsonArray = new JSONArray();
         if (list != null && !list.isEmpty()) {
             for (Object item : list) {
-                if (isCollectionType(item)) {
-                    if (item instanceof List) {
-                        jsonArray.put(listToJsonArray(((List) item)));
-                    } else if (item instanceof Map) {
-                        jsonArray.put(mapToJsonObject(((Map) item)));
-                    }
+                if (item instanceof List) {
+                    jsonArray.put(listToJsonArray(((List) item)));
+                } else if (item instanceof Map) {
+                    jsonArray.put(mapToJsonObject(((Map) item)));
                 } else if (isBeanType(item)) {
                     jsonArray.put(mapToJsonObject(beanToHashMap(item)));
                 } else {
@@ -234,12 +224,10 @@ public final class EasyUtils {
             for (Object key : keySet) {
                 Object value = map.get(key);
                 try {
-                    if (isCollectionType(value)) {
-                        if (value instanceof List) {
-                            jsonObject.put(String.valueOf(key), listToJsonArray(((List) value)));
-                        } else if (value instanceof Map) {
-                            jsonObject.put(String.valueOf(key), mapToJsonObject(((Map) value)));
-                        }
+                    if (value instanceof List) {
+                        jsonObject.put(String.valueOf(key), listToJsonArray(((List) value)));
+                    } else if (value instanceof Map) {
+                        jsonObject.put(String.valueOf(key), mapToJsonObject(((Map) value)));
                     } else if (isBeanType(value)) {
                         jsonObject.put(String.valueOf(key), mapToJsonObject(beanToHashMap(value)));
                     } else {
@@ -299,12 +287,10 @@ public final class EasyUtils {
                     data = new HashMap<>(fields.length);
                 }
 
-                if (isCollectionType(value)) {
-                    if (value instanceof List) {
-                        data.put(key, listToJsonArray(((List) value)));
-                    } else if (value instanceof Map) {
-                        data.put(key, mapToJsonObject(((Map) value)));
-                    }
+                if (value instanceof List) {
+                    data.put(key, listToJsonArray(((List) value)));
+                } else if (value instanceof Map) {
+                    data.put(key, mapToJsonObject(((Map) value)));
                 } else if (isBeanType(value)) {
                     data.put(key, beanToHashMap(value));
                 } else {

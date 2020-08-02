@@ -137,7 +137,12 @@ public final class PostRequest extends BaseRequest<PostRequest> {
                 EasyLog.json(((JsonBody) body).getJsonObject().toString());
             } else {
                 for (String key : params.getNames()) {
-                    EasyLog.print(key, params.get(key).toString());
+                    Object value = params.get(key);
+                    if (value instanceof String) {
+                        EasyLog.print(key, "\"" + value.toString() + "\"");
+                    } else {
+                        EasyLog.print(key, value.toString());
+                    }
                 }
             }
 

@@ -137,7 +137,7 @@ public class XxxServer implements IRequestServer {
 }
 ```
 
-* 当然也支持对某个接口进行单独配置，和上面的雷同，这里略过
+* 当然也支持对某个接口进行单独配置，和上个问题雷同，这里略过
 
 * 表单和 Json 方式提交的优缺点对比
 
