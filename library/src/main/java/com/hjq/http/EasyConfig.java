@@ -2,6 +2,7 @@ package com.hjq.http;
 
 import com.hjq.http.config.ILogStrategy;
 import com.hjq.http.config.IRequestHandler;
+import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.LogStrategy;
 import com.hjq.http.config.RequestServer;
@@ -40,8 +41,10 @@ public final class EasyConfig {
 
     /** 服务器配置 */
     private IRequestServer mServer;
-    /** 请求拦截器 */
+    /** 请求处理器 */
     private IRequestHandler mHandler;
+    /** 请求拦截器 */
+    private IRequestInterceptor mInterceptor;
     /**  日志打印策略 */
     private ILogStrategy mLogStrategy;
 
@@ -80,6 +83,11 @@ public final class EasyConfig {
 
     public EasyConfig setHandler(IRequestHandler handler) {
         mHandler = handler;
+        return this;
+    }
+
+    public EasyConfig setInterceptor(IRequestInterceptor interceptor) {
+        mInterceptor = interceptor;
         return this;
     }
 
@@ -125,7 +133,7 @@ public final class EasyConfig {
 
     public EasyConfig setRetryCount(int count) {
         if (count < 0) {
-            // 重试次数必须大于0
+            // 重试次数必须大于等于 0 次
             throw new IllegalArgumentException("The number of retries must be greater than 0");
         }
         mRetryCount = count;
@@ -134,7 +142,7 @@ public final class EasyConfig {
 
     public void setRetryTime(long time) {
         if (time < 0) {
-            // 重试时间必须大于0
+            // 重试时间必须大于等于 0 毫秒
             throw new IllegalArgumentException("The retry time must be greater than 0");
         }
         mRetryTime = time;
@@ -146,6 +154,10 @@ public final class EasyConfig {
 
     public IRequestHandler getHandler() {
         return mHandler;
+    }
+
+    public IRequestInterceptor getInterceptor() {
+        return mInterceptor;
     }
 
     public OkHttpClient getClient() {

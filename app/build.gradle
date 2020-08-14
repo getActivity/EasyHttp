@@ -13,8 +13,8 @@ android {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
         targetSdkVersion 28
-        versionCode 80
-        versionName "8.0"
+        versionCode 82
+        versionName "8.2"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 

@@ -1,15 +1,27 @@
 #### 如何添加全局参数？
 
-```
+```java
 // 添加全局请求参数
 EasyConfig.getInstance().addHeader("token", "abc");
 // 添加全局请求头
 EasyConfig.getInstance().addParam("token", "abc");
 ```
 
+#### 如何定义全局的动态参数？
+
+```java
+EasyConfig.getInstance().setInterceptor(new IRequestInterceptor() {
+
+    @Override
+    public void intercept(String url, String tag, HttpParams params, HttpHeaders headers) {
+        headers.put("timestamp", String.valueOf(System.currentTimeMillis()));
+    }
+});
+```
+
 #### 如何在请求中忽略某个全局参数？
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -24,7 +36,7 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何获取服务器配置？
 
-```
+```java
 IRequestServer server = EasyConfig.getInstance().getServer();
 // 获取当前全局的服务器主机地址
 String host = server.getHost();
@@ -36,7 +48,7 @@ String path = server.getPath();
 
 * 先定义一个服务器配置
 
-```
+```java
 public class XxxServer implements IRequestServer {
 
     @Override
@@ -53,13 +65,13 @@ public class XxxServer implements IRequestServer {
 
 * 再将它应用到全局配置中
 
-```
+```java
 EasyConfig.getInstance().setServer(new XxxServer());
 ```
 
 * 如果只是针对某个接口可以这样配置
 
-```
+```java
 public final class XxxApi extends XxxServer implements IRequestApi {
 
     @Override
@@ -71,7 +83,7 @@ public final class XxxApi extends XxxServer implements IRequestApi {
 
 * 如果不想单独定义一个类，也可以这样写
 
-```
+```java
 public final class XxxApi implements IRequestServer, IRequestApi {
 
     @Override
@@ -95,7 +107,7 @@ public final class XxxApi implements IRequestServer, IRequestApi {
 
 * 以表单的形式提交参数（默认）
 
-```
+```java
 public class XxxServer implements IRequestServer {
 
     @Override
@@ -117,7 +129,7 @@ public class XxxServer implements IRequestServer {
 
 * 以 Json 的形式提交参数
 
-```
+```java
 public class XxxServer implements IRequestServer {
 
     @Override
@@ -148,7 +160,7 @@ public class XxxServer implements IRequestServer {
 
 #### 如何忽略某个参数？
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -163,7 +175,7 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何传入请求头？
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -178,7 +190,7 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何重命名参数名称？
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -195,7 +207,7 @@ public final class XxxApi implements IRequestApi {
 
 * 使用 File 对象上传
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -209,7 +221,7 @@ public final class XxxApi implements IRequestApi {
 
 * 使用 InputStream 对象上传
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -223,7 +235,7 @@ public final class XxxApi implements IRequestApi {
 
 * 使用 RequestBody 对象上传
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -237,7 +249,7 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何上传文件列表？
 
-```
+```java
 public final class XxxApi implements IRequestApi {
     
     @Override
@@ -251,12 +263,12 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何设置超时重试？
 
-```
+```java
 EasyConfig.getInstance().setRetryCount(3);
 ```
 
 #### 如何设置不打印日志？
 
-```
+```java
 EasyConfig.getInstance().setLogEnabled(false);
 ```

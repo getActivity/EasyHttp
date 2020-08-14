@@ -24,17 +24,13 @@ import okhttp3.Response;
  */
 public abstract class BaseCallback implements Callback {
 
-    /**
-     * 请求任务对象
-     */
+    /** 请求任务对象 */
     private CallProxy mCall;
-    /**
-     * 当前重试次数
-     */
+
+    /** 当前重试次数 */
     private int mRetryCount;
-    /**
-     * 生命周期管理
-     */
+
+    /** 生命周期管理 */
     private LifecycleOwner mLifecycleOwner;
 
     BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {

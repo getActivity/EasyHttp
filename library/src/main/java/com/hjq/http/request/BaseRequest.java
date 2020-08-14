@@ -10,6 +10,7 @@ import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHost;
+import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestPath;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
@@ -254,6 +255,10 @@ public abstract class BaseRequest<T extends BaseRequest> {
         }
 
         String url = mRequestHost.getHost() + mRequestPath.getPath() + mRequestApi.getApi();
+        IRequestInterceptor interceptor = EasyConfig.getInstance().getInterceptor();
+        if (interceptor != null) {
+            interceptor.intercept(url, mTag, params, headers);
+        }
         return mClient.newCall(create(url, mTag, params, headers, type));
     }
 

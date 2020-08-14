@@ -17,7 +17,7 @@
 	}
 
     dependencies {
-        implementation 'com.hjq:http:8.0'
+        implementation 'com.hjq:http:8.2'
 	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
 	    implementation 'com.google.code.gson:gson:2.8.5'
     }
@@ -127,8 +127,8 @@
 
     EasyHttp.post(this)
             .api(new LoginApi()
-            .setUserName("Android 轮子哥")
-            .setPassword("123456"))
+                    .setUserName("Android 轮子哥")
+                    .setPassword("123456"))
             .request(new HttpCallback<HttpData<LoginBean>>(activity) {
 
                 @Override
@@ -214,14 +214,15 @@
 
 |  功能  | Retrofit 框架  | EasyHttp 框架 |
 | :----: | :------: |  :-----: |
-|    动态 Host   | 不支持 | 支持 |
+|    动态 Host  | 不支持 | 支持 |
 |    全局参数   |  不支持  | 支持 |
+|    动态参数   |  不支持  | 支持 |
 |    超时重试   | 不支持 | 支持 |
 |    极速下载   | 不支持 | 支持 |
 |    下载校验   | 不支持 | 支持 |
 |    注解数量   |  25 个  | 3 个 |
 |    上传文件   | RequestBody | File / InputStream |
-|    请求管理  |  需要封装  | 自动管控 |
+|    生命周期  |  需要封装  | 自动管控 |
 
 #### 作者的其他开源项目
 
