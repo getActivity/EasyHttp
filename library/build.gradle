@@ -2,7 +2,7 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 
 android {
-    compileSdkVersion 26
+    compileSdkVersion 29
 
     // 使用 JDK 1.8
     compileOptions {
@@ -12,22 +12,22 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        targetSdkVersion 26
-        versionCode 82
-        versionName "8.2"
+        versionCode 86
+        versionName "8.6"
     }
 }
 
 dependencies {
-    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
+    implementation 'androidx.lifecycle:lifecycle-runtime:2.1.0'
 }
 
 publish {
     userOrg = 'getactivity'
     groupId = 'com.hjq'
     artifactId = 'http'
-    version = '8.2'
+    version = '8.6'
     description = 'Easy-to-use network request framework'
     website = "https://github.com/getActivity/EasyHttp"
 }

@@ -2,8 +2,6 @@ package com.hjq.http.demo.http.model;
 
 import android.app.Application;
 import android.content.Context;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
@@ -38,11 +36,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.List;
 
+import okhttp3.Headers;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -74,14 +74,17 @@ public final class RequestHandler implements IRequestHandler {
             throw new ResponseException(mApplication.getString(R.string.http_response_error) + "，responseCode：" + response.code() + "，message：" + response.message(), response);
         }
 
+        if (Headers.class.equals(type)) {
+            return response.headers();
+        }
+
         ResponseBody body = response.body();
         if (body == null) {
             return null;
         }
 
-        if (Bitmap.class.equals(type)) {
-            // 如果这是一个 Bitmap 对象
-            return BitmapFactory.decodeStream(body.byteStream());
+        if (InputStream.class.equals(type)) {
+            return body.byteStream();
         }
 
         String text;

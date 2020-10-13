@@ -1,4 +1,4 @@
-package com.hjq.http.model;
+package com.hjq.http.lifecycle;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
@@ -13,10 +13,20 @@ import com.hjq.http.EasyHttp;
  *    time   : 2020/04/05
  *    desc   : 请求生命周期控制
  */
-public class HttpLifecycle implements LifecycleEventObserver {
+public final class HttpLifecycleControl implements LifecycleEventObserver {
 
-    public static void with(LifecycleOwner lifecycleOwner) {
-        lifecycleOwner.getLifecycle().addObserver(new HttpLifecycle());
+    /**
+     * 绑定组件的生命周期
+     */
+    public static void bind(LifecycleOwner lifecycleOwner) {
+        lifecycleOwner.getLifecycle().addObserver(new HttpLifecycleControl());
+    }
+
+    /**
+     * 判断宿主是否处于活动状态
+     */
+    public static boolean isLifecycleActive(LifecycleOwner lifecycleOwner) {
+        return lifecycleOwner != null && lifecycleOwner.getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED;
     }
 
     @Override

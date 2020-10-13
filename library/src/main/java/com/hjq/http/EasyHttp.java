@@ -2,9 +2,13 @@ package com.hjq.http;
 
 import androidx.lifecycle.LifecycleOwner;
 
+import com.hjq.http.request.DeleteRequest;
 import com.hjq.http.request.DownloadRequest;
 import com.hjq.http.request.GetRequest;
+import com.hjq.http.request.HeadRequest;
+import com.hjq.http.request.PatchRequest;
 import com.hjq.http.request.PostRequest;
+import com.hjq.http.request.PutRequest;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -19,6 +23,11 @@ public final class EasyHttp {
 
     /**
      * Get 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static GetRequest get(LifecycleOwner lifecycleOwner) {
         return new GetRequest(lifecycleOwner).tag(lifecycleOwner);
@@ -26,13 +35,71 @@ public final class EasyHttp {
 
     /**
      * Post 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static PostRequest post(LifecycleOwner lifecycleOwner) {
         return new PostRequest(lifecycleOwner).tag(lifecycleOwner);
     }
 
     /**
+     * Head 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static HeadRequest head(LifecycleOwner lifecycleOwner) {
+        return new HeadRequest(lifecycleOwner).tag(lifecycleOwner);
+    }
+
+    /**
+     * Delete 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static DeleteRequest delete(LifecycleOwner lifecycleOwner) {
+        return new DeleteRequest(lifecycleOwner).tag(lifecycleOwner);
+    }
+
+    /**
+     * Put 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static PutRequest put(LifecycleOwner lifecycleOwner) {
+        return new PutRequest(lifecycleOwner).tag(lifecycleOwner);
+    }
+
+    /**
+     * Patch 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static PatchRequest patch(LifecycleOwner lifecycleOwner) {
+        return new PatchRequest(lifecycleOwner).tag(lifecycleOwner);
+    }
+
+    /**
      * 下载请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static DownloadRequest download(LifecycleOwner lifecycleOwner) {
         return new DownloadRequest(lifecycleOwner).tag(lifecycleOwner);
@@ -42,7 +109,7 @@ public final class EasyHttp {
      * 取消请求
      */
     public static void cancel(LifecycleOwner lifecycleOwner) {
-        cancel(lifecycleOwner.getLifecycle().toString());
+        cancel(lifecycleOwner.toString());
     }
 
     /**

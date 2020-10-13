@@ -1,13 +1,12 @@
 package com.hjq.http.callback;
 
-import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.lifecycle.HttpLifecycleControl;
 import com.hjq.http.model.CallProxy;
-import com.hjq.http.model.HttpLifecycle;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -36,18 +35,23 @@ public abstract class BaseCallback implements Callback {
     BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
         mCall = call;
         mLifecycleOwner = lifecycleOwner;
-        HttpLifecycle.with(lifecycleOwner);
+        HttpLifecycleControl.bind(lifecycleOwner);
     }
 
     CallProxy getCall() {
         return mCall;
     }
 
+    LifecycleOwner getLifecycleOwner() {
+        return mLifecycleOwner;
+    }
+
     @Override
     public void onResponse(Call call, Response response) {
         try {
+            // 收到响应
             onResponse(response);
-        } catch (final Exception e) {
+        } catch (Exception e) {
             // 回调失败
             onFailure(e);
         } finally {
@@ -63,7 +67,7 @@ public abstract class BaseCallback implements Callback {
             // 设置延迟 N 秒后重试该请求
             EasyUtils.postDelayed(() -> {
                 // 前提是宿主还没有被销毁
-                if (isLifecycleActive()) {
+                if (HttpLifecycleControl.isLifecycleActive(mLifecycleOwner)) {
                     mRetryCount++;
                     Call newCall = call.clone();
                     mCall.setCall(newCall);
@@ -76,13 +80,6 @@ public abstract class BaseCallback implements Callback {
             return;
         }
         onFailure(e);
-    }
-
-    /**
-     * 判断宿主是否处于活动状态
-     */
-    protected boolean isLifecycleActive() {
-        return mLifecycleOwner.getLifecycle().getCurrentState() != Lifecycle.State.DESTROYED;
     }
 
     protected abstract void onResponse(Response response) throws Exception;

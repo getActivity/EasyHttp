@@ -34,14 +34,21 @@
             android:id="@+id/btn_main_get"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Get请求" />
+            android:text="Get 请求" />
 
         <Button
             android:id="@+id/btn_main_post"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="20dp"
-            android:text="Post请求" />
+            android:text="Post 请求" />
+
+        <Button
+            android:id="@+id/btn_main_exec"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="20dp"
+            android:text="同步请求" />
 
         <Button
             android:id="@+id/btn_main_update"

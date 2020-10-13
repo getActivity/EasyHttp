@@ -97,22 +97,32 @@ public final class EasyConfig {
     }
 
     public EasyConfig setParams(HashMap<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<>();
+        }
         mParams = params;
         return this;
     }
 
     public EasyConfig setHeaders(HashMap<String, String> headers) {
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
         mHeaders = headers;
         return this;
     }
 
     public EasyConfig addHeader(String key, String value) {
-        mHeaders.put(key, value);
+        if (key != null && value != null) {
+            mHeaders.put(key, value);
+        }
         return this;
     }
 
     public EasyConfig addParam(String key, String value) {
-        mParams.put(key, value);
+        if (key != null && value != null) {
+            mParams.put(key, value);
+        }
         return this;
     }
 
@@ -140,12 +150,13 @@ public final class EasyConfig {
         return this;
     }
 
-    public void setRetryTime(long time) {
+    public EasyConfig setRetryTime(long time) {
         if (time < 0) {
             // 重试时间必须大于等于 0 毫秒
             throw new IllegalArgumentException("The retry time must be greater than 0");
         }
         mRetryTime = time;
+        return this;
     }
 
     public IRequestServer getServer() {

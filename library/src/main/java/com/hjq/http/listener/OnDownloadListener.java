@@ -1,8 +1,6 @@
 package com.hjq.http.listener;
 
-import com.hjq.http.model.DownloadInfo;
-
-import okhttp3.Call;
+import java.io.File;
 
 /**
  *    author : Android 轮子哥
@@ -15,25 +13,25 @@ public interface OnDownloadListener {
     /**
      * 下载开始
      */
-    void onStart(Call call);
+    void onStart(File file);
 
     /**
      * 下载进度改变
      */
-    void onProgress(DownloadInfo info);
+    void onProgress(File file, long totalByte, long downloadByte, int progress);
 
     /**
      * 下载完成
      */
-    void onComplete(DownloadInfo info);
+    void onComplete(File file);
 
     /**
      * 下载出错
      */
-    void onError(DownloadInfo info, Exception e);
+    void onError(File file, Exception e);
 
     /**
      * 下载结束
      */
-    void onEnd(Call call);
+    void onEnd(File file);
 }

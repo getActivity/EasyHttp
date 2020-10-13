@@ -29,7 +29,10 @@ public class MyApplication extends Application {
             server = new ReleaseServer();
         }
 
-        EasyConfig.with(new OkHttpClient())
+        OkHttpClient okHttpClient = new OkHttpClient.Builder()
+                .build();
+
+        EasyConfig.with(okHttpClient)
                 // 是否打印日志
                 //.setLogEnabled(BuildConfig.DEBUG)
                 // 设置服务器配置
@@ -45,6 +48,8 @@ public class MyApplication extends Application {
                 })
                 // 设置请求重试次数
                 .setRetryCount(1)
+                // 设置请求重试时间
+                .setRetryTime(1000)
                 // 添加全局请求参数
                 //.addParam("token", "6666666")
                 // 添加全局请求头

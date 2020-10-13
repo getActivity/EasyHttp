@@ -12,7 +12,7 @@ public final class EasyLog {
      * 打印分割线
      */
     public static void print() {
-        print("--------------------");
+        print("----------------------------------------");
     }
 
     /**

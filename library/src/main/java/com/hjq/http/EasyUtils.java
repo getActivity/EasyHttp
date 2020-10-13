@@ -2,6 +2,7 @@ package com.hjq.http;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.text.TextUtils;
 
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
@@ -18,6 +19,7 @@ import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.net.URLEncoder;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -39,19 +41,9 @@ public final class EasyUtils {
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 
     /**
-     * 只有满足条件才在主线程中执行
-     */
-    public static boolean runOnUiThread(boolean execute, Runnable r) {
-        if (execute) {
-            return runOnUiThread(r);
-        }
-        return false;
-    }
-
-    /**
      * 在主线程中执行
      */
-    public static boolean runOnUiThread(Runnable r) {
+    public static boolean post(Runnable r) {
         return HANDLER.post(r);
     }
 
@@ -91,7 +83,7 @@ public final class EasyUtils {
     }
 
     /**
-     * 获取文件的 MD5
+     * 获取文件的 md5
      */
     public static String getFileMd5(File file) {
         if (file == null) {
@@ -118,7 +110,7 @@ public final class EasyUtils {
         } catch (NoSuchAlgorithmException | IOException e) {
             EasyLog.print(e);
         } finally {
-            closeStream(inputStream);
+            EasyUtils.closeStream(inputStream);
         }
         return null;
     }
@@ -153,7 +145,7 @@ public final class EasyUtils {
                 return true;
             } else if (List.class.equals(clazz)) {
                 Type[] actualTypeArguments = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
-                if (actualTypeArguments != null && actualTypeArguments.length == 1 && File.class.equals(actualTypeArguments[0])) {
+                if (actualTypeArguments.length == 1 && File.class.equals(actualTypeArguments[0])) {
                     return true;
                 }
             }
@@ -303,5 +295,41 @@ public final class EasyUtils {
         }
 
         return data;
+    }
+
+    /**
+     * 获取对象反射类型
+     */
+    public static Type getReflectType(Object object) {
+        Type type;
+        Type[] types = object.getClass().getGenericInterfaces();
+        if (types.length > 0) {
+            // 如果这个监听对象是直接实现了接口
+            type = ((ParameterizedType) types[0]).getActualTypeArguments()[0];
+        } else {
+            // 如果这个监听对象是通过类继承
+            type = ((ParameterizedType) object.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        }
+        return type;
+    }
+
+    /**
+     * 获取进度百分比
+     */
+    public static int getProgressPercent(long totalByte, long currentByte) {
+        // 计算百分比，这里踩了两个坑
+        // 当文件很大的时候：字节数 * 100 会超过 int 最大值，计算结果会变成负数
+        // 还有需要注意的是，long 除以 long 等于 long，这里的字节数除以总字节数应该要 double 类型的
+        return (int) (((double) currentByte / totalByte) * 100);
+    }
+
+    /**
+     * 字符串编码
+     */
+    public static String encodeString(String text) {
+        if (TextUtils.isEmpty(text)) {
+            return "";
+        }
+        return URLEncoder.encode(text);
     }
 }

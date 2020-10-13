@@ -8,6 +8,7 @@ import com.hjq.http.EasyUtils;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
+import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
@@ -16,7 +17,10 @@ import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
+import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
+import com.hjq.http.model.CallProxy;
+import com.hjq.http.model.DataClass;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
@@ -27,6 +31,7 @@ import java.util.Map;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
+import okhttp3.Response;
 
 /**
  *    author : Android 轮子哥
@@ -37,38 +42,32 @@ import okhttp3.Request;
 @SuppressWarnings("unchecked")
 public abstract class BaseRequest<T extends BaseRequest> {
 
-    /**
-     * Http 客户端
-     */
+    /** OkHttp 客户端 */
     private OkHttpClient mClient = EasyConfig.getInstance().getClient();
 
-    /**
-     * 请求主机配置
-     */
+    /** 接口主机地址 */
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
-    /**
-     * 请求路径配置
-     */
+    /** 接口路径地址 */
     private IRequestPath mRequestPath = EasyConfig.getInstance().getServer();
-    /**
-     * 参数提交类型
-     */
+    /** 提交参数类型 */
     private IRequestType mRequestType = EasyConfig.getInstance().getServer();
-    /**
-     * 请求接口配置
-     */
+
+    /** 请求接口配置 */
     private IRequestApi mRequestApi;
 
-    /**
-     * 请求的上下文
-     */
+    /** 请求生命周期控制 */
     private LifecycleOwner mLifecycleOwner;
-    /**
-     * 请求标记
-     */
+
+    /** 请求执行代理类 */
+    private CallProxy mCallProxy;
+
+    /** 请求标记 */
     private String mTag;
 
     public BaseRequest(LifecycleOwner lifecycle) {
+        if (lifecycle == null) {
+            throw new IllegalArgumentException("are you ok?");
+        }
         mLifecycleOwner = lifecycle;
     }
 
@@ -161,7 +160,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
         params.setMultipart(EasyUtils.isMultipart(fields));
         // 如果参数中包含流参数并且当前请求方式不是表单的话
-        if (type != BodyType.FORM && params.isMultipart()) {
+        if (params.isMultipart() && type != BodyType.FORM) {
             // 就强制设置成以表单形式提交参数
             type = BodyType.FORM;
         }
@@ -262,9 +261,46 @@ public abstract class BaseRequest<T extends BaseRequest> {
         return mClient.newCall(create(url, mTag, params, headers, type));
     }
 
-    public LifecycleOwner getLifecycleOwner() {
+    /**
+     * 执行异步请求
+     */
+    public T request(OnHttpListener listener) {
+        mCallProxy = new CallProxy(create());
+        mCallProxy.enqueue(new NormalCallback(getLifecycle(), mCallProxy, listener));
+        return (T) this;
+    }
+
+    /**
+     * 执行同步请求
+     * @param t                 需要解析泛型的对象
+     * @return                  返回解析完成的对象
+     * @throws Exception        如果请求失败或者解析失败则抛出异常
+     */
+    public <T> T execute(DataClass<T> t) throws Exception {
+        try {
+            mCallProxy = new CallProxy(create());
+            Response response = mCallProxy.execute();
+            return (T) EasyConfig.getInstance().getHandler().requestSucceed(getLifecycle(), response, EasyUtils.getReflectType(t));
+        } catch (Exception e) {
+            throw EasyConfig.getInstance().getHandler().requestFail(getLifecycle(), e);
+        }
+    }
+
+    /**
+     * 取消请求
+     */
+    public T cancel() {
+        if (mCallProxy != null) {
+            mCallProxy.cancel();
+        }
+        return (T) this;
+    }
+
+    protected LifecycleOwner getLifecycle() {
         return mLifecycleOwner;
     }
+
+    protected abstract String getMethod();
 
     protected abstract Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);
 }
