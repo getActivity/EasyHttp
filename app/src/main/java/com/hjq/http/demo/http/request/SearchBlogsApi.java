@@ -9,7 +9,7 @@ import com.hjq.http.config.IRequestApi;
  *    time   : 2019/06/07
  *    desc   : 搜索文章
  */
-public class SearchBlogsApi implements IRequestApi {
+public final class SearchBlogsApi implements IRequestApi {
 
     @Override
     public String getApi() {

@@ -1,226 +1,78 @@
 # 网络请求框架
 
-![](EasyHttp.jpg)
+> 码云地址：[Gitee](https://gitee.com/getActivity/EasyHttp)
 
-[点击此处下载Demo](https://raw.githubusercontent.com/getActivity/EasyHttp/master/EasyHttp.apk)
+> [点击此处下载Demo](EasyHttp.apk)
+
+![](EasyHttp.jpg)
 
 #### Gradle 集成
 
-	android {
-	    // 支持 JDK 1.8
-	    compileOptions {
-	        targetCompatibility JavaVersion.VERSION_1_8
-	        sourceCompatibility JavaVersion.VERSION_1_8
-	    }
-	}
-
-    dependencies {
-        implementation 'com.hjq:http:6.0'
-	    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
-	    implementation 'com.google.code.gson:gson:2.8.5'
+```groovy
+android {
+    // 支持 JDK 1.8
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
     }
+}
 
-#### 配置权限
+dependencies {
+    implementation 'com.hjq:http:8.6'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
+    implementation 'com.google.code.gson:gson:2.8.5'
+}
+```
+            
+#### 具体用法[请点击这里查看](HelpDoc.md)
+    
+#### 不同网络请求框架之间的对比
 
-    <!-- 联网权限 -->
-    <uses-permission android:name="android.permission.INTERNET" />
+|  功能  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit) | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
+| :----: | :------: |  :-----: |  :-----: |
+|    动态 Host  |  支持  |  不支持  |   支持   |
+|    全局参数   |  支持  |  不支持  |    支持   |
+|    超时重试   |  支持  |  不支持  |    支持   |
+|    极速下载   |  支持  |  不支持  |   不支持  |
+|    下载校验   |  支持  |  不支持  |   不支持  |
+|    注解数量   |  3 个  |  25 个  |   0 个  |
+|    上传文件类型   | File / InputStream | RequestBody |  File  |
+|    批量上传文件   |  支持  |   不支持   |    支持    |
+|    上传进度监听   |  支持  |   不支持   |    支持    |
+|    Json 参数提交  |  支持  |    支持   |   支持   |
+|    请求生命周期  | 自动管控 |   需要封装  |   需要封装  |
+|    参数传值方式  |  字段名 + 字段值  | 方法参数名 + 方法参数值 |  定义 key 和 value  |
+|    参数灵活性  | 不强制传入 | 强制全部传入 |   不强制传入 |
+|   框架维护状态 |  维护中  |   维护中   |   停止维护  |
 
-    <!-- 访问网络状态 -->
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+* Retrofit 在我看来并不是那么好用，因为很多常用的功能实现起来比较麻烦，动态 Host 要写拦截器，日志打印要写拦截器，就连最常用的添加全局参数也要写拦截器，一个拦截器意味着要写很多代码，如果写得不够严谨还有可能出现 Bug，从而影响整个 OkHttp 请求流程，我经常在想这些功能能不能都用一句代码搞定，因为我觉得这些功能是框架设计的时候应该考虑的，这便是我做这个框架的初心。
 
-    <!-- 外部存储读写权限 -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+* 本框架采用了 OOP 思想，一个请求代表一个对象，通过类的继承和实现的特性来实现接口的动态化，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。
 
-#### 服务器配置
+* 有很多人觉得写一个接口类很麻烦，这个点确实有点麻烦，但是这块的付出是有收获的，从前期开发的效率考虑：OkGo > EasyHttp > Retrofit，但是从后期维护的效率考虑：EasyHttp > Retrofit > OkGo，之所以比较这三个框架，是因为框架的设计思想不同，但是我始终认为 EasyHttp 才是最好的设计，所以我创造了它。
 
-	public class RequestServer implements IRequestServer {
-	
-	    @Override
-	    public String getHost() {
-	        return "https://www.baidu.com/";
-	    }
-	
-	    @Override
-	    public String getPath() {
-	        return "api/";
-	    }
-
-	    @Override
-	    public BodyType getType() {
-			// 参数以 Json 格式提交（默认是表单）
-	        return BodyType.JSON;
-	    }
-	}
-
-#### 初始化
-
-> 需要配置请求结果处理，具体封装可以参考 [RequestHandler](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
-
-    EasyConfig.with(new OkHttpClient())
-            // 是否打印日志
-            .setLogEnabled(BuildConfig.DEBUG)
-            // 设置服务器配置
-            .setServer(server)
-            // 设置请求处理策略
-            .setHandler(new RequestHandler())
-            // 设置请求重试次数
-            .setRetryCount(3)
-            // 添加全局请求参数
-            //.addParam("token", "6666666")
-            // 添加全局请求头
-            //.addHeader("time", "20191030")
-			// 启用配置
-            .into();
-
-> 上述是创建配置，更新配置可以使用
-
-    EasyConfig.getInstance()
-            .addParam("token", data.getData().getToken());
-
-#### 配置接口
-
-	public class LoginApi implements IRequestApi {
-
-	    @Override
-	    public String getApi() {
-	        return "user/login";
-	    }
-	
-	    /** 用户名 */
-	    private String userName;
-	    
-	    /** 登录密码 */
-	    private String password;
-	
-	    public LoginApi setUserName(String userName) {
-	        this.userName = userName;
-	        return this;
-	    }
-	
-	    public LoginApi setPassword(String password) {
-	        this.password = password;
-	        return this;
-	    }
-	}
-
-* 可为这个类的字段加上一些注解
-
-	* @HttpHeader：标记这个字段是一个请求头参数
-	
-	* @HttpIgnore：标记这个字段不会被发送给后台
-	
-	* @HttpRename：重新定义这个字段发送给后台的参数名称
-
-* 可为这个类多实现一些配置接口
-
-	* implements IRequestHost：实现这个接口之后可以重新指定这个请求的主机地址
-
-	* implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
-
-    * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
-
-#### 发起请求
-
-> 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](https://github.com/getActivity/EasyHttp/blob/master/app/src/main/java/com/hjq/http/demo/BaseActivity.java)
-
-    EasyHttp.post(this)
-            .api(new LoginApi()
-            .setUserName("Android 轮子哥")
-            .setPassword("123456"))
-            .request(new HttpCallback<HttpData<LoginBean>>(activity) {
-
-                @Override
-                public void onSucceed(HttpData<LoginBean> data) {
-                    ToastUtils.show("登录成功");
-                }
-            });
-
-#### 下载文件
-
-> 下载缓存策略：在指定下载文件 md5 或者后台有返回 md5 的情况下，下载框架默认开启下载缓存模式，如果这个文件已经存在手机中，并且经过 md5 校验文件完整，框架就不会重复下载，而是直接回调下载监听。减轻服务器压力，减少用户等待时间。
-
-    EasyHttp.download(this)
-            .method(HttpMethod.GET)
-            .file(new File(Environment.getExternalStorageDirectory(), "微信.apk"))
-            .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
-            .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
-            .listener(new OnDownloadListener() {
-
-                @Override
-                public void onStart(Call call) {
-                    mProgressBar.setVisibility(View.VISIBLE);
-                    ToastUtils.show("下载开始");
-                }
-
-                @Override
-                public void onProgress(DownloadInfo info) {
-                    mProgressBar.setProgress(info.getDownloadProgress());
-                }
-
-                @Override
-                public void onComplete(DownloadInfo info) {
-                    ToastUtils.show("下载完成：" + info.getFile().getPath());
-                    installApk(MainActivity.this, info.getFile());
-                }
-
-                @Override
-                public void onError(DownloadInfo info, Exception e) {
-                    ToastUtils.show("下载出错：" + e.getMessage());
-                }
-
-                @Override
-                public void onEnd(Call call) {
-                    mProgressBar.setVisibility(View.GONE);
-                    ToastUtils.show("下载结束");
-                }
-
-            }).start();
-
-#### 关于 Http 明文请求
-
-> Android P 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
-如果当前应用的请求是 http 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
-
-> 在 res 下新建一个 xml 目录，然后创建一个名为：network_security_config.xml 文件 ，该文件内容如下
-
-	<?xml version="1.0" encoding="utf-8"?>
-	<network-security-config>
-	    <base-config cleartextTrafficPermitted="true" />
-	</network-security-config>
-
-> 然后在 AndroidManifest.xml application 标签内应用上面的xml配置
-
-	<application
-	    android:networkSecurityConfig="@xml/network_security_config" />
+* 前期开发和后期维护哪个更重要？我觉得都重要，但是如果两者之间有利益冲突，我会毫不犹豫选择后期维护，因为前期开发占据的是小头，后期的持续维护才是大头。
 
 #### 混淆规则
-	
-	# OkHttp3
-	-keepattributes Signature
-	-keepattributes *Annotation*
-	-keep class okhttp3.** { *; }
-	-keep interface okhttp3.** { *; }
-	-dontwarn okhttp3.**
-	-dontwarn okio.**
-	
-	# 保护 IRequestApi 类字段名不被混淆
-	-keepclassmembernames class * implements com.hjq.http.config.IRequestApi {
-	    <fields>;
-	}
-	# 保护 Bean 类不被混淆（请注意修改包名路径）
-	-keepclassmembernames class xxx.xxx.xxx.xxx.xxx.response.** {
-	    <fields>;
-	}
-	# 保护模型类的字段不被混淆（请注意修改包名路径）
-	-keepclassmembernames class xxx.xxx.xxx.xxx.xxx.xxx.HttpData {
-	    <fields>;
-	}
+
+```groovy
+# OkHttp3
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# 不混淆这个包下的字段名
+-keepclassmembernames class com.hjq.http.demo.http.** {
+    <fields>;
+}
+```
 
 #### 作者的其他开源项目
 
-* 架构工程：[AndroidProject](https://github.com/getActivity/AndroidProject)
+* 安卓架构：[AndroidProject](https://github.com/getActivity/AndroidProject)
 
 * 日志框架：[Logcat](https://github.com/getActivity/Logcat)
 
@@ -234,12 +86,6 @@
 
 * 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
 
-#### 特别感谢
-
-[张鸿洋](https://github.com/hongyangAndroid)
-
-[WanAndroid](https://www.wanandroid.com/)
-
 #### Android技术讨论Q群：78797078
 
 #### 如果您觉得我的开源库帮你节省了大量的开发时间，请扫描下方的二维码随意打赏，要是能打赏个 10.24 :monkey_face:就太:thumbsup:了。您的支持将鼓励我继续创作:octocat:
@@ -247,6 +93,12 @@
 ![](https://raw.githubusercontent.com/getActivity/Donate/master/picture/pay_ali.png) ![](https://raw.githubusercontent.com/getActivity/Donate/master/picture/pay_wechat.png)
 
 #### [点击查看捐赠列表](https://github.com/getActivity/Donate)
+
+#### 特别感谢
+
+[张鸿洋](https://github.com/hongyangAndroid)
+
+[WanAndroid](https://www.wanandroid.com/)
 
 ## License
 

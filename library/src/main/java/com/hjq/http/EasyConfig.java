@@ -1,7 +1,10 @@
 package com.hjq.http;
 
+import com.hjq.http.config.ILogStrategy;
 import com.hjq.http.config.IRequestHandler;
+import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
+import com.hjq.http.config.LogStrategy;
 import com.hjq.http.config.RequestServer;
 
 import java.net.MalformedURLException;
@@ -38,8 +41,12 @@ public final class EasyConfig {
 
     /** 服务器配置 */
     private IRequestServer mServer;
-    /** 请求拦截器 */
+    /** 请求处理器 */
     private IRequestHandler mHandler;
+    /** 请求拦截器 */
+    private IRequestInterceptor mInterceptor;
+    /**  日志打印策略 */
+    private ILogStrategy mLogStrategy;
 
     /** OkHttp 客户端 */
     private OkHttpClient mClient;
@@ -53,8 +60,11 @@ public final class EasyConfig {
     private boolean mLogEnabled = true;
     /** 日志 TAG */
     private String mLogTag = "EasyHttp";
+
     /** 重试次数 */
     private int mRetryCount;
+    /** 重试时间 */
+    private long mRetryTime = 1000;
 
     private EasyConfig(OkHttpClient client) {
         mClient = client;
@@ -76,28 +86,48 @@ public final class EasyConfig {
         return this;
     }
 
+    public EasyConfig setInterceptor(IRequestInterceptor interceptor) {
+        mInterceptor = interceptor;
+        return this;
+    }
+
     public EasyConfig setClient(OkHttpClient client) {
         mClient = client;
         return this;
     }
 
     public EasyConfig setParams(HashMap<String, Object> params) {
+        if (params == null) {
+            params = new HashMap<>();
+        }
         mParams = params;
         return this;
     }
 
     public EasyConfig setHeaders(HashMap<String, String> headers) {
+        if (headers == null) {
+            headers = new HashMap<>();
+        }
         mHeaders = headers;
         return this;
     }
 
     public EasyConfig addHeader(String key, String value) {
-        mHeaders.put(key, value);
+        if (key != null && value != null) {
+            mHeaders.put(key, value);
+        }
         return this;
     }
 
     public EasyConfig addParam(String key, String value) {
-        mParams.put(key, value);
+        if (key != null && value != null) {
+            mParams.put(key, value);
+        }
+        return this;
+    }
+
+    public EasyConfig setLogStrategy(ILogStrategy strategy) {
+        mLogStrategy = strategy;
         return this;
     }
 
@@ -113,9 +143,19 @@ public final class EasyConfig {
 
     public EasyConfig setRetryCount(int count) {
         if (count < 0) {
+            // 重试次数必须大于等于 0 次
             throw new IllegalArgumentException("The number of retries must be greater than 0");
         }
         mRetryCount = count;
+        return this;
+    }
+
+    public EasyConfig setRetryTime(long time) {
+        if (time < 0) {
+            // 重试时间必须大于等于 0 毫秒
+            throw new IllegalArgumentException("The retry time must be greater than 0");
+        }
+        mRetryTime = time;
         return this;
     }
 
@@ -125,6 +165,10 @@ public final class EasyConfig {
 
     public IRequestHandler getHandler() {
         return mHandler;
+    }
+
+    public IRequestInterceptor getInterceptor() {
+        return mInterceptor;
     }
 
     public OkHttpClient getClient() {
@@ -139,8 +183,12 @@ public final class EasyConfig {
         return mHeaders;
     }
 
+    public ILogStrategy getLogStrategy() {
+        return mLogStrategy;
+    }
+
     public boolean isLogEnabled() {
-        return mLogEnabled;
+        return mLogEnabled && mLogStrategy != null;
     }
 
     public String getLogTag() {
@@ -149,6 +197,10 @@ public final class EasyConfig {
 
     public int getRetryCount() {
         return mRetryCount;
+    }
+
+    public long getRetryTime() {
+        return mRetryTime;
     }
 
     public void into() {
@@ -167,6 +219,9 @@ public final class EasyConfig {
         }
         if (mHandler == null) {
             throw new IllegalArgumentException("The object being processed by the request cannot be empty");
+        }
+        if (mLogStrategy == null) {
+            mLogStrategy = new LogStrategy();
         }
         EasyConfig.setInstance(this);
     }

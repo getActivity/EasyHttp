@@ -10,10 +10,15 @@ import com.hjq.http.annotation.HttpIgnore;
  */
 public final class RequestServer implements IRequestServer {
 
-    /** 主机地址 */
+    /**
+     * 主机地址
+     */
     @HttpIgnore
     private String mHost;
-    /** 接口路径 */
+
+    /**
+     * 接口路径
+     */
     @HttpIgnore
     private String mPath;
 

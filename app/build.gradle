@@ -1,7 +1,11 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 28
+    compileSdkVersion 30
+
+    lintOptions {
+        abortOnError false
+    }
 
     // 支持 JDK 1.8
     compileOptions {
@@ -12,17 +16,18 @@ android {
     defaultConfig {
         applicationId "com.hjq.http.demo"
         minSdkVersion 14
-        targetSdkVersion 28
-        versionCode 60
-        versionName "6.0"
-        testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        targetSdkVersion 30
+        versionCode 86
+        versionName "8.6"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+
     buildTypes {
-        release {
+        debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
-        debug {
+        release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -30,23 +35,30 @@ android {
 }
 
 dependencies {
+    // 依赖 libs 目录下所有的 jar 和 aar 包
     implementation fileTree(include: ['*.jar'], dir: 'libs')
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
+    
     implementation project(':library')
 
-    implementation 'com.android.support:appcompat-v7:28.0.0'
-    implementation 'com.android.support:design:28.0.0'
+    testImplementation 'junit:junit:4.13'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.2'
+    androidTestImplementation 'androidx.test.espresso:espresso-core:3.3.0'
+
+    // 谷歌兼容库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
+    implementation 'androidx.appcompat:appcompat:1.3.0-alpha02'
 
     // 标题栏：https://github.com/getActivity/TitleBar
-    implementation 'com.hjq:titlebar:6.0'
+    implementation 'com.hjq:titlebar:8.0'
     // 吐司工具类：https://github.com/getActivity/ToastUtils
-    implementation 'com.hjq:toast:8.0'
+    implementation 'com.hjq:toast:8.8'
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.hjq:xxpermissions:6.2'
+    implementation 'com.hjq:xxpermissions:8.8'
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.8.5'
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
-    implementation 'com.squareup.okhttp3:okhttp:3.12.10'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
     // 日志调试：https://github.com/getActivity/Logcat
-    debugImplementation 'com.hjq:logcat:6.0'
+    debugImplementation 'com.hjq:logcat:8.6'
 }

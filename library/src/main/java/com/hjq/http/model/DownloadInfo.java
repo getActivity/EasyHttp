@@ -1,6 +1,6 @@
 package com.hjq.http.model;
 
-import java.io.File;
+import com.hjq.http.EasyUtils;
 
 /**
  *    author : Android 轮子哥
@@ -10,48 +10,36 @@ import java.io.File;
  */
 public final class DownloadInfo {
 
-    /** 文件对象 */
-    private final File mFile;
     /** 总字节数 */
-    private long mTotalLength;
+    private long mTotalByte;
+
     /** 已下载字节数 */
-    private long mDownloadLength;
+    private long mDownloadByte;
 
-    public DownloadInfo(File file) {
-        mFile = file;
-    }
-
-    public File getFile() {
-        return mFile;
-    }
-
-    public long getTotalLength() {
+    public long getTotalByte() {
         // 如果没有获取到下载内容的大小，就直接返回已下载字节大小
-        if (mTotalLength <= 0) {
-            return mDownloadLength;
+        if (mTotalByte <= 0) {
+            return mDownloadByte;
         }
-        return mTotalLength;
+        return mTotalByte;
     }
 
-    public void setTotalLength(long length) {
-        mTotalLength = length;
+    public void setTotalByte(long size) {
+        mTotalByte = size;
     }
 
-    public long getDownloadLength() {
-        return mDownloadLength;
+    public long getDownloadByte() {
+        return mDownloadByte;
     }
 
-    public void setDownloadLength(long length) {
-        mDownloadLength = length;
+    public void setDownloadByte(long size) {
+        mDownloadByte = size;
     }
 
     /**
      * 获取当前进度
      */
     public int getDownloadProgress() {
-        // 计算百分比，这里踩了两个坑
-        // 当文件很大的时候：字节数 * 100 会超过 int 最大值，计算结果会变成负数
-        // 还有需要注意的是，long 除以 long 等于 long，这里的字节数除以总字节数应该要 double 类型的
-        return (int) (((double) getDownloadLength() / getTotalLength()) * 100);
+        return EasyUtils.getProgressPercent(mTotalByte, mDownloadByte);
     }
 }

@@ -2,10 +2,13 @@ package com.hjq.http.callback;
 
 import android.text.TextUtils;
 
+import androidx.lifecycle.LifecycleOwner;
+
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.MD5Exception;
 import com.hjq.http.exception.NullBodyException;
+import com.hjq.http.lifecycle.HttpLifecycleControl;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.DownloadInfo;
@@ -28,55 +31,62 @@ public final class DownloadCallback extends BaseCallback {
     /** 文件 MD5 正则表达式 */
     private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
 
-    /** 下载任务 */
-    private DownloadInfo mDownloadInfo;
     /** 保存的文件 */
     private File mFile;
+
     /** 校验的 MD5 */
-    private String mMD5;
+    private String mMd5;
+
     /** 下载监听回调 */
     private OnDownloadListener mListener;
 
-    public DownloadCallback(CallProxy call, File file, String md5, OnDownloadListener listener) {
-        super(call);
-        mDownloadInfo = new DownloadInfo(file);
+    public DownloadCallback(LifecycleOwner lifecycleOwner, CallProxy call, File file, String md5, OnDownloadListener listener) {
+        super(lifecycleOwner, call);
         mFile = file;
-        mMD5 = md5;
+        mMd5 = md5;
         mListener = listener;
 
-        EasyUtils.runOnUiThread(mListener != null, () -> mListener.onStart(getCall()));
+        EasyUtils.post(() -> {
+            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                mListener.onStart(mFile);
+            }
+        });
     }
 
     @Override
     protected void onResponse(Response response) throws Exception {
         // 如果没有指定文件的 md5 值
-        if (mMD5 == null) {
+        if (mMd5 == null) {
             // 获取响应头中的文件 MD5 值
             String md5 = response.header("Content-MD5");
             // 这个 md5 值必须是文件的 md5 值
             if (!TextUtils.isEmpty(md5) && md5.matches(FILE_MD5_REGEX)) {
-                mMD5 = md5;
+                mMd5 = md5;
             }
         }
 
         EasyUtils.createFolder(mFile.getParentFile());
-
         ResponseBody body = response.body();
         if (body == null) {
-            EasyUtils.runOnUiThread(mListener != null, () -> {
-                mListener.onError(mDownloadInfo, new NullBodyException("The response body is empty"));
-                mListener.onEnd(getCall());
+            EasyUtils.post(() -> {
+                if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                    mListener.onError(mFile, new NullBodyException("The response body is empty"));
+                    mListener.onEnd(mFile);
+                }
             });
             return;
         }
 
-        mDownloadInfo.setTotalLength(body.contentLength());
+        DownloadInfo downloadInfo = new DownloadInfo();
+        downloadInfo.setTotalByte(body.contentLength());
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
-        if (!TextUtils.isEmpty(mMD5) && mFile.exists() && mFile.isFile() && mMD5.equalsIgnoreCase(EasyUtils.getFileMD5(mFile))) {
-            EasyUtils.runOnUiThread(mListener != null, () -> {
-                mDownloadInfo.setDownloadLength(mDownloadInfo.getTotalLength());
-                mListener.onComplete(mDownloadInfo);
-                mListener.onEnd(getCall());
+        if (!TextUtils.isEmpty(mMd5) && mFile.exists() && mFile.isFile() && mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(mFile))) {
+            EasyUtils.post(() -> {
+                if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                    downloadInfo.setDownloadByte(downloadInfo.getTotalByte());
+                    mListener.onComplete(mFile);
+                    mListener.onEnd(mFile);
+                }
             });
             return;
         }
@@ -89,22 +99,28 @@ public final class DownloadCallback extends BaseCallback {
         while ((readLength = inputStream.read(bytes)) != -1) {
             downloadSize += readLength;
             outputStream.write(bytes, 0, readLength);
-            mDownloadInfo.setDownloadLength(downloadSize);
-            EasyUtils.runOnUiThread(mListener != null, () -> mListener.onProgress(mDownloadInfo));
+            downloadInfo.setDownloadByte(downloadSize);
+            EasyUtils.post(() -> {
+                if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                    mListener.onProgress(mFile, downloadInfo.getTotalByte(), downloadInfo.getDownloadByte(), downloadInfo.getDownloadProgress());
+                }
+            });
             EasyLog.print(mFile.getPath() + " 正在下载" +
-                    "，文件总字节：" + mDownloadInfo.getTotalLength() +
-                    "，已下载字节：" + mDownloadInfo.getDownloadLength() +
-                    "，下载进度：" + mDownloadInfo.getDownloadProgress() + " %");
+                    "，文件总字节：" + downloadInfo.getTotalByte() +
+                    "，已下载字节：" + downloadInfo.getDownloadByte() +
+                    "，下载进度：" + downloadInfo.getDownloadProgress() + " %");
         }
         outputStream.flush();
 
-        EasyUtils.runOnUiThread(mListener != null, () -> {
-            String md5 = EasyUtils.getFileMD5(mDownloadInfo.getFile());
-            if (!TextUtils.isEmpty(mMD5) && !mMD5.equalsIgnoreCase(md5)) {
-                onFailure(new MD5Exception("MD5 verify failure", md5));
-            } else {
-                mListener.onComplete(mDownloadInfo);
-                mListener.onEnd(getCall());
+        String md5 = EasyUtils.getFileMd5(mFile);
+        if (!TextUtils.isEmpty(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
+            onFailure(new MD5Exception("MD5 verify failure", md5));
+        }
+
+        EasyUtils.post(() -> {
+            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                mListener.onComplete(mFile);
+                mListener.onEnd(mFile);
             }
         });
 
@@ -115,9 +131,11 @@ public final class DownloadCallback extends BaseCallback {
     @Override
     protected void onFailure(final Exception e) {
         EasyLog.print(e);
-        EasyUtils.runOnUiThread(mListener != null, () -> {
-            mListener.onError(mDownloadInfo, e);
-            mListener.onEnd(getCall());
+        EasyUtils.post(() -> {
+            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
+                mListener.onError(mFile, e);
+                mListener.onEnd(mFile);
+            }
         });
     }
 }

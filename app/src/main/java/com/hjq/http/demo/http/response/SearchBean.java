@@ -8,7 +8,7 @@ import java.util.List;
  *    time   : 2019/11/18
  *    desc   : 搜索结果
  */
-public class SearchBean {
+public final class SearchBean {
 
     /**
      * curPage : 1
@@ -60,7 +60,7 @@ public class SearchBean {
         /**
          * apkLink :
          * audit : 1
-         * author : 鸿洋
+         *    author : 鸿洋
          * chapterId : 249
          * chapterName : 干货资源
          * collect : false
