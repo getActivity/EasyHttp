@@ -4,8 +4,6 @@ import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestServer;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  *    author : Android 轮子哥
@@ -28,15 +26,12 @@ public final class UpdateImageApi implements IRequestServer, IRequestApi {
     /** 本地图片 */
     private File image;
 
-    private List<File> files = new ArrayList<>();
-
     public UpdateImageApi(File image) {
         this.image = image;
     }
 
     public UpdateImageApi setImage(File image) {
         this.image = image;
-        files.add(image);
         return this;
     }
 }

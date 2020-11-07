@@ -13,6 +13,7 @@ import java.util.Set;
  */
 public final class HttpHeaders {
 
+    /** 请求头存放集合 */
     private HashMap<String, String> mHeaders = EasyConfig.getInstance().getHeaders();
 
     public void put(String key, String value) {

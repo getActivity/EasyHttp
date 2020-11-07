@@ -1,7 +1,5 @@
 # 目录
 
-> 文档大致分为三类
-
 * [集成文档](#集成文档)
 
 * [使用文档](#使用文档)
@@ -23,10 +21,10 @@
 
 #### 关于 Http 明文请求
 
-> Android P 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
+* Android P 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
 如果当前应用的请求是 http 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
 
-> 在 res 下新建一个 xml 目录，然后创建一个名为：network_security_config.xml 文件 ，该文件内容如下
+* 在 res 下新建一个 xml 目录，然后创建一个名为：network_security_config.xml 文件 ，该文件内容如下
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -35,7 +33,7 @@
 </network-security-config>
 ```
 
-> 然后在 AndroidManifest.xml application 标签内应用上面的xml配置
+* 然后在 AndroidManifest.xml application 标签内应用上面的xml配置
 
 ```xml
 <application
@@ -67,7 +65,7 @@ public class RequestServer implements IRequestServer {
 
 #### 框架初始化
 
-> 需要配置请求结果处理，具体封装可以参考 [RequestHandler](app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
+* 需要配置请求结果处理，具体封装可以参考 [RequestHandler](app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
 
 ```java
 OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -90,11 +88,28 @@ EasyConfig.with(okHttpClient)
         .into();
 ```
 
-> 上述是创建配置，更新配置可以使用
+* 上述是创建配置，更新配置可以使用
 
 ```java
 EasyConfig.getInstance()
         .addParam("token", data.getData().getToken());
+```
+
+#### 混淆规则
+
+```groovy
+# OkHttp3
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+
+# 不混淆这个包下的字段名
+-keepclassmembernames class com.hjq.http.demo.http.** {
+    <fields>;
+}
 ```
 
 # 使用文档
@@ -142,10 +157,18 @@ public final class LoginApi implements IRequestApi {
 	* implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
 
 	* implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
+	
+* 字段作为请求参数的衡量标准
+
+	* 假设某个字段的属性值为空，那么这个字段将不会作为请求参数发送给后台
+	
+	* 假设果某个字段类型是 String，属性值是空字符串，那么这个字段就会作为请求参数，如果是空对象则不会
+	
+	* 假设某个字段类型是 int，因为基本数据类型没有空值，所以这个字段一定会作为请求参数，但是可以换成 Integer 对象来避免，因为 Integer 的默认值是 null
 
 #### 发起请求
 
-> 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](app/src/main/java/com/hjq/http/demo/BaseActivity.java)
+* 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](app/src/main/java/com/hjq/http/demo/BaseActivity.java)
 
 ```java
 EasyHttp.post(this)
@@ -161,7 +184,37 @@ EasyHttp.post(this)
         });
 ```
 
+* 这里展示 post 用法，另外 EasyHttp 还支持 get、head、delete、put、patch 请求方式，这里不再过多演示
+
 #### 上传文件
+
+```java
+public final class UpdateImageApi implements IRequestApi, IRequestType {
+
+    @Override
+    public String getApi() {
+        return "upload/";
+    }
+
+    @Override
+    public BodyType getType() {
+        // 上传文件需要使用表单的形式提交
+        return BodyType.FORM;
+    }
+
+    /** 本地图片 */
+    private File image;
+
+    public UpdateImageApi(File image) {
+        this.image = image;
+    }
+
+    public UpdateImageApi setImage(File image) {
+        this.image = image;
+        return this;
+    }
+}
+```
 
 ```java
 EasyHttp.post(this)
@@ -174,7 +227,7 @@ EasyHttp.post(this)
             }
 
             @Override
-            public void onUpdate(long totalByte, long updateByte, int progress) {
+            public void onProgress(int progress) {
                 mProgressBar.setProgress(progress);
             }
 
@@ -197,7 +250,7 @@ EasyHttp.post(this)
 
 #### 下载文件
 
-> 下载缓存策略：在指定下载文件 md5 或者后台有返回 md5 的情况下，下载框架默认开启下载缓存模式，如果这个文件已经存在手机中，并且经过 md5 校验文件完整，框架就不会重复下载，而是直接回调下载监听。减轻服务器压力，减少用户等待时间。
+* 下载缓存策略：在指定下载文件 md5 或者后台有返回 md5 的情况下，下载框架默认开启下载缓存模式，如果这个文件已经存在手机中，并且经过 md5 校验文件完整，框架就不会重复下载，而是直接回调下载监听。减轻服务器压力，减少用户等待时间。
 
 ```java
 EasyHttp.download(this)
@@ -214,7 +267,7 @@ EasyHttp.download(this)
             }
 
             @Override
-            public void onProgress(File file, long totalByte, long downloadByte, int progress) {
+            public void onProgress(File file, int progress) {
                 mProgressBar.setProgress(progress);
             }
 
@@ -244,7 +297,7 @@ try {
     HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
             .api(new SearchBlogsApi()
                     .setKeyword("搬砖不再有"))
-            .execute(new DataClass<HttpData<SearchBean>>() {});
+            .execute(new ResponseClass<HttpData<SearchBean>>() {});
     ToastUtils.show("请求成功，请看日志");
 } catch (Exception e) {
     e.printStackTrace();
@@ -582,7 +635,7 @@ EasyConfig.getInstance().setLogEnabled(false);
 
 #### 框架指定只能传入 LifecycleOwner，我想传入其他对象怎么办？
 
-* 其中 AppCompatActivity 和 AndroidX.Fragment 都是 LifecycleOwner 子类的，这个是毋庸置疑的
+* 其中 AndroidX.AppCompatActivity 和 AndroidX.Fragment 都是 LifecycleOwner 子类的，这个是毋庸置疑的
 
 * 但是你如果传入的是 Activity 对象，并非 AppCompatActivity 对象，那么你可以这样写
 
@@ -628,4 +681,34 @@ EasyHttp.cancel(LifecycleOwner lifecycleOwner);
 EasyHttp.cancel(Object tag);
 // 取消所有请求
 EasyHttp.cancel();
+```
+
+#### getHost、getPath、getApi 方法之间的作用和区别？
+
+* Host：服务器主机的地址
+
+* Path：除主机地址之外的路径
+
+* Api：业务模块地址
+
+* 我举个栗子：[https://www.baidu.com/api/user/getInfo](https://www.baidu.com/)，那么标准的写法就是
+
+```java
+public final class XxxApi implements IRequestServer, IRequestApi {
+
+    @Override
+    public String getHost() {
+        return "https://www.baidu.com/";
+    }
+
+    @Override
+    public String getPath() {
+        return "api/";
+    }
+
+    @Override
+    public String getApi() {
+        return "user/getInfo";
+    }
+}
 ```

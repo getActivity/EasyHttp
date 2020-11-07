@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class PatchRequest extends BodyRequest<PatchRequest> {
 
-    public PatchRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public PatchRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.PATCH.toString();
     }
 }

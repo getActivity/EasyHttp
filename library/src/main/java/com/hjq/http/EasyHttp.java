@@ -30,7 +30,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static GetRequest get(LifecycleOwner lifecycleOwner) {
-        return new GetRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new GetRequest(lifecycleOwner);
     }
 
     /**
@@ -42,7 +42,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static PostRequest post(LifecycleOwner lifecycleOwner) {
-        return new PostRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new PostRequest(lifecycleOwner);
     }
 
     /**
@@ -54,7 +54,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static HeadRequest head(LifecycleOwner lifecycleOwner) {
-        return new HeadRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new HeadRequest(lifecycleOwner);
     }
 
     /**
@@ -66,7 +66,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static DeleteRequest delete(LifecycleOwner lifecycleOwner) {
-        return new DeleteRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new DeleteRequest(lifecycleOwner);
     }
 
     /**
@@ -78,7 +78,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static PutRequest put(LifecycleOwner lifecycleOwner) {
-        return new PutRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new PutRequest(lifecycleOwner);
     }
 
     /**
@@ -90,7 +90,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static PatchRequest patch(LifecycleOwner lifecycleOwner) {
-        return new PatchRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new PatchRequest(lifecycleOwner);
     }
 
     /**
@@ -102,14 +102,14 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
     public static DownloadRequest download(LifecycleOwner lifecycleOwner) {
-        return new DownloadRequest(lifecycleOwner).tag(lifecycleOwner);
+        return new DownloadRequest(lifecycleOwner);
     }
 
     /**
      * 取消请求
      */
     public static void cancel(LifecycleOwner lifecycleOwner) {
-        cancel(lifecycleOwner.toString());
+        cancel(String.valueOf(lifecycleOwner));
     }
 
     /**

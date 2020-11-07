@@ -9,10 +9,10 @@ import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
-import com.hjq.http.model.DataClass;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.HttpParams;
+import com.hjq.http.model.ResponseClass;
 
 import java.io.File;
 
@@ -41,8 +41,8 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     /** 请求执行对象 */
     private CallProxy mCallProxy;
 
-    public DownloadRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public DownloadRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     /**
@@ -92,14 +92,14 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         switch (mMethod) {
             case GET:
                 // 如果这个下载请求方式是 Get
-                return new GetRequest(getLifecycle()).create(url, tag, params, headers, type);
+                return new GetRequest(getLifecycleOwner()).createRequest(url, tag, params, headers, type);
             case POST:
                 // 如果这个下载请求方式是 Post
-                return new PostRequest(getLifecycle()).create(url, tag, params, headers, type);
+                return new PostRequest(getLifecycleOwner()).createRequest(url, tag, params, headers, type);
             default:
                 throw new IllegalStateException("are you ok?");
         }
@@ -109,9 +109,9 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
      * 开始下载
      */
     public DownloadRequest start() {
-        mCallProxy = new CallProxy(create());
+        mCallProxy = new CallProxy(createCall());
         /** 下载回调对象 */
-        mCallProxy.enqueue(new DownloadCallback(getLifecycle(), mCallProxy, mFile, mMd5, mListener));
+        mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));
         return this;
     }
 
@@ -132,7 +132,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    public <T> T execute(DataClass<T> t) {
+    public <T> T execute(ResponseClass<T> t) {
         // 请调用 start 方法
         throw new IllegalStateException("are you ok?");
     }
@@ -144,7 +144,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    protected String getMethod() {
-        return mMethod.toString();
+    protected String getRequestMethod() {
+        return String.valueOf(mMethod);
     }
 }

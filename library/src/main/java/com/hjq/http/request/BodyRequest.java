@@ -5,8 +5,9 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.body.JsonObjectBody;
-import com.hjq.http.body.MultipartBodyProxy;
+import com.hjq.http.body.JsonBody;
+import com.hjq.http.body.ProgressBody;
+import com.hjq.http.body.StringBody;
 import com.hjq.http.body.UpdateBody;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
@@ -28,27 +29,33 @@ import okhttp3.RequestBody;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2020/10/07
- *    desc   : Post 请求
+ *    desc   : 带 RequestBody 请求
  */
+@SuppressWarnings("unchecked")
 public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> {
 
-    private OnUpdateListener mListener;
+    private OnUpdateListener mUpdateListener;
 
     private RequestBody mRequestBody;
 
-    public BodyRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public BodyRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
-    /**
-     * 自定义请求参数的 Map
-     */
     public T body(Map map) {
-        return body(new JsonObjectBody(map));
+        return body(new JsonBody(map));
+    }
+
+    public T body(List list) {
+        return body(new JsonBody(list));
+    }
+
+    public T body(String text) {
+        return body(new StringBody(text));
     }
 
     /**
-     * 自定义请求 Body
+     * 自定义 RequestBody
      */
     public T body(RequestBody body) {
         mRequestBody = body;
@@ -56,12 +63,12 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         Request.Builder request = new Request.Builder();
         request.url(url);
 
         EasyLog.print("RequestUrl", url);
-        EasyLog.print("RequestMethod", getMethod());
+        EasyLog.print("RequestMethod", getRequestMethod());
 
         if (tag != null) {
             request.tag(tag);
@@ -74,76 +81,10 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
             }
         }
 
-        RequestBody body = mRequestBody;
-        if (mRequestBody == null) {
-            if (params.isMultipart() && !params.isEmpty()) {
-                MultipartBodyProxy.Builder builder = new MultipartBodyProxy.Builder();
-                builder.setType(MultipartBody.FORM);
-                builder.setLifecycleOwner(getLifecycle());
-                builder.setOnUpdateListener(mListener);
-                for (String key : params.getNames()) {
-                    Object object = params.get(key);
-                    if (object instanceof File) {
-                        // 如果这是一个文件
-                        MultipartBody.Part part = MultipartBodyProxy.createPart(key, (File) object);
-                        if (part != null) {
-                            builder.addPart(part);
-                        }
-                    } else if (object instanceof InputStream) {
-                        // 如果这是一个输入流
-                        MultipartBody.Part part = MultipartBodyProxy.createPart(key, (InputStream) object);
-                        if (part != null) {
-                            builder.addPart(part);
-                        }
-                    } else if (object instanceof RequestBody) {
-                        // 如果这是一个自定义 RequestBody
-                        if (object instanceof UpdateBody) {
-                            builder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
-                        } else {
-                            builder.addFormDataPart(key, null, (RequestBody) object);
-                        }
-                    } else {
-                        if (object instanceof List && EasyUtils.isFileList((List) object)) {
-                            // 上传文件列表
-                            for (Object item : (List) object) {
-                                MultipartBody.Part part = MultipartBodyProxy.createPart(key, (File) item);
-                                if (part != null) {
-                                    builder.addPart(part);
-                                }
-                            }
-                        } else {
-                            // 如果这是一个普通参数
-                            builder.addFormDataPart(key, object.toString());
-                        }
-                    }
-                }
-                try {
-                    body = builder.build();
-                } catch (IllegalStateException ignore) {
-                    // 如果里面没有任何参数会抛出异常
-                    // java.lang.IllegalStateException: Multipart body must have at least one part.
-                    body = new FormBody.Builder().build();
-                }
-            } else {
-                if (type == BodyType.JSON) {
-                    if (!params.isEmpty()) {
-                        body = new JsonObjectBody(params.getParams());
-                    } else {
-                        body = new JsonObjectBody();
-                    }
-                } else {
-                    FormBody.Builder builder = new FormBody.Builder();
-                    if (!params.isEmpty()) {
-                        for (String key : params.getNames()) {
-                            builder.add(key, params.get(key).toString());
-                        }
-                    }
-                    body = builder.build();
-                }
-            }
-        }
-        request.method(getMethod(), body);
+        RequestBody body = mRequestBody != null ? mRequestBody : createBody(params, type);
+        request.method(getRequestMethod(), body);
 
+        // 打印请求头和参数的日志
         if (EasyConfig.getInstance().isLogEnabled()) {
 
             if (!headers.isEmpty() || !params.isEmpty()) {
@@ -158,17 +99,24 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
                 EasyLog.print();
             }
 
-            if (body instanceof JsonObjectBody) {
-                EasyLog.json(((JsonObjectBody) body).getJsonObject().toString());
-            } else {
+            if (body instanceof FormBody ||
+                    body instanceof MultipartBody ||
+                    body instanceof ProgressBody) {
+                // 打印表单
                 for (String key : params.getNames()) {
                     Object value = params.get(key);
                     if (value instanceof String) {
-                        EasyLog.print(key, "\"" + value.toString() + "\"");
+                        EasyLog.print(key, "\"" + value + "\"");
                     } else {
-                        EasyLog.print(key, value.toString());
+                        EasyLog.print(key, String.valueOf(value));
                     }
                 }
+            } else if (body instanceof JsonBody) {
+                // 打印 Json
+                EasyLog.json(body.toString());
+            } else {
+                // 打印文本
+                EasyLog.print(body.toString());
             }
 
             if (!headers.isEmpty() || !params.isEmpty()) {
@@ -183,10 +131,91 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
      * 执行异步请求（执行传入上传进度监听器）
      */
     @Override
-    public T request(OnHttpListener listener) {
+    public T request(OnHttpListener<?> listener) {
         if (listener instanceof OnUpdateListener) {
-            mListener = (OnUpdateListener) listener;
+            mUpdateListener = (OnUpdateListener) listener;
         }
         return super.request(listener);
+    }
+
+    /**
+     * 组装 RequestBody 对象
+     */
+    private RequestBody createBody(HttpParams params, BodyType type) {
+        if (params.isMultipart() && !params.isEmpty()) {
+            MultipartBody.Builder builder = new MultipartBody.Builder();
+            builder.setType(MultipartBody.FORM);
+            for (String key : params.getNames()) {
+                Object object = params.get(key);
+
+                // 如果这是一个文件
+                if (object instanceof File) {
+                    MultipartBody.Part part = EasyUtils.createPart(key, (File) object);
+                    if (part != null) {
+                        builder.addPart(part);
+                    }
+                    continue;
+                }
+
+                // 如果这是一个输入流
+                if (object instanceof InputStream) {
+                    MultipartBody.Part part = EasyUtils.createPart(key, (InputStream) object);
+                    if (part != null) {
+                        builder.addPart(part);
+                    }
+                    continue;
+                }
+
+                // 如果这是一个自定义 RequestBody
+                if (object instanceof RequestBody) {
+                    if (object instanceof UpdateBody) {
+                        builder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
+                    } else {
+                        builder.addFormDataPart(key, null, (RequestBody) object);
+                    }
+                    continue;
+                }
+
+                // 上传文件列表
+                if (object instanceof List && EasyUtils.isFileList((List) object)) {
+                    for (Object item : (List) object) {
+                        MultipartBody.Part part = EasyUtils.createPart(key, (File) item);
+                        if (part != null) {
+                            builder.addPart(part);
+                        }
+                    }
+                    continue;
+                }
+
+                // 如果这是一个普通参数
+                builder.addFormDataPart(key, String.valueOf(object));
+            }
+
+            if (mUpdateListener != null) {
+                return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
+            } else {
+                return builder.build();
+            }
+        }
+
+        if (type == BodyType.JSON) {
+            if (mUpdateListener != null) {
+                return new ProgressBody(new JsonBody(params.getParams()), getLifecycleOwner(), mUpdateListener);
+            } else {
+                return new JsonBody(params.getParams());
+            }
+        }
+
+        FormBody.Builder builder = new FormBody.Builder();
+        if (!params.isEmpty()) {
+            for (String key : params.getNames()) {
+                builder.add(key, String.valueOf(params.get(key)));
+            }
+        }
+        if (mUpdateListener != null) {
+            return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
+        } else {
+            return builder.build();
+        }
     }
 }

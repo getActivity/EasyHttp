@@ -24,8 +24,8 @@ import com.hjq.http.demo.http.response.SearchBean;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
-import com.hjq.http.model.DataClass;
 import com.hjq.http.model.HttpMethod;
+import com.hjq.http.model.ResponseClass;
 import com.hjq.permissions.OnPermission;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
@@ -134,7 +134,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                         HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
                                 .api(new SearchBlogsApi()
                                         .setKeyword("搬砖不再有"))
-                                .execute(new DataClass<HttpData<SearchBean>>() {});
+                                .execute(new ResponseClass<HttpData<SearchBean>>() {});
                         ToastUtils.show("同步请求成功，请看日志");
                     } catch (Exception e) {
                         e.printStackTrace();
@@ -163,12 +163,11 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 
                             @Override
-                            public void onUpdate(long totalByte, long updateByte, int progress) {
+                            public void onProgress(int progress) {
                                 mProgressBar.setProgress(progress);
                             }
 
                             @Override
-
                             public void onSucceed(Void result) {
                                 ToastUtils.show("上传成功");
                             }
@@ -203,7 +202,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                             }
 
                             @Override
-                            public void onProgress(File file, long totalByte, long downloadByte, int progress) {
+                            public void onProgress(File file, int progress) {
                                 mProgressBar.setProgress(progress);
                             }
 

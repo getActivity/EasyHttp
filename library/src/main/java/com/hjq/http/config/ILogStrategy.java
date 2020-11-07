@@ -36,20 +36,20 @@ public interface ILogStrategy {
     void print(String key, String value);
 
     /**
-     * 将字符串格式化成JSON的格式
+     * 将字符串格式化成 JSON 格式
      */
-    static String stringToJSON(String strJson) {
-        if (strJson == null) {
-            return null;
+    static String formatJson(String json) {
+        if (json == null) {
+            return "";
         }
         // 计数tab的个数
         int tabNum = 0;
         StringBuilder builder = new StringBuilder();
-        int length = strJson.length();
+        int length = json.length();
 
         char last = 0;
         for (int i = 0; i < length; i++) {
-            char c = strJson.charAt(i);
+            char c = json.charAt(i);
             if (c == '{') {
                 tabNum++;
                 builder.append(c).append("\n")
@@ -63,14 +63,14 @@ public interface ILogStrategy {
                 builder.append(c).append("\n")
                         .append(getSpaceOrTab(tabNum));
             } else if (c == ':') {
-                if (i > 0 && strJson.charAt(i - 1) == '"') {
+                if (i > 0 && json.charAt(i - 1) == '"') {
                     builder.append(c).append(" ");
                 } else {
                     builder.append(c);
                 }
             } else if (c == '[') {
                 tabNum++;
-                char next = strJson.charAt(i + 1);
+                char next = json.charAt(i + 1);
                 if (next == ']') {
                     builder.append(c);
                 } else {
@@ -92,6 +92,9 @@ public interface ILogStrategy {
         return builder.toString();
     }
 
+    /**
+     * 创建对应数量的制表符
+     */
     static String getSpaceOrTab(int tabNum) {
         StringBuffer sb = new StringBuffer();
         for (int i = 0; i < tabNum; i++) {

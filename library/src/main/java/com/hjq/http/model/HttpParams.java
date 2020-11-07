@@ -13,6 +13,7 @@ import java.util.Set;
  */
 public final class HttpParams {
 
+    /** 请求参数存放集合 */
     private HashMap<String, Object> mParams = EasyConfig.getInstance().getParams();
 
     /** 是否有流参数 */

@@ -9,11 +9,17 @@ package com.hjq.http.listener;
 public interface OnUpdateListener<T> extends OnHttpListener<T> {
 
     /**
-     * 上传进度发生变化
+     * 上传字节改变
      *
-     * @param totalByte         总字节数
-     * @param updateByte        已上传字节数
+     * @param totalByte             总字节数
+     * @param updateByte            已上传字节数
+     */
+    default void onByte(long totalByte, long updateByte) {}
+
+    /**
+     * 上传进度改变
+     *
      * @param progress          上传进度值（0-100）
      */
-    void onUpdate(long totalByte, long updateByte, int progress);
+    void onProgress(int progress);
 }

@@ -21,7 +21,7 @@ import okio.Source;
  *    time   : 2019/12/14
  *    desc   : 上传文件流
  */
-public class UpdateBody extends RequestBody {
+public final class UpdateBody extends RequestBody {
 
     public static final MediaType MEDIA_TYPE = MediaType.parse("application/octet-stream");
 

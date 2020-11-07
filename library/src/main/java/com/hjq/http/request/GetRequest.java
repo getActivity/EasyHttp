@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class GetRequest extends UrlRequest<GetRequest> {
 
-    public GetRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public GetRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.GET.toString();
     }
 }

@@ -12,14 +12,17 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        versionCode 86
-        versionName "8.6"
+        versionCode 88
+        versionName "8.8"
     }
 }
 
 dependencies {
+    // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.12'
+    // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
+    // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-runtime:2.1.0'
 }
 
@@ -27,7 +30,7 @@ publish {
     userOrg = 'getactivity'
     groupId = 'com.hjq'
     artifactId = 'http'
-    version = '8.6'
+    version = '8.8'
     description = 'Easy-to-use network request framework'
     website = "https://github.com/getActivity/EasyHttp"
 }

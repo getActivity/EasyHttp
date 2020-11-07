@@ -6,6 +6,7 @@ import android.text.TextUtils;
 
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
+import com.hjq.http.body.UpdateBody;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -14,6 +15,7 @@ import org.json.JSONObject;
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
@@ -28,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
 
 /**
@@ -129,26 +132,42 @@ public final class EasyUtils {
     }
 
     /**
-     * 判断字段数组是否有存在流参数
+     * 判断是否包含存在流参数
      */
     public static boolean isMultipart(Field[] fields) {
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
 
+            // 获取对象的类型
             Class<?> clazz = field.getType();
-            if (File.class.equals(clazz)) {
-                return true;
-            } else if (InputStream.class.equals(clazz)) {
-                return true;
-            } else if (RequestBody.class.equals(clazz)) {
-                return true;
-            } else if (List.class.equals(clazz)) {
-                Type[] actualTypeArguments = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
-                if (actualTypeArguments.length == 1 && File.class.equals(actualTypeArguments[0])) {
-                    return true;
+
+            // 获取对象上面实现的接口
+            Class<?>[] interfaces = clazz.getInterfaces();
+            for (int i = 0; i <= interfaces.length; i++) {
+                Class temp;
+                if (i == interfaces.length) {
+                    temp = clazz;
+                } else {
+                    temp = interfaces[i];
+                }
+
+                // 判断类型是否是 List<File>
+                if (List.class.equals(temp)) {
+                    Type[] actualTypeArguments = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
+                    if (actualTypeArguments.length == 1 && File.class.equals(actualTypeArguments[0])) {
+                        return true;
+                    }
                 }
             }
+
+            do {
+                if (File.class.equals(clazz) || InputStream.class.equals(clazz) || RequestBody.class.equals(clazz)) {
+                    return true;
+                }
+                // 获取对象的父类类型
+                clazz = clazz.getSuperclass();
+            } while (clazz != null && !Object.class.equals(clazz));
         }
         return false;
     }
@@ -243,12 +262,6 @@ public final class EasyUtils {
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
-            // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉
-            // 如果使用静态内部类则不会出现这个问题
-            if (object.getClass().toString().startsWith(field.getType().toString())) {
-                //"class com.hjq.http.demo.http.request.SearchBlogsApi$TestBean".startsWith("class com.hjq.http.demo.http.request.SearchBlogsApi")
-                continue;
-            }
 
             try {
 
@@ -256,8 +269,8 @@ public final class EasyUtils {
                 Object value = field.get(object);
 
                 // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (isEmpty(value)) {
-                    // 遍历下一个字段
+                // 又或者这个字段需要忽略，则进行忽略
+                if (isEmpty(value) || field.isAnnotationPresent(HttpIgnore.class)) {
                     continue;
                 }
 
@@ -267,12 +280,11 @@ public final class EasyUtils {
                     key = field.getAnnotation(HttpRename.class).value();
                 } else {
                     key = field.getName();
-                }
-
-                // 如果这个字段需要忽略，则进行忽略
-                if (field.isAnnotationPresent(HttpIgnore.class)) {
-                    // 遍历下一个字段
-                    continue;
+                    // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉，如果使用静态内部类则不会出现这个问题
+                    // 和规避 Kotlin 自动生成的伴生对象：https://github.com/getActivity/EasyHttp/issues/15
+                    if (key.matches("this\\$\\d+") || "Companion".equals(key)) {
+                        continue;
+                    }
                 }
 
                 if (data == null) {
@@ -316,7 +328,7 @@ public final class EasyUtils {
     /**
      * 获取进度百分比
      */
-    public static int getProgressPercent(long totalByte, long currentByte) {
+    public static int getProgressProgress(long totalByte, long currentByte) {
         // 计算百分比，这里踩了两个坑
         // 当文件很大的时候：字节数 * 100 会超过 int 最大值，计算结果会变成负数
         // 还有需要注意的是，long 除以 long 等于 long，这里的字节数除以总字节数应该要 double 类型的
@@ -331,5 +343,34 @@ public final class EasyUtils {
             return "";
         }
         return URLEncoder.encode(text);
+    }
+
+    /**
+     * 根据 File 对象创建一个流媒体
+     */
+    public static MultipartBody.Part createPart(String key, File file) {
+        if (file.exists() && file.isFile()) {
+            try {
+                // 文件名必须不能带中文，所以这里要编码
+                return MultipartBody.Part.createFormData(key, EasyUtils.encodeString(file.getName()), new UpdateBody(file));
+            } catch (FileNotFoundException e) {
+                EasyLog.print(e);
+            }
+        } else {
+            EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
+        }
+        return null;
+    }
+
+    /**
+     * 根据 InputStream 对象创建一个流媒体
+     */
+    public static MultipartBody.Part createPart(String key, InputStream inputStream) {
+        try {
+            return MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key));
+        } catch (IOException e) {
+            EasyLog.print(e);
+        }
+        return null;
     }
 }

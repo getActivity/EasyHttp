@@ -45,7 +45,7 @@ public final class EasyConfig {
     private IRequestHandler mHandler;
     /** 请求拦截器 */
     private IRequestInterceptor mInterceptor;
-    /**  日志打印策略 */
+    /** 日志打印策略 */
     private ILogStrategy mLogStrategy;
 
     /** OkHttp 客户端 */

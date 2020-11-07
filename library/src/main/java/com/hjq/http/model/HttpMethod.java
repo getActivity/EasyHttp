@@ -28,15 +28,16 @@ public enum HttpMethod {
     /** Patch 请求 */
     PATCH("PATCH");
 
-    private final String method;
+    /** 请求方式 */
+    private final String mMethod;
 
     HttpMethod(String method) {
-        this.method = method;
+        this.mMethod = method;
     }
 
     @NonNull
     @Override
     public String toString() {
-        return method;
+        return mMethod;
     }
 }

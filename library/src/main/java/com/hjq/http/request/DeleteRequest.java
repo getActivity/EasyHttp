@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class DeleteRequest extends BodyRequest<DeleteRequest> {
 
-    public DeleteRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public DeleteRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.DELETE.toString();
     }
 }

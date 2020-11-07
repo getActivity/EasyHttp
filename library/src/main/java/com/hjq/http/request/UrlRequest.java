@@ -15,14 +15,15 @@ import okhttp3.Request;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2020/10/07
- *    desc   : url 类型请求
+ *    desc   : 不带 RequestBody 的请求
  */
+@SuppressWarnings("unchecked")
 public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
 
     private CacheControl mCacheControl;
 
-    public UrlRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public UrlRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     /**
@@ -34,7 +35,7 @@ public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
     }
 
     @Override
-    protected Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
         Request.Builder request = new Request.Builder();
         if (mCacheControl != null) {
             request.cacheControl(mCacheControl);
@@ -55,15 +56,15 @@ public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
         // 添加参数
         if (!params.isEmpty()) {
             for (String key : params.getNames()) {
-                builder.addEncodedQueryParameter(key, params.get(key).toString());
+                builder.addEncodedQueryParameter(key, String.valueOf(params.get(key)));
             }
         }
         HttpUrl link = builder.build();
         request.url(link);
-        request.method(getMethod(), null);
+        request.method(getRequestMethod(), null);
 
-        EasyLog.print("RequestUrl", link.toString());
-        EasyLog.print("RequestMethod", getMethod());
+        EasyLog.print("RequestUrl", String.valueOf(link));
+        EasyLog.print("RequestMethod", getRequestMethod());
         return request.build();
     }
 }

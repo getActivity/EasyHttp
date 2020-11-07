@@ -20,7 +20,7 @@ public final class LogStrategy implements ILogStrategy {
 
     @Override
     public void json(String json) {
-        String text = ILogStrategy.stringToJSON(json);
+        String text = ILogStrategy.formatJson(json);
         if (!TextUtils.isEmpty(text)) {
             // 打印 Json 数据最好换一行再打印会好看一点
             text = " \n" + text;

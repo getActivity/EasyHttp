@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class PostRequest extends BodyRequest<PostRequest> {
 
-    public PostRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public PostRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.POST.toString();
     }
 }

@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class HeadRequest extends UrlRequest<HeadRequest> {
 
-    public HeadRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public HeadRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.HEAD.toString();
     }
 }

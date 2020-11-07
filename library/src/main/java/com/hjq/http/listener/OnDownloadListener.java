@@ -16,9 +16,19 @@ public interface OnDownloadListener {
     void onStart(File file);
 
     /**
-     * 下载进度改变
+     * 下载字节改变
+     *
+     * @param totalByte             总字节数
+     * @param downloadByte          已下载字节数
      */
-    void onProgress(File file, long totalByte, long downloadByte, int progress);
+    default void onByte(File file, long totalByte, long downloadByte) {}
+
+    /**
+     * 下载进度改变
+     *
+     * @param progress              下载进度值（0-100）
+     */
+    void onProgress(File file, int progress);
 
     /**
      * 下载完成

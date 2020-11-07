@@ -6,4 +6,4 @@ package com.hjq.http.model;
  *    time   : 2020/08/14
  *    desc   : 数据解析模型类
  */
-public abstract class DataClass<T> {}
+public abstract class ResponseClass<T> {}

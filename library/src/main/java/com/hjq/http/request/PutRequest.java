@@ -12,12 +12,12 @@ import com.hjq.http.model.HttpMethod;
  */
 public final class PutRequest extends BodyRequest<PutRequest> {
 
-    public PutRequest(LifecycleOwner lifecycle) {
-        super(lifecycle);
+    public PutRequest(LifecycleOwner lifecycleOwner) {
+        super(lifecycleOwner);
     }
 
     @Override
-    protected String getMethod() {
+    protected String getRequestMethod() {
         return HttpMethod.PUT.toString();
     }
 }

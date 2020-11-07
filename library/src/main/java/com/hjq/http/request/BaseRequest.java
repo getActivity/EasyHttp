@@ -20,9 +20,9 @@ import com.hjq.http.config.RequestServer;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
-import com.hjq.http.model.DataClass;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
+import com.hjq.http.model.ResponseClass;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -64,11 +64,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
     /** 请求标记 */
     private String mTag;
 
-    public BaseRequest(LifecycleOwner lifecycle) {
-        if (lifecycle == null) {
+    public BaseRequest(LifecycleOwner lifecycleOwner) {
+        if (lifecycleOwner == null) {
             throw new IllegalArgumentException("are you ok?");
         }
-        mLifecycleOwner = lifecycle;
+        mLifecycleOwner = lifecycleOwner;
+        tag(lifecycleOwner);
     }
 
     public T api(Class<? extends IRequestApi> api) {
@@ -131,7 +132,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
      */
     public T tag(Object tag) {
         if (tag != null) {
-            return tag(tag.toString());
+            return tag(String.valueOf(tag));
         }
         return (T) this;
     }
@@ -149,7 +150,10 @@ public abstract class BaseRequest<T extends BaseRequest> {
         return (T) this;
     }
 
-    public Call create() {
+    /**
+     * 创建连接对象
+     */
+    protected Call createCall() {
 
         BodyType type = mRequestType.getType();
 
@@ -157,7 +161,6 @@ public abstract class BaseRequest<T extends BaseRequest> {
         HttpHeaders headers = new HttpHeaders();
 
         Field[] fields = mRequestApi.getClass().getDeclaredFields();
-
         params.setMultipart(EasyUtils.isMultipart(fields));
         // 如果参数中包含流参数并且当前请求方式不是表单的话
         if (params.isMultipart() && type != BodyType.FORM) {
@@ -168,21 +171,29 @@ public abstract class BaseRequest<T extends BaseRequest> {
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
-            // 规避非静态内部类持有的外部类对象
-            if (mRequestApi.getClass().toString().startsWith(field.getType().toString())) {
-                continue;
-            }
 
             try {
                 // 获取字段的对象
                 Object value = field.get(mRequestApi);
 
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (EasyUtils.isEmpty(value)) {
+                    // 遍历下一个字段
+                    continue;
+                }
+
                 // 获取字段的名称
                 String key;
-                if (field.isAnnotationPresent(HttpRename.class)) {
-                    key = field.getAnnotation(HttpRename.class).value();
+                HttpRename annotation = field.getAnnotation(HttpRename.class);
+                if (annotation != null) {
+                    key = annotation.value();
                 } else {
                     key = field.getName();
+                    // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉，如果使用静态内部类则不会出现这个问题
+                    // 和规避 Kotlin 自动生成的伴生对象：https://github.com/getActivity/EasyHttp/issues/15
+                    if (key.matches("this\\$\\d+") || "Companion".equals(key)) {
+                        continue;
+                    }
                 }
 
                 // 如果这个字段需要忽略，则进行忽略
@@ -192,13 +203,6 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     } else {
                         params.remove(key);
                     }
-                    // 遍历下一个字段
-                    continue;
-                }
-
-                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (EasyUtils.isEmpty(value)) {
-                    // 遍历下一个字段
                     continue;
                 }
 
@@ -208,44 +212,46 @@ public abstract class BaseRequest<T extends BaseRequest> {
                         Map map = ((Map) value);
                         for (Object o : map.keySet()) {
                             if (o != null && map.get(o) != null) {
-                                headers.put(o.toString(), map.get(o).toString());
+                                headers.put(String.valueOf(o), String.valueOf(map.get(o)));
                             }
                         }
                     } else {
-                        headers.put(key, value.toString());
+                        headers.put(key, String.valueOf(value));
                     }
-                } else {
-                    switch (type) {
-                        case FORM:
-                            if (value instanceof Map) {
-                                Map map = ((Map) value);
-                                for (Object o : map.keySet()) {
-                                    if (o != null && map.get(o) != null) {
-                                        params.put(o.toString(), map.get(o));
-                                    }
+                    continue;
+                }
+
+                // 否则这就是一个普通的参数
+                switch (type) {
+                    case FORM:
+                        if (value instanceof Map) {
+                            Map map = ((Map) value);
+                            for (Object o : map.keySet()) {
+                                if (o != null && map.get(o) != null) {
+                                    params.put(String.valueOf(o), map.get(o));
                                 }
-                            } else {
-                                params.put(key, value);
                             }
-                            break;
-                        case JSON:
-                            if (value instanceof List) {
-                                // 如果这是一个 List 参数
-                                params.put(key, EasyUtils.listToJsonArray(((List) value)));
-                            } else if (value instanceof Map) {
-                                // 如果这是一个 Map 参数
-                                params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
-                            } else if (EasyUtils.isBeanType(value)) {
-                                // 如果这是一个 Bean 参数
-                                params.put(key, EasyUtils.mapToJsonObject(EasyUtils.beanToHashMap(value)));
-                            } else {
-                                // 如果这是一个普通的参数
-                                params.put(key, value);
-                            }
-                            break;
-                        default:
-                            break;
-                    }
+                        } else {
+                            params.put(key, value);
+                        }
+                        break;
+                    case JSON:
+                        if (value instanceof List) {
+                            // 如果这是一个 List 参数
+                            params.put(key, EasyUtils.listToJsonArray(((List) value)));
+                        } else if (value instanceof Map) {
+                            // 如果这是一个 Map 参数
+                            params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
+                        } else if (EasyUtils.isBeanType(value)) {
+                            // 如果这是一个 Bean 参数
+                            params.put(key, EasyUtils.mapToJsonObject(EasyUtils.beanToHashMap(value)));
+                        } else {
+                            // 如果这是一个普通的参数
+                            params.put(key, value);
+                        }
+                        break;
+                    default:
+                        break;
                 }
 
             } catch (IllegalAccessException e) {
@@ -258,15 +264,15 @@ public abstract class BaseRequest<T extends BaseRequest> {
         if (interceptor != null) {
             interceptor.intercept(url, mTag, params, headers);
         }
-        return mClient.newCall(create(url, mTag, params, headers, type));
+        return mClient.newCall(createRequest(url, mTag, params, headers, type));
     }
 
     /**
      * 执行异步请求
      */
-    public T request(OnHttpListener listener) {
-        mCallProxy = new CallProxy(create());
-        mCallProxy.enqueue(new NormalCallback(getLifecycle(), mCallProxy, listener));
+    public T request(OnHttpListener<?> listener) {
+        mCallProxy = new CallProxy(createCall());
+        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, listener));
         return (T) this;
     }
 
@@ -276,13 +282,13 @@ public abstract class BaseRequest<T extends BaseRequest> {
      * @return                  返回解析完成的对象
      * @throws Exception        如果请求失败或者解析失败则抛出异常
      */
-    public <T> T execute(DataClass<T> t) throws Exception {
+    public <T> T execute(ResponseClass<T> t) throws Exception {
         try {
-            mCallProxy = new CallProxy(create());
+            mCallProxy = new CallProxy(createCall());
             Response response = mCallProxy.execute();
-            return (T) EasyConfig.getInstance().getHandler().requestSucceed(getLifecycle(), response, EasyUtils.getReflectType(t));
+            return (T) EasyConfig.getInstance().getHandler().requestSucceed(getLifecycleOwner(), response, EasyUtils.getReflectType(t));
         } catch (Exception e) {
-            throw EasyConfig.getInstance().getHandler().requestFail(getLifecycle(), e);
+            throw EasyConfig.getInstance().getHandler().requestFail(getLifecycleOwner(), e);
         }
     }
 
@@ -296,11 +302,20 @@ public abstract class BaseRequest<T extends BaseRequest> {
         return (T) this;
     }
 
-    protected LifecycleOwner getLifecycle() {
+    /**
+     * 获取生命周期管控对象
+     */
+    protected LifecycleOwner getLifecycleOwner() {
         return mLifecycleOwner;
     }
 
-    protected abstract String getMethod();
+    /**
+     * 获取请求的方式
+     */
+    protected abstract String getRequestMethod();
 
-    protected abstract Request create(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);
+    /**
+     * 创建请求的对象
+     */
+    protected abstract Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);
 }
