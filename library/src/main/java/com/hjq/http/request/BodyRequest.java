@@ -43,14 +43,23 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
     }
 
     public T body(Map map) {
+        if (map == null) {
+            return (T) this;
+        }
         return body(new JsonBody(map));
     }
 
     public T body(List list) {
+        if (list == null) {
+            return (T) this;
+        }
         return body(new JsonBody(list));
     }
 
     public T body(String text) {
+        if (text == null) {
+            return (T) this;
+        }
         return body(new StringBody(text));
     }
 

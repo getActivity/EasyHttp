@@ -33,7 +33,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.hjq:http:8.8'
+    implementation 'com.hjq:http:8.9'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.12'
@@ -46,7 +46,7 @@ dependencies {
 
 |  功能  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit) | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  8.8 |  2.9.0  |  3.0.4    |
+|    对应版本  |  8.9 |  2.9.0  |  3.0.4    |
 |    动态 Host  |  支持  |  不支持  |   支持   |
 |    全局参数   |  支持  |  不支持  |    支持   |
 |    超时重试   |  支持  |  不支持  |    支持   |

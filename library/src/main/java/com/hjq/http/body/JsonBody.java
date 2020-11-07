@@ -21,8 +21,10 @@ import okio.BufferedSink;
  */
 public final class JsonBody extends RequestBody {
 
-    /** Json 文本数据 */
+    /** Json 数据 */
     private final String mJson;
+    /** 字节数组 */
+    private final byte[] mBytes;
 
     public JsonBody(Map map) {
         this(new JSONObject(map));
@@ -30,6 +32,7 @@ public final class JsonBody extends RequestBody {
 
     public JsonBody(JSONObject jsonObject) {
        mJson = jsonObject.toString();
+       mBytes = mJson.getBytes();
     }
 
     public JsonBody(List list) {
@@ -38,6 +41,7 @@ public final class JsonBody extends RequestBody {
 
     public JsonBody(JSONArray jsonArray) {
         mJson = jsonArray.toString();
+        mBytes = mJson.getBytes();
     }
 
     @Override
@@ -47,13 +51,13 @@ public final class JsonBody extends RequestBody {
 
     @Override
     public long contentLength() {
-        return mJson.length();
+        // 需要注意：这里需要用字节数组的长度来计算
+        return mBytes.length;
     }
 
     @Override
     public void writeTo(BufferedSink sink) throws IOException {
-        byte[] bytes = mJson.getBytes();
-        sink.write(bytes, 0, bytes.length);
+        sink.write(mBytes, 0, mBytes.length);
     }
 
     @NonNull
