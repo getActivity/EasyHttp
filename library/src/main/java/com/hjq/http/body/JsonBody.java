@@ -44,6 +44,11 @@ public final class JsonBody extends RequestBody {
         mBytes = mJson.getBytes();
     }
 
+    public JsonBody(String json) {
+        mJson = json;
+        mBytes = mJson.getBytes();
+    }
+
     @Override
     public MediaType contentType() {
         return MediaType.get("application/json; charset=utf-8");
@@ -58,6 +63,13 @@ public final class JsonBody extends RequestBody {
     @Override
     public void writeTo(BufferedSink sink) throws IOException {
         sink.write(mBytes, 0, mBytes.length);
+    }
+
+    /**
+     * 获取 Json 字符串
+     */
+    public String getJson() {
+        return mJson;
     }
 
     @NonNull

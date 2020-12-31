@@ -42,20 +42,33 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
         super(lifecycleOwner);
     }
 
-    public T body(Map map) {
+    /**
+     * 自定义 json 字符串
+     */
+    public T json(Map map) {
         if (map == null) {
             return (T) this;
         }
         return body(new JsonBody(map));
     }
 
-    public T body(List list) {
+    public T json(List list) {
         if (list == null) {
             return (T) this;
         }
         return body(new JsonBody(list));
     }
 
+    public T json(String json) {
+        if (json == null) {
+            return (T) this;
+        }
+        return body(new JsonBody(json));
+    }
+
+    /**
+     * 自定义文本字符串
+     */
     public T body(String text) {
         if (text == null) {
             return (T) this;
@@ -202,17 +215,15 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
 
             if (mUpdateListener != null) {
                 return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
-            } else {
-                return builder.build();
             }
+            return builder.build();
         }
 
         if (type == BodyType.JSON) {
             if (mUpdateListener != null) {
                 return new ProgressBody(new JsonBody(params.getParams()), getLifecycleOwner(), mUpdateListener);
-            } else {
-                return new JsonBody(params.getParams());
             }
+            return new JsonBody(params.getParams());
         }
 
         FormBody.Builder builder = new FormBody.Builder();
@@ -223,8 +234,8 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
         }
         if (mUpdateListener != null) {
             return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
-        } else {
-            return builder.build();
         }
+
+        return builder.build();
     }
 }

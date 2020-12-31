@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
-    package="com.hjq.http.demo">
+    package="com.hjq.easy.demo">
 
     <!-- 联网权限 -->
     <uses-permission android:name="android.permission.INTERNET" />
@@ -23,8 +23,9 @@
         android:label="@string/app_name"
         android:networkSecurityConfig="@xml/network_security_config"
         android:roundIcon="@mipmap/ic_launcher_round"
+        android:requestLegacyExternalStorage="true"
         android:theme="@style/AppTheme"
-        tools:ignore="LockedOrientationActivity"
+        tools:ignore="LockedOrientationActivity,UnusedAttribute"
         tools:targetApi="n">
 
         <!-- 适配 Android 7.0 文件意图 -->

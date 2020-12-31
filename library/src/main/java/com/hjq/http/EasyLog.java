@@ -34,6 +34,15 @@ public final class EasyLog {
     }
 
     /**
+     * 打印键值对
+     */
+    public static void print(String key, String value) {
+        if (EasyConfig.getInstance().isLogEnabled()) {
+            EasyConfig.getInstance().getLogStrategy().print(key, value);
+        }
+    }
+
+    /**
      * 打印异常
      */
     public static void print(Throwable throwable) {
@@ -43,11 +52,11 @@ public final class EasyLog {
     }
 
     /**
-     * 打印键值对
+     * 打印堆栈
      */
-    public static void print(String key, String value) {
+    public static void print(StackTraceElement[] stackTrace) {
         if (EasyConfig.getInstance().isLogEnabled()) {
-            EasyConfig.getInstance().getLogStrategy().print(key, value);
+            EasyConfig.getInstance().getLogStrategy().print(stackTrace);
         }
     }
 }

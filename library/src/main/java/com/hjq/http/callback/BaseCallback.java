@@ -5,7 +5,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.lifecycle.HttpLifecycleControl;
+import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
 
 import java.io.IOException;
@@ -35,7 +35,7 @@ public abstract class BaseCallback implements Callback {
     BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
         mCall = call;
         mLifecycleOwner = lifecycleOwner;
-        HttpLifecycleControl.bind(lifecycleOwner);
+        HttpLifecycleManager.bind(lifecycleOwner);
     }
 
     CallProxy getCall() {
@@ -66,17 +66,21 @@ public abstract class BaseCallback implements Callback {
         if (e instanceof SocketTimeoutException && mRetryCount < EasyConfig.getInstance().getRetryCount()) {
             // 设置延迟 N 秒后重试该请求
             EasyUtils.postDelayed(() -> {
+
                 // 前提是宿主还没有被销毁
-                if (HttpLifecycleControl.isLifecycleActive(mLifecycleOwner)) {
-                    mRetryCount++;
-                    Call newCall = call.clone();
-                    mCall.setCall(newCall);
-                    newCall.enqueue(BaseCallback.this);
-                    EasyLog.print("请求超时，正在延迟重试，重试次数：" + mRetryCount + "/" + EasyConfig.getInstance().getRetryCount());
-                } else {
+                if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                     EasyLog.print("宿主已被销毁，无法对请求进行重试");
+                    return;
                 }
+
+                mRetryCount++;
+                Call newCall = call.clone();
+                mCall.setCall(newCall);
+                newCall.enqueue(BaseCallback.this);
+                EasyLog.print("请求超时，正在延迟重试，重试次数：" + mRetryCount + "/" + EasyConfig.getInstance().getRetryCount());
+
             }, EasyConfig.getInstance().getRetryTime());
+
             return;
         }
         onFailure(e);

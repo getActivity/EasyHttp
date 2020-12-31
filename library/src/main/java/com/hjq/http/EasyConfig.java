@@ -207,19 +207,22 @@ public final class EasyConfig {
         if (mClient == null) {
             throw new IllegalArgumentException("The OkHttp client object cannot be empty");
         }
+
         if (mServer == null) {
             throw new IllegalArgumentException("The host configuration cannot be empty");
-        } else {
-            try {
-                // 校验主机和路径的 url 是否合法
-                new URL(mServer.getHost() + mServer.getPath());
-            } catch (MalformedURLException e) {
-                throw new IllegalArgumentException("The configured host path url address is not correct");
-            }
         }
+
         if (mHandler == null) {
             throw new IllegalArgumentException("The object being processed by the request cannot be empty");
         }
+
+        try {
+            // 校验主机和路径的 url 是否合法
+            new URL(mServer.getHost() + mServer.getPath());
+        } catch (MalformedURLException e) {
+            throw new IllegalArgumentException("The configured host path url address is not correct");
+        }
+
         if (mLogStrategy == null) {
             mLogStrategy = new LogStrategy();
         }

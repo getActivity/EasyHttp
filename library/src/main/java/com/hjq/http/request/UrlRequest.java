@@ -2,6 +2,7 @@ package com.hjq.http.request;
 
 import androidx.lifecycle.LifecycleOwner;
 
+import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.HttpHeaders;
@@ -65,6 +66,30 @@ public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
 
         EasyLog.print("RequestUrl", String.valueOf(link));
         EasyLog.print("RequestMethod", getRequestMethod());
+
+        // 打印请求头和参数的日志
+        if (EasyConfig.getInstance().isLogEnabled()) {
+
+            if (!headers.isEmpty() || !params.isEmpty()) {
+                EasyLog.print();
+            }
+
+            for (String key : headers.getNames()) {
+                EasyLog.print(key, headers.get(key));
+            }
+
+            if (!headers.isEmpty() && !params.isEmpty()) {
+                EasyLog.print();
+            }
+
+            for (String key : params.getNames()) {
+                EasyLog.print(key, String.valueOf(params.get(key)));
+            }
+
+            if (!headers.isEmpty() || !params.isEmpty()) {
+                EasyLog.print();
+            }
+        }
         return request.build();
     }
 }

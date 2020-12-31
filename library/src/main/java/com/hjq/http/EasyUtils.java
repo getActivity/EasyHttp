@@ -183,9 +183,8 @@ public final class EasyUtils {
                 }
             }
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -199,9 +198,8 @@ public final class EasyUtils {
             return true;
         } else if (object instanceof Map && ((Map) object).isEmpty()) {
             return true;
-        } else {
-            return false;
         }
+        return false;
     }
 
     /**
@@ -313,6 +311,9 @@ public final class EasyUtils {
      * 获取对象反射类型
      */
     public static Type getReflectType(Object object) {
+        if (object == null) {
+            return Void.class;
+        }
         Type type;
         Type[] types = object.getClass().getGenericInterfaces();
         if (types.length > 0) {
@@ -349,17 +350,13 @@ public final class EasyUtils {
      * 根据 File 对象创建一个流媒体
      */
     public static MultipartBody.Part createPart(String key, File file) {
-        if (file.exists() && file.isFile()) {
-            try {
-                // 文件名必须不能带中文，所以这里要编码
-                return MultipartBody.Part.createFormData(key, EasyUtils.encodeString(file.getName()), new UpdateBody(file));
-            } catch (FileNotFoundException e) {
-                EasyLog.print(e);
-            }
-        } else {
+        try {
+            // 文件名必须不能带中文，所以这里要编码
+            return MultipartBody.Part.createFormData(key, EasyUtils.encodeString(file.getName()), new UpdateBody(file));
+        } catch (FileNotFoundException e) {
             EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
+            return null;
         }
-        return null;
     }
 
     /**
@@ -370,7 +367,7 @@ public final class EasyUtils {
             return MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key));
         } catch (IOException e) {
             EasyLog.print(e);
+            return null;
         }
-        return null;
     }
 }

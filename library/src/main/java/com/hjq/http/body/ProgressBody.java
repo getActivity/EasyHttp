@@ -4,7 +4,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.lifecycle.HttpLifecycleControl;
+import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnUpdateListener;
 
 import java.io.IOException;
@@ -61,20 +61,21 @@ public final class ProgressBody extends RequestBody {
                 super.write(source, byteCount);
                 mUpdateByte += byteCount;
                 EasyUtils.post(() -> {
-                    int progress = EasyUtils.getProgressProgress(mTotalByte, mUpdateByte);
-                    if (mListener != null && HttpLifecycleControl.isLifecycleActive(mLifecycleOwner)) {
-                        // 只有上传进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-                        if (progress != mUpdateProgress) {
-                            mUpdateProgress = progress;
-                            mListener.onProgress(progress);
-                        }
+                    if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                         mListener.onByte(mTotalByte, mUpdateByte);
                     }
-
-                    EasyLog.print("正在进行上传" +
-                            "，总字节：" + mTotalByte +
-                            "，已上传：" + mUpdateByte +
-                            "，进度：" + progress + "%");
+                    int progress = EasyUtils.getProgressProgress(mTotalByte, mUpdateByte);
+                    // 只有上传进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
+                    if (progress != mUpdateProgress) {
+                        mUpdateProgress = progress;
+                        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+                            mListener.onProgress(progress);
+                        }
+                        EasyLog.print("正在进行上传" +
+                                "，总字节：" + mTotalByte +
+                                "，已上传：" + mUpdateByte +
+                                "，进度：" + progress + "%");
+                    }
                 });
             }
         }));

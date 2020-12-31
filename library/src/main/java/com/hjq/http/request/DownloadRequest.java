@@ -2,6 +2,7 @@ package com.hjq.http.request;
 
 import androidx.lifecycle.LifecycleOwner;
 
+import com.hjq.http.EasyLog;
 import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
@@ -109,6 +110,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
      * 开始下载
      */
     public DownloadRequest start() {
+        EasyLog.print(new Throwable().getStackTrace());
         mCallProxy = new CallProxy(createCall());
         /** 下载回调对象 */
         mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));

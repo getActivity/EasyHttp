@@ -26,14 +26,19 @@ public interface ILogStrategy {
     void json(String json);
 
     /**
+     * 打印键值对
+     */
+    void print(String key, String value);
+
+    /**
      * 打印异常
      */
     void print(Throwable throwable);
 
     /**
-     * 打印键值对
+     * 打印堆栈
      */
-    void print(String key, String value);
+    void print(StackTraceElement[] stackTrace);
 
     /**
      * 将字符串格式化成 JSON 格式

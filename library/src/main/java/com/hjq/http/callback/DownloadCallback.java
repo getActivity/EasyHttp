@@ -8,7 +8,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.MD5Exception;
 import com.hjq.http.exception.NullBodyException;
-import com.hjq.http.lifecycle.HttpLifecycleControl;
+import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.model.CallProxy;
 
@@ -55,9 +55,10 @@ public final class DownloadCallback extends BaseCallback {
         mListener = listener;
 
         EasyUtils.post(() -> {
-            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
-                mListener.onStart(mFile);
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                return;
             }
+            mListener.onStart(mFile);
         });
     }
 
@@ -90,10 +91,11 @@ public final class DownloadCallback extends BaseCallback {
         if (!TextUtils.isEmpty(mMd5) && mFile.isFile() &&
                 mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(mFile))) {
             EasyUtils.post(() -> {
-                if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
-                    mListener.onComplete(mFile);
-                    mListener.onEnd(mFile);
+                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                    return;
                 }
+                mListener.onComplete(mFile);
+                mListener.onEnd(mFile);
             });
             return;
         }
@@ -107,14 +109,15 @@ public final class DownloadCallback extends BaseCallback {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
             EasyUtils.post(() -> {
-                if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
-                    mListener.onByte(mFile, mTotalByte, mDownloadByte);
-                    int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
-                    // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-                    if (progress != mDownloadProgress) {
-                        mDownloadProgress = progress;
-                        mListener.onProgress(mFile, mDownloadProgress);
-                    }
+                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                    return;
+                }
+                mListener.onByte(mFile, mTotalByte, mDownloadByte);
+                int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
+                // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
+                if (progress != mDownloadProgress) {
+                    mDownloadProgress = progress;
+                    mListener.onProgress(mFile, mDownloadProgress);
                     EasyLog.print(mFile.getPath() + " 正在下载，总字节：" + mTotalByte + "，已下载：" + mDownloadByte +
                             "，进度：" + progress + " %");
                 }
@@ -130,10 +133,11 @@ public final class DownloadCallback extends BaseCallback {
         }
 
         EasyUtils.post(() -> {
-            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
-                mListener.onComplete(mFile);
-                mListener.onEnd(mFile);
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                return;
             }
+            mListener.onComplete(mFile);
+            mListener.onEnd(mFile);
         });
     }
 
@@ -142,10 +146,11 @@ public final class DownloadCallback extends BaseCallback {
         // 打印错误堆栈
         EasyLog.print(e);
         EasyUtils.post(() -> {
-            if (mListener != null && HttpLifecycleControl.isLifecycleActive(getLifecycleOwner())) {
-                mListener.onError(mFile, e);
-                mListener.onEnd(mFile);
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                return;
             }
+            mListener.onError(mFile, e);
+            mListener.onEnd(mFile);
         });
     }
 }

@@ -24,7 +24,7 @@
 * Android P 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
 如果当前应用的请求是 http 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
 
-* 在 res 下新建一个 xml 目录，然后创建一个名为：network_security_config.xml 文件 ，该文件内容如下
+* 在 res 下新建一个 xml 目录，然后创建一个名为：`network_security_config.xml` 文件 ，该文件内容如下
 
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -65,7 +65,7 @@ public class RequestServer implements IRequestServer {
 
 #### 框架初始化
 
-* 需要配置请求结果处理，具体封装可以参考 [RequestHandler](app/src/main/java/com/hjq/http/demo/http/model/RequestHandler.java)
+* 需要配置请求结果处理，具体封装可以参考 [RequestHandler](app/src/main/java/com/hjq/easy/demo/http/model/RequestHandler.java)
 
 ```java
 OkHttpClient okHttpClient = new OkHttpClient.Builder()
@@ -107,7 +107,7 @@ EasyConfig.getInstance()
 -dontwarn okio.**
 
 # 不混淆这个包下的字段名
--keepclassmembernames class com.hjq.http.demo.http.** {
+-keepclassmembernames class com.xxx.xxx.xxx.xxx.** {
     <fields>;
 }
 ```
@@ -353,7 +353,7 @@ String host = server.getHost();
 String path = server.getPath();
 ```
 
-#### 如何修改服务器配置？
+#### 如何修改接口的服务器配置？
 
 * 先定义一个服务器配置
 
@@ -408,6 +408,85 @@ public final class XxxApi implements IRequestServer, IRequestApi {
     @Override
     public String getApi() {
         return "xxx/xxxx";
+    }
+}
+```
+
+#### 如何配置多域名？
+
+* 先定义一个普通接口的测试服和正式服的配置
+
+```java
+public class TestServer implements IRequestServer {
+
+    @Override
+    public String getHost() {
+        return "https://www.test.xxxxxxx.com/";
+    }
+
+    @Override
+    public String getPath() {
+        return "api/";
+    }
+}
+```
+
+```java
+public class ReleaseServer implements IRequestServer {
+
+    @Override
+    public String getHost() {
+        return "https://www.xxxxxxx.com/";
+    }
+
+    @Override
+    public String getPath() {
+        return "api/";
+    }
+}
+```
+
+* 再将它应用到全局配置中
+
+```java
+IRequestServer server;
+if (BuildConfig.DEBUG) {
+    server = new TestServer();
+} else {
+    server = new ReleaseServer();
+}
+EasyConfig.getInstance().setServer(server);
+```
+
+* 假设要为 H5 业务模块设定特定服务器配置，可以这样做
+
+```java
+public class H5Server implements IRequestServer {
+
+    @Override
+    public String getHost() {
+        IRequestServer server = EasyConfig.getInstance().getServer();
+        if (server instanceof TestServer) {
+            return "https://www.test.h5.xxxxxxx.com/";
+        }
+        return "https://www.h5.xxxxxxx.com/";
+    }
+
+    @Override
+    public String getPath() {
+        return "api/";
+    }
+}
+```
+
+* 在配置接口的时候继承 H5Server 就可以了，其他 H5 模块的配置也是雷同
+
+```java
+public final class UserAgreementApi extends H5Server implements IRequestApi {
+
+    @Override
+    public String getApi() {
+        return "user/agreement";
     }
 }
 ```
@@ -482,6 +561,39 @@ public final class XxxApi implements IRequestApi, IRequestType {
 |   参数嵌套  |  不支持  |   支持  |
 |   文件上传  |   支持  |  不支持  |
 
+#### 如何对整个 Json 字符串进行加密？
+
+* 这块的需求比较奇葩，但是搭配 OkHttp 拦截器仍然是可以实现的，这得益于 EasyHttp 良好的框架设计
+
+```java
+OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .addInterceptor(new Interceptor() {
+            @Override
+            public Response intercept(Chain chain) throws IOException {
+                Request request = chain.request();
+                RequestBody body = request.body();
+                if (body instanceof JsonBody) {
+                    body = new JsonBody("假装加密了：" + ((JsonBody) body).getJson());
+                    Request.Builder builder = request.newBuilder();
+                    builder.method(request.method(), body);
+                    request = builder.build();
+                }
+                return chain.proceed(request);
+            }
+        })
+        .build();
+```
+
+* 在 Application 初始化 EasyHttp 的时候配置进去
+
+```java
+EasyConfig.with(okHttpClient)
+        //.setXxxx(Xxxx)
+        //.setXxxx(Xxxx)
+        //.setXxxx(Xxxx)
+        .into();
+```
+
 #### 如何忽略某个参数？
 
 ```java
@@ -512,7 +624,7 @@ public final class XxxApi implements IRequestApi {
 }
 ```
 
-#### 如何重命名参数名称？
+#### 如何重命名参数/请求头的名称？
 
 ```java
 public final class XxxApi implements IRequestApi {
@@ -681,6 +793,18 @@ EasyHttp.cancel(LifecycleOwner lifecycleOwner);
 EasyHttp.cancel(Object tag);
 // 取消所有请求
 EasyHttp.cancel();
+```
+
+#### Https 如何配置信任所有证书?
+
+* 在初始化 OkHttp 的时候这样设置，但是不推荐这样做，因为这样是不安全的，意味着每个请求都不会 Https 去校验
+
+```java
+HttpSslConfig sslConfig = HttpSslFactory.generateSslConfig();
+OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .sslSocketFactory(sslConfig.getsSLSocketFactory(), sslConfig.getTrustManager())
+        .hostnameVerifier(HttpSslFactory.generateUnSafeHostnameVerifier())
+        .build();
 ```
 
 #### getHost、getPath、getApi 方法之间的作用和区别？

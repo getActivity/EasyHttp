@@ -10,6 +10,7 @@ import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
+import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestPath;
@@ -44,6 +45,9 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
     /** OkHttp 客户端 */
     private OkHttpClient mClient = EasyConfig.getInstance().getClient();
+
+    /** 请求处理策略 */
+    private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
 
     /** 接口主机地址 */
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
@@ -118,7 +122,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
     }
 
     /**
-     * 替换服务器配器（推荐使用 api 的方式来替代 server，具体实现可见 api 方法源码）
+     * 替换默认的服务器配器（推荐使用 api 的方式来替代 server，具体实现可见 api 方法源码）
      */
     public T server(IRequestServer server) {
         mRequestHost = server;
@@ -128,7 +132,15 @@ public abstract class BaseRequest<T extends BaseRequest> {
     }
 
     /**
-     * 设置标记
+     * 替换默认的请求处理策略
+     */
+    public T handler(IRequestHandler handler) {
+        mRequestHandler = handler;
+        return (T) this;
+    }
+
+    /**
+     * 设置请求的标记
      */
     public T tag(Object tag) {
         if (tag != null) {
@@ -176,12 +188,6 @@ public abstract class BaseRequest<T extends BaseRequest> {
                 // 获取字段的对象
                 Object value = field.get(mRequestApi);
 
-                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
-                if (EasyUtils.isEmpty(value)) {
-                    // 遍历下一个字段
-                    continue;
-                }
-
                 // 获取字段的名称
                 String key;
                 HttpRename annotation = field.getAnnotation(HttpRename.class);
@@ -203,6 +209,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     } else {
                         params.remove(key);
                     }
+                    continue;
+                }
+
+                // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
+                if (EasyUtils.isEmpty(value)) {
+                    // 遍历下一个字段
                     continue;
                 }
 
@@ -271,8 +283,9 @@ public abstract class BaseRequest<T extends BaseRequest> {
      * 执行异步请求
      */
     public T request(OnHttpListener<?> listener) {
+        EasyLog.print(new Throwable().getStackTrace());
         mCallProxy = new CallProxy(createCall());
-        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, listener));
+        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, mRequestHandler, listener));
         return (T) this;
     }
 
@@ -283,12 +296,13 @@ public abstract class BaseRequest<T extends BaseRequest> {
      * @throws Exception        如果请求失败或者解析失败则抛出异常
      */
     public <T> T execute(ResponseClass<T> t) throws Exception {
+        EasyLog.print(new Throwable().getStackTrace());
         try {
             mCallProxy = new CallProxy(createCall());
             Response response = mCallProxy.execute();
-            return (T) EasyConfig.getInstance().getHandler().requestSucceed(getLifecycleOwner(), response, EasyUtils.getReflectType(t));
+            return (T) mRequestHandler.requestSucceed(getLifecycleOwner(), response, EasyUtils.getReflectType(t));
         } catch (Exception e) {
-            throw EasyConfig.getInstance().getHandler().requestFail(getLifecycleOwner(), e);
+            throw mRequestHandler.requestFail(getLifecycleOwner(), e);
         }
     }
 
