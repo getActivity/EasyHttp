@@ -10,6 +10,7 @@ import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
+import com.hjq.http.config.IRequestClient;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
@@ -18,6 +19,7 @@ import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
+import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
@@ -28,9 +30,9 @@ import com.hjq.http.model.ResponseClass;
 import java.lang.reflect.Field;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 import okhttp3.Call;
-import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
@@ -41,10 +43,7 @@ import okhttp3.Response;
  *    desc   : 请求基类
  */
 @SuppressWarnings("unchecked")
-public abstract class BaseRequest<T extends BaseRequest> {
-
-    /** OkHttp 客户端 */
-    private OkHttpClient mClient = EasyConfig.getInstance().getClient();
+public abstract class BaseRequest<T extends BaseRequest<?>> {
 
     /** 请求处理策略 */
     private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
@@ -55,18 +54,23 @@ public abstract class BaseRequest<T extends BaseRequest> {
     private IRequestPath mRequestPath = EasyConfig.getInstance().getServer();
     /** 提交参数类型 */
     private IRequestType mRequestType = EasyConfig.getInstance().getServer();
+    /** OkHttp 客户端 */
+    private IRequestClient mRequestClient = EasyConfig.getInstance().getServer();
 
     /** 请求接口配置 */
     private IRequestApi mRequestApi;
 
     /** 请求生命周期控制 */
-    private LifecycleOwner mLifecycleOwner;
+    private final LifecycleOwner mLifecycleOwner;
 
     /** 请求执行代理类 */
     private CallProxy mCallProxy;
 
     /** 请求标记 */
     private String mTag;
+
+    /** 请求延迟 */
+    private long mDelayMillis;
 
     public BaseRequest(LifecycleOwner lifecycleOwner) {
         if (lifecycleOwner == null) {
@@ -104,6 +108,12 @@ public abstract class BaseRequest<T extends BaseRequest> {
         if (api instanceof IRequestType) {
             mRequestType = (IRequestType) api;
         }
+        if (api instanceof IRequestClient) {
+            mRequestClient = (IRequestClient) api;
+        }
+        if (api instanceof IRequestHandler) {
+            mRequestHandler = (IRequestHandler) api;
+        }
         return (T) this;
     }
 
@@ -128,6 +138,21 @@ public abstract class BaseRequest<T extends BaseRequest> {
         mRequestHost = server;
         mRequestPath = server;
         mRequestType = server;
+        mRequestClient = server;
+        return (T) this;
+    }
+
+    public T delay(long delay, TimeUnit unit) {
+        return delay(unit.toMillis(delay));
+    }
+
+    /**
+     * 设置请求延迟执行
+     *
+     * @param delayMillis       延迟毫秒数
+     */
+    public T delay(long delayMillis) {
+        mDelayMillis = delayMillis;
         return (T) this;
     }
 
@@ -151,14 +176,6 @@ public abstract class BaseRequest<T extends BaseRequest> {
 
     public T tag(String tag) {
         mTag = tag;
-        return (T) this;
-    }
-
-    /**
-     * 替换 OkHttpClient
-     */
-    public T client(OkHttpClient client) {
-        mClient = client;
         return (T) this;
     }
 
@@ -221,7 +238,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
                 // 如果这是一个请求头参数
                 if (field.isAnnotationPresent(HttpHeader.class)) {
                     if (value instanceof Map) {
-                        Map map = ((Map) value);
+                        Map<?, ?> map = ((Map<?, ?>) value);
                         for (Object o : map.keySet()) {
                             if (o != null && map.get(o) != null) {
                                 headers.put(String.valueOf(o), String.valueOf(map.get(o)));
@@ -237,7 +254,7 @@ public abstract class BaseRequest<T extends BaseRequest> {
                 switch (type) {
                     case FORM:
                         if (value instanceof Map) {
-                            Map map = ((Map) value);
+                            Map<?, ?> map = ((Map<?, ?>) value);
                             for (Object o : map.keySet()) {
                                 if (o != null && map.get(o) != null) {
                                     params.put(String.valueOf(o), map.get(o));
@@ -250,10 +267,10 @@ public abstract class BaseRequest<T extends BaseRequest> {
                     case JSON:
                         if (value instanceof List) {
                             // 如果这是一个 List 参数
-                            params.put(key, EasyUtils.listToJsonArray(((List) value)));
+                            params.put(key, EasyUtils.listToJsonArray(((List<?>) value)));
                         } else if (value instanceof Map) {
                             // 如果这是一个 Map 参数
-                            params.put(key, EasyUtils.mapToJsonObject(((Map) value)));
+                            params.put(key, EasyUtils.mapToJsonObject(((Map<?, ?>) value)));
                         } else if (EasyUtils.isBeanType(value)) {
                             // 如果这是一个 Bean 参数
                             params.put(key, EasyUtils.mapToJsonObject(EasyUtils.beanToHashMap(value)));
@@ -274,35 +291,55 @@ public abstract class BaseRequest<T extends BaseRequest> {
         String url = mRequestHost.getHost() + mRequestPath.getPath() + mRequestApi.getApi();
         IRequestInterceptor interceptor = EasyConfig.getInstance().getInterceptor();
         if (interceptor != null) {
-            interceptor.intercept(url, mTag, params, headers);
+            interceptor.interceptArguments(mRequestApi, params, headers);
         }
-        return mClient.newCall(createRequest(url, mTag, params, headers, type));
+        return mRequestClient.getClient().newCall(createRequest(url, mTag, params, headers, type));
     }
 
     /**
      * 执行异步请求
      */
     public T request(OnHttpListener<?> listener) {
-        EasyLog.print(new Throwable().getStackTrace());
-        mCallProxy = new CallProxy(createCall());
-        mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, mRequestHandler, listener));
+        if (mDelayMillis > 0) {
+            // 打印请求延迟时间
+            EasyLog.print("RequestDelay", String.valueOf(mDelayMillis));
+        }
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        EasyUtils.postDelayed(() -> {
+            if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+                EasyLog.print("宿主已被销毁，请求无法进行");
+                return;
+            }
+            EasyLog.print(stackTrace);
+            mCallProxy = new CallProxy(createCall());
+            mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, mRequestApi, mRequestHandler, listener));
+        }, mDelayMillis);
         return (T) this;
     }
 
     /**
      * 执行同步请求
-     * @param t                 需要解析泛型的对象
+     * @param responseClass                 需要解析泛型的对象
      * @return                  返回解析完成的对象
      * @throws Exception        如果请求失败或者解析失败则抛出异常
      */
-    public <T> T execute(ResponseClass<T> t) throws Exception {
+    public <Bean> Bean execute(ResponseClass<Bean> responseClass) throws Exception {
+        if (mDelayMillis > 0) {
+            // 打印请求延迟时间
+            EasyLog.print("RequestDelay", String.valueOf(mDelayMillis));
+            Thread.sleep(mDelayMillis);
+        }
+        if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+            EasyLog.print("宿主已被销毁，请求无法进行");
+            throw new IllegalStateException("The host has been destroyed and the request cannot proceed");
+        }
         EasyLog.print(new Throwable().getStackTrace());
         try {
             mCallProxy = new CallProxy(createCall());
             Response response = mCallProxy.execute();
-            return (T) mRequestHandler.requestSucceed(getLifecycleOwner(), response, EasyUtils.getReflectType(t));
+            return (Bean) mRequestHandler.requestSucceed(getLifecycleOwner(), getRequestApi(), response, EasyUtils.getReflectType(responseClass));
         } catch (Exception e) {
-            throw mRequestHandler.requestFail(getLifecycleOwner(), e);
+            throw mRequestHandler.requestFail(getLifecycleOwner(), getRequestApi(), e);
         }
     }
 
@@ -327,6 +364,27 @@ public abstract class BaseRequest<T extends BaseRequest> {
      * 获取请求的方式
      */
     protected abstract String getRequestMethod();
+
+    /**
+     * 获取延迟请求时间
+     */
+    protected long getDelayMillis() {
+        return mDelayMillis;
+    }
+
+    /**
+     * 获取请求接口对象
+     */
+    protected IRequestApi getRequestApi() {
+        return mRequestApi;
+    }
+
+    /**
+     * 获取请求处理对象
+     */
+    protected IRequestHandler getRequestHandler() {
+        return mRequestHandler;
+    }
 
     /**
      * 创建请求的对象

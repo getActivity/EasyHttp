@@ -20,12 +20,12 @@ import okio.Okio;
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
  *    time   : 2020/08/15
- *    desc   : RequestBody 代理类（用于获取上传进度）
+ *    desc   : RequestBody 包装类（用于获取上传进度）
  */
 public final class ProgressBody extends RequestBody {
 
     private final RequestBody mRequestBody;
-    private final OnUpdateListener mListener;
+    private final OnUpdateListener<?> mListener;
     private final LifecycleOwner mLifecycleOwner;
 
     /** 总字节数 */
@@ -35,7 +35,7 @@ public final class ProgressBody extends RequestBody {
     /** 上传进度值 */
     private int mUpdateProgress;
 
-    public ProgressBody(RequestBody body, LifecycleOwner lifecycleOwner, OnUpdateListener listener) {
+    public ProgressBody(RequestBody body, LifecycleOwner lifecycleOwner, OnUpdateListener<?> listener) {
         mRequestBody = body;
         mLifecycleOwner = lifecycleOwner;
         mListener = listener;

@@ -11,6 +11,7 @@ import com.google.gson.JsonSyntaxException;
 import com.hjq.easy.demo.R;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.http.EasyLog;
+import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.exception.CancelException;
 import com.hjq.http.exception.DataException;
@@ -51,7 +52,7 @@ public final class RequestHandler implements IRequestHandler {
     }
 
     @Override
-    public Object requestSucceed(LifecycleOwner lifecycle, Response response, Type type) throws Exception {
+    public Object requestSucceed(LifecycleOwner lifecycle, IRequestApi api, Response response, Type type) throws Exception {
         if (Response.class.equals(type)) {
             return response;
         }
@@ -117,13 +118,13 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         if (result instanceof HttpData) {
-            HttpData model = (HttpData) result;
+            HttpData<?> model = (HttpData<?>) result;
             if (model.getCode() == 0) {
                 // 代表执行成功
                 return result;
             } else if (model.getCode() == 1001) {
                 // 代表登录失效，需要重新登录
-                throw new TokenException(mApplication.getString(R.string.http_account_error));
+                throw new TokenException(mApplication.getString(R.string.http_token_error));
             }
             // 代表执行失败
             throw new ResultException(model.getMessage(), model);
@@ -132,7 +133,7 @@ public final class RequestHandler implements IRequestHandler {
     }
 
     @Override
-    public Exception requestFail(LifecycleOwner lifecycle,  Exception e) {
+    public Exception requestFail(LifecycleOwner lifecycle, IRequestApi api, Exception e) {
         // 判断这个异常是不是自己抛的
         if (e instanceof HttpException) {
             if (e instanceof TokenException) {

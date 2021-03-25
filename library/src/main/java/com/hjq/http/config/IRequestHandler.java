@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import java.lang.reflect.Type;
 
+import okhttp3.Request;
 import okhttp3.Response;
 
 /**
@@ -15,6 +16,17 @@ import okhttp3.Response;
 public interface IRequestHandler {
 
     /**
+     * 请求开始
+     *
+     * @param lifecycle     有生命周期的对象（例如 Activity、Fragment）
+     * @param request       请求对象
+     * @return              返回新的请求对象
+     */
+    default Request requestStart(LifecycleOwner lifecycle, IRequestApi api, Request request) {
+        return request;
+    }
+
+    /**
      * 请求成功时回调
      *
      * @param lifecycle     有生命周期的对象（例如 Activity、Fragment）
@@ -24,7 +36,7 @@ public interface IRequestHandler {
      *
      * @throws Exception    如果抛出则回调失败
      */
-    Object requestSucceed(LifecycleOwner lifecycle, Response response, Type type) throws Exception;
+    Object requestSucceed(LifecycleOwner lifecycle, IRequestApi api, Response response, Type type) throws Exception;
 
     /**
      * 请求失败
@@ -33,5 +45,5 @@ public interface IRequestHandler {
      * @param e             错误对象
      * @return              错误对象
      */
-    Exception requestFail(LifecycleOwner lifecycle, Exception e);
+    Exception requestFail(LifecycleOwner lifecycle, IRequestApi api, Exception e);
 }

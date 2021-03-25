@@ -2,6 +2,7 @@ package com.hjq.http.lifecycle;
 
 import android.app.Activity;
 import android.app.Application;
+import android.os.Build;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -30,7 +31,11 @@ public final class ActivityLifecycle implements
         if (mActivity instanceof LifecycleOwner) {
             ((LifecycleOwner) mActivity).getLifecycle().addObserver(this);
         } else {
-            mActivity.getApplication().registerActivityLifecycleCallbacks(this);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                mActivity.registerActivityLifecycleCallbacks(this);
+            } else {
+                mActivity.getApplication().registerActivityLifecycleCallbacks(this);
+            }
         }
     }
 
@@ -51,13 +56,9 @@ public final class ActivityLifecycle implements
     @Override
     public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
         mLifecycle.handleLifecycleEvent(event);
-        switch (event) {
-            case ON_DESTROY:
-                source.getLifecycle().removeObserver(this);
-                mActivity = null;
-                break;
-            default:
-                break;
+        if (event == Lifecycle.Event.ON_DESTROY) {
+            source.getLifecycle().removeObserver(this);
+            mActivity = null;
         }
     }
 
@@ -104,7 +105,11 @@ public final class ActivityLifecycle implements
     public void onActivityDestroyed(Activity activity) {
         if (mActivity == activity) {
             mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
-            mActivity.getApplication().unregisterActivityLifecycleCallbacks(this);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                mActivity.unregisterActivityLifecycleCallbacks(this);
+            } else {
+                mActivity.getApplication().unregisterActivityLifecycleCallbacks(this);
+            }
             mActivity = null;
         }
     }

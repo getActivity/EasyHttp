@@ -16,7 +16,7 @@ import okhttp3.Call;
  *    time   : 2019/05/19
  *    desc   : 基类封装
  */
-public class BaseActivity extends AppCompatActivity implements OnHttpListener {
+public class BaseActivity extends AppCompatActivity implements OnHttpListener<Object> {
 
     /** 加载对话框 */
     private ProgressDialog mDialog;
@@ -68,7 +68,7 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener {
     @Override
     public void onSucceed(Object result) {
         if (result instanceof HttpData) {
-            ToastUtils.show(((HttpData) result).getMessage());
+            ToastUtils.show(((HttpData<?>) result).getMessage());
         }
     }
 

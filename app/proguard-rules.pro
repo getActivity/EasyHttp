@@ -24,9 +24,6 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# 忽略警告
--ignorewarning
-
 # OkHttp3
 -keepattributes Signature
 -keepattributes *Annotation*

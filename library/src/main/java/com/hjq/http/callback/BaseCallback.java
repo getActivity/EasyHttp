@@ -23,26 +23,26 @@ import okhttp3.Response;
  */
 public abstract class BaseCallback implements Callback {
 
+    /** 生命周期管理 */
+    private final LifecycleOwner mLifecycleOwner;
+
     /** 请求任务对象 */
-    private CallProxy mCall;
+    private final CallProxy mCall;
 
     /** 当前重试次数 */
     private int mRetryCount;
 
-    /** 生命周期管理 */
-    private LifecycleOwner mLifecycleOwner;
-
-    BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
-        mCall = call;
+    public BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
         mLifecycleOwner = lifecycleOwner;
+        mCall = call;
         HttpLifecycleManager.bind(lifecycleOwner);
     }
 
-    CallProxy getCall() {
+    protected CallProxy getCall() {
         return mCall;
     }
 
-    LifecycleOwner getLifecycleOwner() {
+    protected LifecycleOwner getLifecycleOwner() {
         return mLifecycleOwner;
     }
 

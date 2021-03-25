@@ -4,6 +4,7 @@ import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
@@ -17,15 +18,18 @@ import okhttp3.Response;
  *    time   : 2019/11/25
  *    desc   : 正常接口回调
  */
+@SuppressWarnings("rawtypes")
 public final class NormalCallback extends BaseCallback {
 
     private final LifecycleOwner mLifecycle;
     private final OnHttpListener mListener;
+    private final IRequestApi mRequestApi;
     private final IRequestHandler mRequestHandler;
 
-    public NormalCallback(LifecycleOwner lifecycleOwner, CallProxy call, IRequestHandler handler, OnHttpListener listener) {
+    public NormalCallback(LifecycleOwner lifecycleOwner, CallProxy call, IRequestApi api, IRequestHandler handler, OnHttpListener listener) {
         super(lifecycleOwner, call);
         mLifecycle = lifecycleOwner;
+        mRequestApi = api;
         mListener = listener;
         mRequestHandler = handler;
 
@@ -40,8 +44,9 @@ public final class NormalCallback extends BaseCallback {
     @SuppressWarnings("unchecked")
     @Override
     protected void onResponse(Response response) throws Exception {
-        EasyLog.print("RequestTime：" + (response.receivedResponseAtMillis() - response.sentRequestAtMillis()) + " ms");
-        final Object result = mRequestHandler.requestSucceed(mLifecycle, response, EasyUtils.getReflectType(mListener));
+        // 打印请求耗时时间
+        EasyLog.print("RequestConsuming：" + (response.receivedResponseAtMillis() - response.sentRequestAtMillis()) + " ms");
+        final Object result = mRequestHandler.requestSucceed(mLifecycle, mRequestApi, response, EasyUtils.getReflectType(mListener));
         EasyUtils.post( () -> {
             if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
                 return;
@@ -53,8 +58,8 @@ public final class NormalCallback extends BaseCallback {
 
     @Override
     protected void onFailure(Exception e) {
-        EasyLog.print(e);
-        final Exception exception = mRequestHandler.requestFail(mLifecycle, e);
+        final Exception exception = mRequestHandler.requestFail(mLifecycle, mRequestApi, e);
+        EasyLog.print(exception);
         EasyUtils.post(() -> {
             if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
                 return;

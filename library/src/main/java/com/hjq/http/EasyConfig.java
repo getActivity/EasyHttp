@@ -64,7 +64,7 @@ public final class EasyConfig {
     /** 重试次数 */
     private int mRetryCount;
     /** 重试时间 */
-    private long mRetryTime = 1000;
+    private long mRetryTime = 2000;
 
     private EasyConfig(OkHttpClient client) {
         mClient = client;
@@ -93,6 +93,9 @@ public final class EasyConfig {
 
     public EasyConfig setClient(OkHttpClient client) {
         mClient = client;
+        if (mClient == null) {
+            throw new IllegalArgumentException("The OkHttp client object cannot be empty");
+        }
         return this;
     }
 

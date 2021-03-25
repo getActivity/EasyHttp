@@ -31,13 +31,13 @@ public final class DownloadCallback extends BaseCallback {
     private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
 
     /** 保存的文件 */
-    private File mFile;
+    private final File mFile;
 
     /** 校验的 MD5 */
     private String mMd5;
 
     /** 下载监听回调 */
-    private OnDownloadListener mListener;
+    private final OnDownloadListener mListener;
 
     /** 下载总字节 */
     private long mTotalByte;

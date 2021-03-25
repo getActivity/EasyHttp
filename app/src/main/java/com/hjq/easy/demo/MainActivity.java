@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -34,7 +35,6 @@ import com.hjq.toast.ToastUtils;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.List;
 
 import okhttp3.Call;
@@ -45,7 +45,7 @@ import okhttp3.Call;
  *    time   : 2019/05/19
  *    desc   : 网络请求示例
  */
-public class MainActivity extends BaseActivity implements View.OnClickListener, OnPermissionCallback {
+public final class MainActivity extends BaseActivity implements View.OnClickListener, OnPermissionCallback {
 
     private ProgressBar mProgressBar;
 
@@ -93,7 +93,7 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (XXPermissions.isGrantedPermission(this, Permission.MANAGE_EXTERNAL_STORAGE)) {
+        if (XXPermissions.isGranted(this, Permission.MANAGE_EXTERNAL_STORAGE)) {
             onGranted(null, true);
         } else {
             requestPermission();
@@ -101,132 +101,136 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
     }
 
     @Override
-    public void onClick(View v) {
-        switch (v.getId()) {
-            case R.id.btn_main_get:
-                EasyHttp.get(this)
-                        .api(new SearchAuthorApi()
-                                .setAuthor("鸿洋"))
-                        .request(new HttpCallback<HttpData<SearchBean>>(this) {
+    public void onClick(View view) {
+        int viewId = view.getId();
+        if (viewId == R.id.btn_main_get) {
 
-                            @Override
-                            public void onSucceed(HttpData<SearchBean> result) {
-                                ToastUtils.show("Get 请求成功，请看日志");
-                            }
-                        });
-                break;
-            case R.id.btn_main_post:
-                EasyHttp.post(this)
-                        .api(new SearchBlogsApi()
-                                .setKeyword("搬砖不再有"))
-                        .request(new HttpCallback<HttpData<SearchBean>>(this) {
+            EasyHttp.get(this)
+                    .api(new SearchAuthorApi()
+                            .setAuthor("鸿洋"))
+                    .request(new HttpCallback<HttpData<SearchBean>>(this) {
 
-                            @Override
-                            public void onSucceed(HttpData<SearchBean> result) {
-                                ToastUtils.show("Post 请求成功，请看日志");
-                            }
-                        });
-                break;
-            case R.id.btn_main_exec:
-                // 在主线程中不能做耗时操作
-                new Thread(() -> {
-                    runOnUiThread(this::showDialog);
-                    try {
-                        HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
-                                .api(new SearchBlogsApi()
-                                        .setKeyword("搬砖不再有"))
-                                .execute(new ResponseClass<HttpData<SearchBean>>() {});
-                        ToastUtils.show("同步请求成功，请看日志");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                        ToastUtils.show(e.getMessage());
-                    }
-                    runOnUiThread(this::hideDialog);
-                }).start();
-                break;
-            case R.id.btn_main_update:
-                if (mProgressBar.getVisibility() == View.VISIBLE) {
-                    ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
-                    return;
+                        @Override
+                        public void onSucceed(HttpData<SearchBean> result) {
+                            ToastUtils.show("Get 请求成功，请看日志");
+                        }
+                    });
+
+        } else if (viewId == R.id.btn_main_post) {
+
+            EasyHttp.post(MainActivity.this)
+                    .api(new SearchBlogsApi()
+                            .setKeyword("搬砖不再有"))
+                    .request(new HttpCallback<HttpData<SearchBean>>(MainActivity.this) {
+
+                        @Override
+                        public void onSucceed(HttpData<SearchBean> result) {
+                            ToastUtils.show("Post 请求成功，请看日志");
+                        }
+                    });
+
+        } else if (viewId == R.id.btn_main_exec) {
+
+            // 在主线程中不能做耗时操作
+            new Thread(() -> {
+                runOnUiThread(this::showDialog);
+                try {
+                    HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
+                            .api(new SearchBlogsApi()
+                                    .setKeyword("搬砖不再有"))
+                            .execute(new ResponseClass<HttpData<SearchBean>>() {});
+                    ToastUtils.show("同步请求成功，请看日志");
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    ToastUtils.show(e.getMessage());
                 }
+                runOnUiThread(this::hideDialog);
+            }).start();
 
-                File file = new File(Environment.getExternalStorageDirectory(), getString(R.string.app_name) + ".png");
+        } else if (viewId == R.id.btn_main_update) {
+
+            if (mProgressBar.getVisibility() == View.VISIBLE) {
+                ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
+                return;
+            }
+
+            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), getString(R.string.app_name) + ".png");
+            if (!file.exists()) {
                 // 生成图片到本地
                 drawableToFile(ContextCompat.getDrawable(this, R.drawable.bg_material), file);
+            }
 
-                EasyHttp.post(this)
-                        .api(new UpdateImageApi(file))
-                        .request(new OnUpdateListener<Void>() {
+            EasyHttp.post(this)
+                    .api(new UpdateImageApi(file))
+                    .request(new OnUpdateListener<Void>() {
 
-                            @Override
-                            public void onStart(Call call) {
-                                mProgressBar.setVisibility(View.VISIBLE);
-                            }
+                        @Override
+                        public void onStart(Call call) {
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
 
-                            @Override
-                            public void onProgress(int progress) {
-                                mProgressBar.setProgress(progress);
-                            }
+                        @Override
+                        public void onProgress(int progress) {
+                            mProgressBar.setProgress(progress);
+                        }
 
-                            @Override
-                            public void onSucceed(Void result) {
-                                ToastUtils.show("上传成功");
-                            }
+                        @Override
+                        public void onSucceed(Void result) {
+                            ToastUtils.show("上传成功");
+                        }
 
-                            @Override
-                            public void onFail(Exception e) {
-                                ToastUtils.show("上传失败");
-                            }
+                        @Override
+                        public void onFail(Exception e) {
+                            ToastUtils.show("上传失败");
+                        }
 
-                            @Override
-                            public void onEnd(Call call) {
-                                mProgressBar.setVisibility(View.GONE);
-                            }
-                        });
-                break;
-            case R.id.btn_main_download:
-                if (mProgressBar.getVisibility() == View.VISIBLE) {
-                    ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
-                    return;
-                }
-                EasyHttp.download(this)
-                        .method(HttpMethod.GET)
-                        .file(new File(Environment.getExternalStorageDirectory(), "微信.apk"))
-                        //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
-                        .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
-                        .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
-                        .listener(new OnDownloadListener() {
+                        @Override
+                        public void onEnd(Call call) {
+                            mProgressBar.setVisibility(View.GONE);
+                        }
+                    });
 
-                            @Override
-                            public void onStart(File file) {
-                                mProgressBar.setVisibility(View.VISIBLE);
-                            }
+        } else if (viewId == R.id.btn_main_download) {
 
-                            @Override
-                            public void onProgress(File file, int progress) {
-                                mProgressBar.setProgress(progress);
-                            }
+            if (mProgressBar.getVisibility() == View.VISIBLE) {
+                ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
+                return;
+            }
+            EasyHttp.download(this)
+                    .method(HttpMethod.GET)
+                    .file(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "微信.apk"))
+                    //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
+                    .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
+                    .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
+                    .listener(new OnDownloadListener() {
 
-                            @Override
-                            public void onComplete(File file) {
-                                ToastUtils.show("下载完成：" + file.getPath());
-                                installApk(MainActivity.this, file);
-                            }
+                        @Override
+                        public void onStart(File file) {
+                            mProgressBar.setVisibility(View.VISIBLE);
+                        }
 
-                            @Override
-                            public void onError(File file, Exception e) {
-                                ToastUtils.show("下载出错：" + e.getMessage());
-                            }
+                        @Override
+                        public void onProgress(File file, int progress) {
+                            mProgressBar.setProgress(progress);
+                        }
 
-                            @Override
-                            public void onEnd(File file) {
-                                mProgressBar.setVisibility(View.GONE);
-                            }
+                        @Override
+                        public void onComplete(File file) {
+                            ToastUtils.show("下载完成：" + file.getPath());
+                            installApk(MainActivity.this, file);
+                        }
 
-                        }).start();
-                break;
-            default:
-                break;
+                        @Override
+                        public void onError(File file, Exception e) {
+                            ToastUtils.show("下载出错：" + e.getMessage());
+                        }
+
+                        @Override
+                        public void onEnd(File file) {
+                            mProgressBar.setVisibility(View.GONE);
+                        }
+
+                    }).start();
         }
     }
 
@@ -272,6 +276,8 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
             return;
         }
 
+        FileOutputStream outputStream = null;
+
         try {
             if (file.exists()) {
                 file.delete();
@@ -281,12 +287,24 @@ public class MainActivity extends BaseActivity implements View.OnClickListener, 
                 file.createNewFile();
             }
 
-            FileOutputStream out;
-            out = new FileOutputStream(file);
-            ((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, out);
-            out.close();
+            outputStream = new FileOutputStream(file);
+            if (((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
+                outputStream.flush();
+            }
+
+            // 通知系统多媒体扫描该文件，否则会导致拍摄出来的图片或者视频没有及时显示到相册中，而需要通过重启手机才能看到
+            MediaScannerConnection.scanFile(this, new String[]{file.getPath()}, null, null);
+
         } catch (IOException e) {
             e.printStackTrace();
+        } finally {
+            try {
+                if (outputStream != null) {
+                    outputStream.close();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 }

@@ -6,8 +6,8 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        versionCode 90
-        versionName "9.0"
+        versionCode 92
+        versionName "9.2"
     }
 
     // 使用 JDK 1.8
@@ -19,7 +19,7 @@ android {
 
 dependencies {
     // noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
     // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
     // noinspection GradleDependency
@@ -27,17 +27,11 @@ dependencies {
 }
 
 publish {
-    // 填写 bintray 用户名，注意大小写
     userOrg = 'getactivity'
-    // 定义的 maven group id 最终引用形式
     groupId = 'com.hjq'
-    // maven的 artifact id
     artifactId = 'http'
-    // maven 上发布版本号
-    publishVersion = '9.0'
-    // 描述，自己定义
+    publishVersion = '9.2'
     desc = 'Easy-to-use network request framework'
-    // 项目在 github 中的地址
     website = "https://github.com/getActivity/EasyHttp"
 }
 

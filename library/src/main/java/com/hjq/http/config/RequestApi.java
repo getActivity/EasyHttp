@@ -10,11 +10,9 @@ import com.hjq.http.annotation.HttpIgnore;
  */
 public final class RequestApi implements IRequestApi {
 
-    /**
-     * 接口地址
-     */
+    /** 接口地址 */
     @HttpIgnore
-    private String mApi;
+    private final String mApi;
 
     public RequestApi(String api) {
         mApi = api;

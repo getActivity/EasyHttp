@@ -8,6 +8,7 @@ import okhttp3.Call;
  *    time   : 2019/05/19
  *    desc   : 请求回调包装类
  */
+@SuppressWarnings("rawtypes")
 public class HttpCallback<T> implements OnHttpListener<T> {
 
     private final OnHttpListener mListener;

@@ -8,7 +8,7 @@ import com.hjq.http.model.BodyType;
  *    time   : 2019/05/19
  *    desc   : 请求服务配置
  */
-public interface IRequestServer extends IRequestHost, IRequestPath, IRequestType {
+public interface IRequestServer extends IRequestHost, IRequestPath, IRequestType, IRequestClient {
 
     @Override
     default BodyType getType() {

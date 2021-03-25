@@ -26,7 +26,7 @@ public final class JsonBody extends RequestBody {
     /** 字节数组 */
     private final byte[] mBytes;
 
-    public JsonBody(Map map) {
+    public JsonBody(Map<?, ?> map) {
         this(new JSONObject(map));
     }
 
@@ -35,7 +35,7 @@ public final class JsonBody extends RequestBody {
        mBytes = mJson.getBytes();
     }
 
-    public JsonBody(List list) {
+    public JsonBody(List<?> list) {
         this(new JSONArray(list));
     }
 

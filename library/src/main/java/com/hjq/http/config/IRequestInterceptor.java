@@ -12,12 +12,11 @@ import com.hjq.http.model.HttpParams;
 public interface IRequestInterceptor {
 
     /**
-     * 开始请求之前调用
+     * 拦截参数
      *
-     * @param url           请求地址
-     * @param tag           请求标记
+     * @param api           接口对象
      * @param params        请求参数
      * @param headers       请求头参数
      */
-    void intercept(String url, String tag, HttpParams params, HttpHeaders headers);
+    void interceptArguments(IRequestApi api, HttpParams params, HttpHeaders headers);
 }

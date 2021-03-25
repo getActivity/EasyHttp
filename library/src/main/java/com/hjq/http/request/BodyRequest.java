@@ -32,9 +32,9 @@ import okhttp3.RequestBody;
  *    desc   : 带 RequestBody 请求
  */
 @SuppressWarnings("unchecked")
-public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> {
+public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<T> {
 
-    private OnUpdateListener mUpdateListener;
+    private OnUpdateListener<?> mUpdateListener;
 
     private RequestBody mRequestBody;
 
@@ -45,14 +45,14 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
     /**
      * 自定义 json 字符串
      */
-    public T json(Map map) {
+    public T json(Map<?, ?> map) {
         if (map == null) {
             return (T) this;
         }
         return body(new JsonBody(map));
     }
 
-    public T json(List list) {
+    public T json(List<?> list) {
         if (list == null) {
             return (T) this;
         }
@@ -69,7 +69,7 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
     /**
      * 自定义文本字符串
      */
-    public T body(String text) {
+    public T text(String text) {
         if (text == null) {
             return (T) this;
         }
@@ -146,7 +146,7 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
             }
         }
 
-        return request.build();
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), request.build());
     }
 
     /**
@@ -155,7 +155,7 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
     @Override
     public T request(OnHttpListener<?> listener) {
         if (listener instanceof OnUpdateListener) {
-            mUpdateListener = (OnUpdateListener) listener;
+            mUpdateListener = (OnUpdateListener<?>) listener;
         }
         return super.request(listener);
     }
@@ -199,8 +199,8 @@ public abstract class BodyRequest<T extends BodyRequest> extends BaseRequest<T> 
                 }
 
                 // 上传文件列表
-                if (object instanceof List && EasyUtils.isFileList((List) object)) {
-                    for (Object item : (List) object) {
+                if (object instanceof List && EasyUtils.isFileList((List<?>) object)) {
+                    for (Object item : (List<?>) object) {
                         MultipartBody.Part part = EasyUtils.createPart(key, (File) item);
                         if (part != null) {
                             builder.addPart(part);

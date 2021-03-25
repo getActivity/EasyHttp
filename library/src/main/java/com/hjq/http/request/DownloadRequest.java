@@ -3,9 +3,11 @@ package com.hjq.http.request;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
+import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.RequestApi;
 import com.hjq.http.config.RequestServer;
+import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
@@ -102,7 +104,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
                 // 如果这个下载请求方式是 Post
                 return new PostRequest(getLifecycleOwner()).createRequest(url, tag, params, headers, type);
             default:
-                throw new IllegalStateException("are you ok?");
+                throw new IllegalStateException("method nonsupport");
         }
     }
 
@@ -110,10 +112,22 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
      * 开始下载
      */
     public DownloadRequest start() {
-        EasyLog.print(new Throwable().getStackTrace());
-        mCallProxy = new CallProxy(createCall());
-        /** 下载回调对象 */
-        mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));
+        long delayMillis = getDelayMillis();
+        if (delayMillis > 0) {
+            // 打印请求延迟时间
+            EasyLog.print("RequestDelay", String.valueOf(delayMillis));
+        }
+        StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+        EasyUtils.postDelayed(() -> {
+            if (!HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                EasyLog.print("宿主已被销毁，请求无法进行");
+                return;
+            }
+            EasyLog.print(stackTrace);
+            mCallProxy = new CallProxy(createCall());
+            /** 下载回调对象 */
+            mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));
+        }, delayMillis);
         return this;
     }
 
@@ -128,21 +142,21 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    public DownloadRequest request(OnHttpListener listener) {
+    public DownloadRequest request(OnHttpListener<?> listener) {
         // 请调用 start 方法
-        throw new IllegalStateException("are you ok?");
+        throw new IllegalStateException("Call the start method");
     }
 
     @Override
-    public <T> T execute(ResponseClass<T> t) {
+    public <Bean> Bean execute(ResponseClass<Bean> responseClass) {
         // 请调用 start 方法
-        throw new IllegalStateException("are you ok?");
+        throw new IllegalStateException("Call the start method");
     }
 
     @Override
     public DownloadRequest cancel() {
         // 请调用 stop 方法
-        throw new IllegalStateException("are you ok?");
+        throw new IllegalStateException("Call the start method");
     }
 
     @Override

@@ -19,7 +19,7 @@ import okhttp3.Request;
  *    desc   : 不带 RequestBody 的请求
  */
 @SuppressWarnings("unchecked")
-public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
+public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T> {
 
     private CacheControl mCacheControl;
 
@@ -90,6 +90,7 @@ public abstract class UrlRequest<T extends UrlRequest> extends BaseRequest<T> {
                 EasyLog.print();
             }
         }
-        return request.build();
+
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), request.build());
     }
 }

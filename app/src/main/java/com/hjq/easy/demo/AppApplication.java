@@ -6,6 +6,7 @@ import com.hjq.easy.demo.http.model.RequestHandler;
 import com.hjq.easy.demo.http.server.ReleaseServer;
 import com.hjq.easy.demo.http.server.TestServer;
 import com.hjq.http.EasyConfig;
+import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.model.HttpHeaders;
@@ -14,7 +15,13 @@ import com.hjq.toast.ToastUtils;
 
 import okhttp3.OkHttpClient;
 
-public class MyApplication extends Application {
+/**
+ *    author : Android 轮子哥
+ *    github : https://github.com/getActivity/EasyHttp
+ *    time   : 2019/12/07
+ *    desc   : 应用入口
+ */
+public final class AppApplication extends Application {
 
     @Override
     public void onCreate() {
@@ -42,14 +49,14 @@ public class MyApplication extends Application {
                 // 设置请求参数拦截器
                 .setInterceptor(new IRequestInterceptor() {
                     @Override
-                    public void intercept(String url, String tag, HttpParams params, HttpHeaders headers) {
+                    public void interceptArguments(IRequestApi api, HttpParams params, HttpHeaders headers) {
                         headers.put("timestamp", String.valueOf(System.currentTimeMillis()));
                     }
                 })
                 // 设置请求重试次数
                 .setRetryCount(1)
                 // 设置请求重试时间
-                .setRetryTime(1000)
+                .setRetryTime(2000)
                 // 添加全局请求参数
                 .addParam("token", "6666666")
                 // 添加全局请求头

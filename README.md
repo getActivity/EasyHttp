@@ -10,17 +10,17 @@
 
 * 另外对 OkHttp 原理感兴趣的同学推荐你看以下源码分析文章
 
- * [OkHttp 精讲：拦截器执行原理](https://www.jianshu.com/p/e0f324fd9411)
+* [OkHttp 精讲：拦截器执行原理](https://www.jianshu.com/p/e0f324fd9411)
 
- * [OkHttp 精讲：RetryAndFollowUpInterceptor](https://www.jianshu.com/p/40636d32cb67)
+* [OkHttp 精讲：RetryAndFollowUpInterceptor](https://www.jianshu.com/p/40636d32cb67)
 
- * [OkHttp 精讲：BridgeInterceptor](https://www.jianshu.com/p/fab2d74de900)
+* [OkHttp 精讲：BridgeInterceptor](https://www.jianshu.com/p/fab2d74de900)
 
- * [OkHttp 精讲：CacheInterceptor](https://www.jianshu.com/p/44fad764c0ae)
+* [OkHttp 精讲：CacheInterceptor](https://www.jianshu.com/p/44fad764c0ae)
 
- * [OkHttp 精讲：ConnectInterceptor](https://www.jianshu.com/p/a3a774fdff4f)
+* [OkHttp 精讲：ConnectInterceptor](https://www.jianshu.com/p/a3a774fdff4f)
 
- * [OkHttp 精讲：CallServerInterceptor](https://www.jianshu.com/p/aa77af6251ff)
+* [OkHttp 精讲：CallServerInterceptor](https://www.jianshu.com/p/aa77af6251ff)
 
 #### Gradle 集成
 
@@ -35,10 +35,10 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.hjq:http:9.0'
+    implementation 'com.hjq:http:9.2'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:okhttp:3.12.12'
+    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 }
 ```
             
@@ -46,37 +46,69 @@ dependencies {
 
 ### 不同网络请求框架之间的对比
 
-|  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit) | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
+|  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit) + [RxJava](https://github.com/ReactiveX/RxJava) | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  9.0 |  2.9.0  |  3.0.4    |
-|    **aar 包大小**  |  [61 KB](https://bintray.com/getactivity/maven/http#files/com/hjq/http)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
+|    对应版本  |  9.2 |  2.9.0  |  3.0.4    |
+|    **aar 包大小**  |  [63 KB](https://bintray.com/getactivity/maven/http#files/com/hjq/http)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
-|    配置多域名  |  支持  |  不支持  |   支持   |
-|    **动态 Host**  |  支持  |  不支持  |   不支持   |
-|    全局参数   |  支持  |  不支持  |    支持   |
-|    超时重试   |  支持  |  不支持  |    支持   |
-|    **下载校验**   |  支持  |  不支持  |   不支持  |
-|    **极速下载**   |  支持  |  不支持  |   不支持  |
+|    配置多域名  |  ✅  |  ❌  |   ✅   |
+|    **动态 Host**  |  ✅  |  ❌  |   ❌   |
+|    全局参数   |  ✅  |  ❌  |    ✅   |
+|    日志打印   |  ✅  |  ❌  |    ✅   |
+|    超时重试   |  ✅  |  ✅  |    ✅   |
+|    **下载校验**   |  ✅  |  ❌  |   ❌  |
+|    **极速下载**   |  ✅  |  ❌  |   ❌  |
+|    批量上传文件   |  ✅  |   ❌   |    ✅    |
+|    上传进度监听   |  ✅  |   ❌   |    ✅    |
+|    Json 参数提交  |  ✅  |   ❌   |    ✅   |
+|    **请求代码定位**   |  ✅  |   ❌   |    ❌    |
+|    **延迟发起请求**   |  ✅  |   ✅   |    ❌    |
 |    上传文件类型   | File / InputStream / RequestBody | RequestBody |  File  |
-|    批量上传文件   |  支持  |   不支持   |    支持    |
-|    上传进度监听   |  支持  |   不支持   |    支持    |
-|    Json 参数提交  |  支持  |   不支持   |    支持   |
-|    **请求代码定位**   |  支持  |   不支持   |    不支持    |
 |    **请求生命周期**  | 自动管控 |   需要封装  |   需要封装  |
 |    参数传值方式  |  字段名 + 字段值  | 参数名 + 参数值 |  定义 Key + Value  |
-|    参数灵活性  | 不强制传入 | 强制全部传入 |   不强制传入 |
+|    框架灵活性  |    高     |     低      |     中    |
 |    框架学习成本   |    中    |     高    |    低    |
-|    **API 记忆成本**  |    低    |     高    |    低    | 
+|    **API 记忆成本**  |    低    |     高    |    低    |
 |    **接口维护成本**   |   低     |     中    |    高    |
 |    框架维护状态   |  维护中  |   维护中   |   停止维护  |
 
 * Retrofit 在我看来并不是那么好用，因为很多常用的功能实现起来比较麻烦，动态 Host 要写拦截器，日志打印要写拦截器，就连最常用的添加全局参数也要写拦截器，一个拦截器意味着要写很多代码，如果写得不够严谨还有可能出现 Bug，从而影响整个 OkHttp 请求流程，我经常在想这些功能能不能都用一句代码搞定，因为我觉得这些功能是设计框架的时候本应该考虑的，这便是我做这个框架的初心。
 
-* 本框架采用了 OOP 思想，一个请求代表一个对象，通过类的继承和实现的特性来实现接口的动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。
+* 本框架采用了 OOP 思想，一个请求代表一个对象，通过类继承和实现的特性来对接口进行动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。而 Retrofit 采用的是注解方式，缺点是灵活性极低，因为注解上面只能放常量，也就会限定你在注解上面的一切参数只能是事先定义好的，这对接口的动态化配置极不利的。
 
 * 有很多人觉得写一个接口类很麻烦，这个点确实有点麻烦，但是这块的付出是有收获的，从前期开发的效率考虑：OkGo > EasyHttp > Retrofit，但是从后期维护的效率考虑：EasyHttp > Retrofit > OkGo，之所以比较这三个框架，是因为框架的设计思想不同，但是我始终认为 EasyHttp 才是最好的设计，所以我创造了它。
 
 * 前期开发和后期维护哪个更重要？我觉得都重要，但是如果两者之间存在利益冲突，我会毫不犹豫地选择后期维护，因为前期开发占据的是小头，后期的持续维护才是大头。
+
+#### 生命周期自动管控介绍
+
+* 框架可以自动管控请求的生命周期，无需第三方调用者封装和适配，这块其实用到 Jetpack 中的一个 Lifecycle 特性，框架将网络请求和 LifecycleOwner 绑定在一起，当 LifecycleOwner 触发 destroy 时，框架会对绑定的网络请求进行 cancel 处理。相比较传统的写法，这种方式更加简单快捷，同时有 Lifecycle 特性的加持，灵活也会更高，因为我们完全不需要关心请求的主体是 Activity 还是 Fragment，又或者是其他类型的对象。
+
+* 但并不是完全没有缺点，因为 Lifecycle 特性是 AndroidX 包中的新特性，如果需要使用的话，当前项目必须基于 AndroidX 库开发的才可以集成。
+
+* 都说代码是最好的老师，具体实现的代码如下：
+
+```java
+public final class HttpLifecycleManager implements LifecycleEventObserver {
+
+    /**
+     * 绑定组件的生命周期
+     */
+    public static void bind(LifecycleOwner lifecycleOwner) {
+        lifecycleOwner.getLifecycle().addObserver(new HttpLifecycleManager());
+    }
+
+    @Override
+    public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
+        if (event == Lifecycle.Event.ON_DESTROY) {
+            // 移除监听
+            source.getLifecycle().removeObserver(this);
+            // 取消请求
+            EasyHttp.cancel(source);
+        }
+    }
+}
+```
 
 #### 极速下载功能介绍
 
@@ -89,6 +121,25 @@ dependencies {
 * 框架会在日志打印中输出在网络请求的代码位置，这样开发者可以直接通过点击 Log 来定位代码是在哪个类哪行代码，这样可以极大提升我们排查问题的效率，特别是在请求一多且业务复杂的情况下，我相信没有一个人会拒绝这样的功能。
 
 ![](RequestCode.png)
+
+#### 延迟发起请求功能介绍
+
+* 通常我们都有这样一种需求，就是我们希望发起网络请求，但是希望它不是及时，而是经过一定的延迟才去请求，EasyHttp 针对这种场景进行了考虑并封装，我们可以这样写来做到这种效果：
+
+```java
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .delay(3000)
+        .request(new HttpCallback<HttpData<XxxBean>>(this) {
+
+            @Override
+            public void onSucceed(HttpData<XxxBean> result) {
+                
+            }
+        });
+```
+
+* 延迟请求功能不仅支持同步和异步请求，还支持下载请求延迟。
 
 #### 作者的其他开源项目
 
@@ -104,11 +155,15 @@ dependencies {
 
 * 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
 
-* 日志框架：[Logcat](https://github.com/getActivity/Logcat)
-
 * Gson 解析容错：[GsonFactory](https://github.com/getActivity/GsonFactory)
 
-#### Android技术讨论Q群：78797078
+* 日志查看框架：[Logcat](https://github.com/getActivity/Logcat)
+
+#### 微信公众号：Android轮子哥
+
+![](https://raw.githubusercontent.com/getActivity/Donate/master/picture/official_ccount.png)
+
+#### Android 技术分享 QQ 群：78797078
 
 #### 如果您觉得我的开源库帮你节省了大量的开发时间，请扫描下方的二维码随意打赏，要是能打赏个 10.24 :monkey_face:就太:thumbsup:了。您的支持将鼓励我继续创作:octocat:
 
