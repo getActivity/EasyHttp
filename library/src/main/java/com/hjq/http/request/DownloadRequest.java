@@ -1,5 +1,8 @@
 package com.hjq.http.request;
 
+import android.content.ContentResolver;
+import android.net.Uri;
+
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
@@ -12,6 +15,8 @@ import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
+import com.hjq.http.model.FileContentResolver;
+import com.hjq.http.model.FileWrapper;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.HttpParams;
@@ -33,7 +38,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     private HttpMethod mMethod = HttpMethod.GET;
 
     /** 保存的文件 */
-    private File mFile;
+    private FileWrapper mFile;
 
     /** 校验的 md5 */
     private String mMd5;
@@ -68,13 +73,26 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     /**
      * 设置保存的路径
      */
+
+    public DownloadRequest file(String filePath) {
+        return file(new File(filePath));
+    }
+
     public DownloadRequest file(File file) {
-        mFile = file;
+        if (file instanceof FileContentResolver) {
+            return file((FileContentResolver) file);
+        }
+
+        mFile = new FileWrapper(file);
         return this;
     }
 
-    public DownloadRequest file(String file) {
-        mFile = new File(file);
+    public DownloadRequest file(ContentResolver resolver, Uri uri) {
+        return file(new FileContentResolver(resolver, uri));
+    }
+
+    public DownloadRequest file(FileContentResolver file) {
+        mFile = file;
         return this;
     }
 
@@ -117,7 +135,9 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
             // 打印请求延迟时间
             EasyLog.print("RequestDelay", String.valueOf(delayMillis));
         }
+
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
+
         EasyUtils.postDelayed(() -> {
             if (!HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
                 EasyLog.print("宿主已被销毁，请求无法进行");
@@ -125,9 +145,9 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
             }
             EasyLog.print(stackTrace);
             mCallProxy = new CallProxy(createCall());
-            /** 下载回调对象 */
             mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));
         }, delayMillis);
+
         return this;
     }
 

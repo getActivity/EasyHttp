@@ -22,7 +22,23 @@
 
 * [OkHttp 精讲：CallServerInterceptor](https://www.jianshu.com/p/aa77af6251ff)
 
-#### Gradle 集成
+#### 集成步骤
+
+* 在项目根目录下的 `build.gradle` 文件中加入
+
+```groovy
+buildscript {
+    ......
+}
+allprojects {
+    repositories {
+        // JitPack 远程仓库：https://jitpack.io
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+* 在项目 app 模块下的 `build.gradle` 文件中加入
 
 ```groovy
 android {
@@ -35,7 +51,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.hjq:http:9.2'
+    implementation 'com.github.getActivity:EasyHttp:9.5'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -46,10 +62,10 @@ dependencies {
 
 ### 不同网络请求框架之间的对比
 
-|  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit) + [RxJava](https://github.com/ReactiveX/RxJava) | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
+|  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  9.2 |  2.9.0  |  3.0.4    |
-|    **aar 包大小**  |  [63 KB](https://bintray.com/getactivity/maven/http#files/com/hjq/http)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
+|    对应版本  |  9.5 |  2.9.0  |  3.0.4    |
+|    **aar 包大小**  |  [70 KB](https://jitpack.io/#getActivity/EasyHttp)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
@@ -62,7 +78,7 @@ dependencies {
 |    上传进度监听   |  ✅  |   ❌   |    ✅    |
 |    Json 参数提交  |  ✅  |   ❌   |    ✅   |
 |    **请求代码定位**   |  ✅  |   ❌   |    ❌    |
-|    **延迟发起请求**   |  ✅  |   ✅   |    ❌    |
+|    **延迟发起请求**   |  ✅  |   ❌   |    ❌    |
 |    上传文件类型   | File / InputStream / RequestBody | RequestBody |  File  |
 |    **请求生命周期**  | 自动管控 |   需要封装  |   需要封装  |
 |    参数传值方式  |  字段名 + 字段值  | 参数名 + 参数值 |  定义 Key + Value  |
@@ -74,7 +90,17 @@ dependencies {
 
 * Retrofit 在我看来并不是那么好用，因为很多常用的功能实现起来比较麻烦，动态 Host 要写拦截器，日志打印要写拦截器，就连最常用的添加全局参数也要写拦截器，一个拦截器意味着要写很多代码，如果写得不够严谨还有可能出现 Bug，从而影响整个 OkHttp 请求流程，我经常在想这些功能能不能都用一句代码搞定，因为我觉得这些功能是设计框架的时候本应该考虑的，这便是我做这个框架的初心。
 
-* 本框架采用了 OOP 思想，一个请求代表一个对象，通过类继承和实现的特性来对接口进行动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。而 Retrofit 采用的是注解方式，缺点是灵活性极低，因为注解上面只能放常量，也就会限定你在注解上面的一切参数只能是事先定义好的，这对接口的动态化配置极不利的。
+* OkGo 其实也存在一些弊端，例如会把参数的 key 引用放到外层去，这样会引发一些问题：
+
+    1. Key 管理问题：这个 key 可能会在外层被使用很多次，这样参数的 key 管理就会变得不可控，后续接口改动可能会出现漏改的风险，尽管这种情况比较少见，但是也不容忽视，而 EasyHttp 没有这个问题，因为 EasyHttp 不会将参数 key 值放置到外层中去。
+    
+    2. 接口参数注释的问题：站在代码的规范角度上讲，我们应该在代码中注明参数的含义及作用，如果一旦将 key 放到外层，那么每一处调用的地方都需要写一遍注释，而 EasyHttp 是将参数字段化，只需要写一次注释到字段上即可。
+    
+    3. 接口信息完整信息展示：使用 OkGo 请求网络，只能在调用的地方看到传递的接口参数，而一些被其他地方引用的参数，我们无法很直观的看到，只能通过追踪代码或者查看文档来得知，而 EasyHttp 将一个接口的信息全部通过一个类来管理的，这个类其实就相当于一个接口文档。
+
+    4. 接口的动态化配置：除了接口的参数之外，一个接口还有可能单独配置OkHttpClient 对象、参数的提交方式、接口响应处理方式等，这些用 OkGo 是可以实现，但是每个地方都要写一次，而 EasyHttp 可以直接在 API 类中配置，真正做到一劳永逸。
+
+* EasyHttp 采用了 OOP 思想，一个请求代表一个对象，通过类继承和实现的特性来对接口进行动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。而 Retrofit 采用的是注解方式，缺点是灵活性极低，因为注解上面只能放常量，也就会限定你在注解上面的一切参数只能是事先定义好的，这对接口的动态化配置极不利的。
 
 * 有很多人觉得写一个接口类很麻烦，这个点确实有点麻烦，但是这块的付出是有收获的，从前期开发的效率考虑：OkGo > EasyHttp > Retrofit，但是从后期维护的效率考虑：EasyHttp > Retrofit > OkGo，之所以比较这三个框架，是因为框架的设计思想不同，但是我始终认为 EasyHttp 才是最好的设计，所以我创造了它。
 
@@ -100,12 +126,14 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
 
     @Override
     public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
-        if (event == Lifecycle.Event.ON_DESTROY) {
-            // 移除监听
-            source.getLifecycle().removeObserver(this);
-            // 取消请求
-            EasyHttp.cancel(source);
+        if (event != Lifecycle.Event.ON_DESTROY) {
+            return;
         }
+
+        // 移除监听
+        source.getLifecycle().removeObserver(this);
+        // 取消请求
+        EasyHttp.cancel(source);
     }
 }
 ```
@@ -173,9 +201,9 @@ EasyHttp.post(this)
 
 #### 特别感谢
 
-[张鸿洋](https://github.com/hongyangAndroid)
+* [张鸿洋](https://github.com/hongyangAndroid)
 
-[WanAndroid](https://www.wanandroid.com/)
+* [WanAndroid](https://www.wanandroid.com/)
 
 ## License
 

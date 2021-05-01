@@ -26,7 +26,13 @@ public enum HttpMethod {
     PUT("PUT"),
 
     /** Patch 请求 */
-    PATCH("PATCH");
+    PATCH("PATCH"),
+
+    /** Options 请求 */
+    OPTIONS("OPTIONS"),
+
+    /** Trace 请求 */
+    TRACE("TRACE");
 
     /** 请求方式 */
     private final String mMethod;

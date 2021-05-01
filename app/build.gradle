@@ -7,18 +7,18 @@ android {
         abortOnError false
     }
 
-    // 支持 JDK 1.8
-    compileOptions {
-        targetCompatibility JavaVersion.VERSION_1_8
-        sourceCompatibility JavaVersion.VERSION_1_8
-    }
-
     defaultConfig {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 92
-        versionName '9.2'
+        versionCode 95
+        versionName '9.5'
+    }
+
+    // 支持 JDK 1.8
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
     }
 
     buildTypes {
@@ -40,23 +40,28 @@ dependencies {
     
     implementation project(':library')
 
-    // 谷歌兼容库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-
-    // 标题栏框架：https://github.com/getActivity/TitleBar
-    implementation 'com.hjq:titlebar:8.5'
-    // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.hjq:toast:8.8'
-    // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.hjq:xxpermissions:10.5'
-    // Json 解析框架：https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.8.6'
-    // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation 'com.hjq.gson:factory:5.2'
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+
+    // 谷歌兼容库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
+    implementation 'androidx.appcompat:appcompat:1.2.0'
+
+    // 吐司框架：https://github.com/getActivity/ToastUtils
+    implementation 'com.github.getActivity:ToastUtils:9.1'
+
+    // 权限请求框架：https://github.com/getActivity/XXPermissions
+    implementation 'com.github.getActivity:XXPermissions:10.8'
+
+    // 标题栏框架：https://github.com/getActivity/TitleBar
+    implementation 'com.github.getActivity:TitleBar:8.6'
+
+    // Json 解析框架：https://github.com/google/gson
+    implementation 'com.google.code.gson:gson:2.8.6'
+    // Gson 解析容错：https://github.com/getActivity/GsonFactory
+    implementation 'com.github.getActivity:GsonFactory:5.2'
+
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.hjq:logcat:9.5'
+    debugImplementation 'com.github.getActivity:Logcat:9.6'
 }

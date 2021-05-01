@@ -6,9 +6,11 @@ import com.hjq.http.request.DeleteRequest;
 import com.hjq.http.request.DownloadRequest;
 import com.hjq.http.request.GetRequest;
 import com.hjq.http.request.HeadRequest;
+import com.hjq.http.request.OptionsRequest;
 import com.hjq.http.request.PatchRequest;
 import com.hjq.http.request.PostRequest;
 import com.hjq.http.request.PutRequest;
+import com.hjq.http.request.TraceRequest;
 
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
@@ -91,6 +93,30 @@ public final class EasyHttp {
      */
     public static PatchRequest patch(LifecycleOwner lifecycleOwner) {
         return new PatchRequest(lifecycleOwner);
+    }
+
+    /**
+     * Options 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static OptionsRequest options(LifecycleOwner lifecycleOwner) {
+        return new OptionsRequest(lifecycleOwner);
+    }
+
+    /**
+     * Trace 请求
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static TraceRequest trace(LifecycleOwner lifecycleOwner) {
+        return new TraceRequest(lifecycleOwner);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.hjq.easy.demo.http.request;
+package com.hjq.easy.demo.http.api;
 
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestServer;

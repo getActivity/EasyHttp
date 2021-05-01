@@ -28,6 +28,8 @@ import com.hjq.http.model.HttpParams;
 import com.hjq.http.model.ResponseClass;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -189,8 +191,19 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
         HttpParams params = new HttpParams();
         HttpHeaders headers = new HttpHeaders();
 
-        Field[] fields = mRequestApi.getClass().getDeclaredFields();
+        List<Field> fields = new ArrayList<>();
+
+        Class<?> clazz = mRequestApi.getClass();
+        do {
+            Field[] declaredFields = clazz.getDeclaredFields();
+            fields.addAll(0, Arrays.asList(declaredFields));
+            // 遍历获取父类的字段
+            clazz = clazz.getSuperclass();
+        } while (clazz != null && !Object.class.equals(clazz));
+
+        // 当前请求是否存在流参数
         params.setMultipart(EasyUtils.isMultipart(fields));
+
         // 如果参数中包含流参数并且当前请求方式不是表单的话
         if (params.isMultipart() && type != BodyType.FORM) {
             // 就强制设置成以表单形式提交参数
@@ -304,8 +317,10 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
             // 打印请求延迟时间
             EasyLog.print("RequestDelay", String.valueOf(mDelayMillis));
         }
+
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
         EasyUtils.postDelayed(() -> {
+
             if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                 EasyLog.print("宿主已被销毁，请求无法进行");
                 return;
@@ -313,7 +328,9 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
             EasyLog.print(stackTrace);
             mCallProxy = new CallProxy(createCall());
             mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, mRequestApi, mRequestHandler, listener));
+
         }, mDelayMillis);
+
         return (T) this;
     }
 
@@ -329,10 +346,12 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
             EasyLog.print("RequestDelay", String.valueOf(mDelayMillis));
             Thread.sleep(mDelayMillis);
         }
+
         if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
             EasyLog.print("宿主已被销毁，请求无法进行");
             throw new IllegalStateException("The host has been destroyed and the request cannot proceed");
         }
+
         EasyLog.print(new Throwable().getStackTrace());
         try {
             mCallProxy = new CallProxy(createCall());

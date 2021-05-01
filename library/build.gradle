@@ -1,13 +1,12 @@
 apply plugin: 'com.android.library'
-apply plugin: 'com.novoda.bintray-release'
 
 android {
     compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 14
-        versionCode 92
-        versionName "9.2"
+        versionCode 95
+        versionName "9.5"
     }
 
     // 使用 JDK 1.8
@@ -24,15 +23,6 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
     // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-runtime:2.1.0'
-}
-
-publish {
-    userOrg = 'getactivity'
-    groupId = 'com.hjq'
-    artifactId = 'http'
-    publishVersion = '9.2'
-    desc = 'Easy-to-use network request framework'
-    website = "https://github.com/getActivity/EasyHttp"
 }
 
 tasks.withType(Javadoc) {

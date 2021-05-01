@@ -2,6 +2,8 @@ package com.hjq.http.body;
 
 import androidx.annotation.NonNull;
 
+import com.hjq.http.model.ContentType;
+
 import org.json.JSONArray;
 import org.json.JSONObject;
 
@@ -19,7 +21,7 @@ import okio.BufferedSink;
  *    time   : 2019/12/28
  *    desc   : Json 参数提交
  */
-public final class JsonBody extends RequestBody {
+public class JsonBody extends RequestBody {
 
     /** Json 数据 */
     private final String mJson;
@@ -51,7 +53,7 @@ public final class JsonBody extends RequestBody {
 
     @Override
     public MediaType contentType() {
-        return MediaType.get("application/json; charset=utf-8");
+        return ContentType.JSON;
     }
 
     @Override

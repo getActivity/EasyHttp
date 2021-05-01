@@ -78,21 +78,21 @@ public final class HttpSslFactory {
             TrustManager[] trustManagers = prepareTrustManager(certificates);
             X509TrustManager manager;
             if (trustManager != null) {
-                // 优先使用用户自定义的TrustManager
+                // 优先使用用户自定义的 TrustManager
                 manager = trustManager;
             } else if (trustManagers != null) {
-                // 然后使用默认的TrustManager
+                // 然后使用默认的 TrustManager
                 manager = chooseTrustManager(trustManagers);
             } else {
-                // 否则使用不安全的TrustManager
+                // 否则使用不安全的 TrustManager
                 manager = new UnSafeTrustManager();
             }
-            // 创建TLS类型的SSLContext对象， that uses our TrustManager
+            // 创建 TLS 类型的 SsLContext 对象，使用我们的 TrustManager
             SSLContext sslContext = SSLContext.getInstance("TLS");
-            // 用上面得到的trustManagers初始化SSLContext，这样sslContext就会信任keyStore中的证书
+            // 用上面得到的 TrustManagers 初始化 SsLContext，这样 SslContext 就会信任keyStore中的证书
             // 第一个参数是授权的密钥管理器，用来授权验证，比如授权自签名的证书验证。第二个是被授权的证书管理器，用来验证服务器端的证书
             sslContext.init(keyManagers, new TrustManager[]{manager}, null);
-            // 通过sslContext获取SSLSocketFactory对象
+            // 通过 SslContext 获取 SSLSocketFactory 对象
             return new HttpSslConfig(sslContext.getSocketFactory(), manager);
         } catch (NoSuchAlgorithmException | KeyManagementException e) {
             throw new AssertionError(e);
@@ -121,15 +121,15 @@ public final class HttpSslFactory {
         }
         try {
             CertificateFactory certificateFactory = CertificateFactory.getInstance("X.509");
-            // 创建一个默认类型的KeyStore，存储我们信任的证书
+            // 创建一个默认类型的 KeyStore，存储我们信任的证书
             KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
             keyStore.load(null);
             int index = 0;
             for (InputStream certStream : certificates) {
                 String certificateAlias = Integer.toString(index++);
-                // 证书工厂根据证书文件的流生成证书 cert
+                // 证书工厂根据证书文件的流生成证书 Cert
                 Certificate cert = certificateFactory.generateCertificate(certStream);
-                // 将 cert 作为可信证书放入到keyStore中
+                // 将 Cert 作为可信证书放入到 KeyStore 中
                 keyStore.setCertificateEntry(certificateAlias, cert);
                 try {
                     if (certStream != null) {
@@ -139,11 +139,11 @@ public final class HttpSslFactory {
                     EasyLog.print(e);
                 }
             }
-            // 我们创建一个默认类型的TrustManagerFactory
+            // 我们创建一个默认类型的 TrustManagerFactory
             TrustManagerFactory factory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-            // 用我们之前的keyStore实例初始化TrustManagerFactory，这样tmf就会信任keyStore中的证书
+            // 用我们之前的 KeyStore 实例初始化 TrustManagerFactory，这样 tmf 就会信任 KeyStore 中的证书
             factory.init(keyStore);
-            // 通过tmf获取TrustManager数组，TrustManager也会信任keyStore中的证书
+            // 通过 tmf 获取 TrustManager 数组，TrustManager 也会信任 KeyStore 中的证书
             return factory.getTrustManagers();
         } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
             EasyLog.print(e);

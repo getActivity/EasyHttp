@@ -11,19 +11,19 @@ import javax.net.ssl.X509TrustManager;
  */
 public final class HttpSslConfig {
 
-    private final SSLSocketFactory sSLSocketFactory;
-    private final X509TrustManager trustManager;
+    private final SSLSocketFactory mSSLSocketFactory;
+    private final X509TrustManager mTrustManager;
 
-    HttpSslConfig(SSLSocketFactory sSLSocketFactory, X509TrustManager trustManager) {
-        this.sSLSocketFactory = sSLSocketFactory;
-        this.trustManager = trustManager;
+    HttpSslConfig(SSLSocketFactory factory, X509TrustManager manager) {
+        mSSLSocketFactory = factory;
+        mTrustManager = manager;
     }
 
-    public SSLSocketFactory getsSLSocketFactory() {
-        return sSLSocketFactory;
+    public SSLSocketFactory getSslSocketFactory() {
+        return mSSLSocketFactory;
     }
 
     public X509TrustManager getTrustManager() {
-        return trustManager;
+        return mTrustManager;
     }
 }

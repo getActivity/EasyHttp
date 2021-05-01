@@ -2,6 +2,8 @@ package com.hjq.http.body;
 
 import androidx.annotation.NonNull;
 
+import com.hjq.http.model.ContentType;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -14,7 +16,7 @@ import okio.BufferedSink;
  *    time   : 2020/10/26
  *    desc   : 文本参数提交
  */
-public final class StringBody extends RequestBody {
+public class StringBody extends RequestBody {
 
     /** 字符串数据 */
     private final String mText;
@@ -33,7 +35,7 @@ public final class StringBody extends RequestBody {
 
     @Override
     public MediaType contentType() {
-        return MediaType.get("text/plain; charset=utf-8");
+        return ContentType.TEXT;
     }
 
     @Override

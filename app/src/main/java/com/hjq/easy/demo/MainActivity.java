@@ -16,11 +16,10 @@ import android.widget.ProgressBar;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.hjq.easy.demo.http.api.SearchAuthorApi;
+import com.hjq.easy.demo.http.api.SearchBlogsApi;
+import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
-import com.hjq.easy.demo.http.request.SearchAuthorApi;
-import com.hjq.easy.demo.http.request.SearchBlogsApi;
-import com.hjq.easy.demo.http.request.UpdateImageApi;
-import com.hjq.easy.demo.http.response.SearchBean;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
@@ -107,24 +106,24 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
             EasyHttp.get(this)
                     .api(new SearchAuthorApi()
-                            .setAuthor("鸿洋"))
-                    .request(new HttpCallback<HttpData<SearchBean>>(this) {
+                            .setId(190000))
+                    .request(new HttpCallback<HttpData<List<SearchAuthorApi.Bean>>>(this) {
 
                         @Override
-                        public void onSucceed(HttpData<SearchBean> result) {
+                        public void onSucceed(HttpData<List<SearchAuthorApi.Bean>> result) {
                             ToastUtils.show("Get 请求成功，请看日志");
                         }
                     });
 
         } else if (viewId == R.id.btn_main_post) {
 
-            EasyHttp.post(MainActivity.this)
+            EasyHttp.post(this)
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
-                    .request(new HttpCallback<HttpData<SearchBean>>(MainActivity.this) {
+                    .request(new HttpCallback<HttpData<SearchBlogsApi.Bean>>(this) {
 
                         @Override
-                        public void onSucceed(HttpData<SearchBean> result) {
+                        public void onSucceed(HttpData<SearchBlogsApi.Bean> result) {
                             ToastUtils.show("Post 请求成功，请看日志");
                         }
                     });
@@ -135,10 +134,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             new Thread(() -> {
                 runOnUiThread(this::showDialog);
                 try {
-                    HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
+                    HttpData<SearchBlogsApi.Bean> data = EasyHttp.post(MainActivity.this)
                             .api(new SearchBlogsApi()
                                     .setKeyword("搬砖不再有"))
-                            .execute(new ResponseClass<HttpData<SearchBean>>() {});
+                            .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
                     ToastUtils.show("同步请求成功，请看日志");
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -196,6 +195,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
                 return;
             }
+
             EasyHttp.download(this)
                     .method(HttpMethod.GET)
                     .file(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "微信.apk"))
@@ -230,7 +230,8 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                             mProgressBar.setVisibility(View.GONE);
                         }
 
-                    }).start();
+                    })
+                    .start();
         }
     }
 

@@ -31,11 +31,13 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
 
     @Override
     public void onStateChanged(@NonNull LifecycleOwner source, @NonNull Lifecycle.Event event) {
-        if (event == Lifecycle.Event.ON_DESTROY) {
-            // 移除监听
-            source.getLifecycle().removeObserver(this);
-            // 取消请求
-            EasyHttp.cancel(source);
+        if (event != Lifecycle.Event.ON_DESTROY) {
+            return;
         }
+
+        // 移除监听
+        source.getLifecycle().removeObserver(this);
+        // 取消请求
+        EasyHttp.cancel(source);
     }
 }

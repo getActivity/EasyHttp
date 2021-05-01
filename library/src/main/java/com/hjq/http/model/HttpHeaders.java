@@ -17,21 +17,25 @@ public final class HttpHeaders {
     private HashMap<String, String> mHeaders = EasyConfig.getInstance().getHeaders();
 
     public void put(String key, String value) {
-        if (key != null && value != null) {
-            if (mHeaders == EasyConfig.getInstance().getHeaders()) {
-                mHeaders = new HashMap<>(mHeaders);
-            }
-            mHeaders.put(key, value);
+        if (key == null || value == null) {
+            return;
         }
+
+        if (mHeaders == EasyConfig.getInstance().getHeaders()) {
+            mHeaders = new HashMap<>(mHeaders);
+        }
+        mHeaders.put(key, value);
     }
 
     public void remove(String key) {
-        if (key != null) {
-            if (mHeaders == EasyConfig.getInstance().getHeaders()) {
-                mHeaders = new HashMap<>(mHeaders);
-            }
-            mHeaders.remove(key);
+        if (key == null) {
+            return;
         }
+
+        if (mHeaders == EasyConfig.getInstance().getHeaders()) {
+            mHeaders = new HashMap<>(mHeaders);
+        }
+        mHeaders.remove(key);
     }
 
     public String get(String key) {

@@ -32,7 +32,7 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 
-# 不混淆这个包下的字段名
--keepclassmembernames class com.hjq.easy.demo.http.** {
+# 不混淆这个包下的类
+-keep class com.hjq.easy.demo.http.** {
     <fields>;
 }

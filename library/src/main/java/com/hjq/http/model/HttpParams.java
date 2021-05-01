@@ -20,21 +20,25 @@ public final class HttpParams {
     private boolean mMultipart;
 
     public void put(String key, Object value) {
-        if (key != null && value != null) {
-            if (mParams == EasyConfig.getInstance().getParams()) {
-                mParams = new HashMap<>(mParams);
-            }
-            mParams.put(key, value);
+        if (key == null || value == null) {
+            return;
         }
+
+        if (mParams == EasyConfig.getInstance().getParams()) {
+            mParams = new HashMap<>(mParams);
+        }
+        mParams.put(key, value);
     }
 
     public void remove(String key) {
-        if (key != null) {
-            if (mParams == EasyConfig.getInstance().getParams()) {
-                mParams = new HashMap<>(mParams);
-            }
-            mParams.remove(key);
+        if (key == null) {
+            return;
         }
+
+        if (mParams == EasyConfig.getInstance().getParams()) {
+            mParams = new HashMap<>(mParams);
+        }
+        mParams.remove(key);
     }
 
     public Object get(String key) {

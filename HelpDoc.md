@@ -72,6 +72,8 @@
 
     * [框架只能传入 LifecycleOwner 该怎么办](#框架只能传入-lifecycleowner-该怎么办)
 
+    * [我想取消请求时显示的加载对话框该怎么办](#我想取消请求时显示的加载对话框该怎么办)
+
 * [搭配 RxJava](#搭配-rxjava)
 
     * [准备工作](#准备工作)
@@ -184,8 +186,8 @@ EasyConfig.getInstance()
 -dontwarn okhttp3.**
 -dontwarn okio.**
 
-# 不混淆这个包下的字段名
--keepclassmembernames class com.xxx.xxx.xxx.xxx.** {
+# 不混淆这个包下的类
+-keep class com.xxx.xxx.xxx.xxx.** {
     <fields>;
 }
 ```
@@ -358,7 +360,7 @@ EasyHttp.post(this)
         });
 ```
 
-* 需要注意的是：如果上传的文件过大，可能会导致请求超时，可以重新设置本次请求超时的时间，具体设置超时方式文档有介绍，可以在本页面直接搜索。
+* **需要注意的是：如果上传的文件过多或者过大，可能会导致请求超时，可以重新设置本次请求超时时间，超时时间建议根据文件大小而定，具体设置超时方式文档有介绍，可以在本页面直接搜索。**
 
 #### 下载文件
 
@@ -912,6 +914,8 @@ public interface IRequestHandler {
 }
 ```
 
+* 如果你想对某个接口进行加解密，可以根据方法中的 api 参数对象来判断 ，如果你想对部分接口进行加解密，可以让外层的 IRequestApi 类实现统一的接口来标识这些接口，然后在 requestStart 和 requestFail 方法中判断 api 参数对象是否实现了这个接口来决定要不要进行加解密。
+
 #### 如何对接口路径进行动态化拼接
 
 ```java
@@ -1048,6 +1052,51 @@ EasyHttp.post(new ApplicationLifecycle())
 
 ```java
 EasyHttp.cancel("abc");
+```
+
+#### 我想取消请求时显示的加载对话框该怎么办
+
+* 首先这个加载对话框不是框架自带的，是可以修改或者取消的，主要有两种方式可供选择
+
+* 第一种方式：重写 HttpCallback 类方法
+
+```java
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .request(new HttpCallback<Xxx>(this) {
+
+            @Override
+            public void onStart(Call call) {
+                // 重写方法并注释父类调用
+                //super.onStart(call);
+            }
+
+            @Override
+            public void onEnd(Call call) {
+                // 重写方法并注释父类调用
+                //super.onEnd(call);
+            }
+        });
+```
+
+* 第二种方式：直接实现 OnHttpListener 接口
+
+```java
+
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .request(new OnHttpListener<Xxx>() {
+
+            @Override
+            public void onSucceed(Xxx result) {
+                
+            }
+
+            @Override
+            public void onFail(Exception e) {
+
+            }
+        });
 ```
 
 # 搭配 RxJava

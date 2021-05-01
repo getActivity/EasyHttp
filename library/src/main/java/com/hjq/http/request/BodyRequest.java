@@ -170,7 +170,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
             for (String key : params.getNames()) {
                 Object object = params.get(key);
 
-                // 如果这是一个文件
+                // 如果这是一个 File 对象
                 if (object instanceof File) {
                     MultipartBody.Part part = EasyUtils.createPart(key, (File) object);
                     if (part != null) {
@@ -179,7 +179,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                     continue;
                 }
 
-                // 如果这是一个输入流
+                // 如果这是一个 InputStream 对象
                 if (object instanceof InputStream) {
                     MultipartBody.Part part = EasyUtils.createPart(key, (InputStream) object);
                     if (part != null) {
@@ -188,7 +188,13 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                     continue;
                 }
 
-                // 如果这是一个自定义 RequestBody
+                // 如果这是一个自定义的 MultipartBody.Part 对象
+                if (object instanceof MultipartBody.Part) {
+                    builder.addPart((MultipartBody.Part) object);
+                    continue;
+                }
+
+                // 如果这是一个自定义的 RequestBody 对象
                 if (object instanceof RequestBody) {
                     if (object instanceof UpdateBody) {
                         builder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
@@ -198,7 +204,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                     continue;
                 }
 
-                // 上传文件列表
+                // 如果这是一个 List<File> 对象
                 if (object instanceof List && EasyUtils.isFileList((List<?>) object)) {
                     for (Object item : (List<?>) object) {
                         MultipartBody.Part part = EasyUtils.createPart(key, (File) item);
