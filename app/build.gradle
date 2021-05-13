@@ -11,8 +11,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 95
-        versionName '9.5'
+        versionCode 96
+        versionName '9.6'
     }
 
     // 支持 JDK 1.8
@@ -49,7 +49,7 @@ dependencies {
     implementation 'androidx.appcompat:appcompat:1.2.0'
 
     // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.github.getActivity:ToastUtils:9.1'
+    implementation 'com.github.getActivity:ToastUtils:9.2'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.github.getActivity:XXPermissions:10.8'

@@ -28,11 +28,12 @@
 
 ```groovy
 buildscript {
-    ......
+    repositories {
+        maven { url 'https://jitpack.io' }
+    }
 }
 allprojects {
     repositories {
-        // JitPack 远程仓库：https://jitpack.io
         maven { url 'https://jitpack.io' }
     }
 }
@@ -51,7 +52,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:9.5'
+    implementation 'com.github.getActivity:EasyHttp:9.6'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -64,7 +65,7 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  9.5 |  2.9.0  |  3.0.4    |
+|    对应版本  |  9.6 |  2.9.0  |  3.0.4    |
 |    **aar 包大小**  |  [70 KB](https://jitpack.io/#getActivity/EasyHttp)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |

@@ -164,6 +164,8 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
      * 组装 RequestBody 对象
      */
     private RequestBody createBody(HttpParams params, BodyType type) {
+        RequestBody body;
+
         if (params.isMultipart() && !params.isEmpty()) {
             MultipartBody.Builder builder = new MultipartBody.Builder();
             builder.setType(MultipartBody.FORM);
@@ -219,29 +221,25 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                 builder.addFormDataPart(key, String.valueOf(object));
             }
 
-            if (mUpdateListener != null) {
-                return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
+            try {
+                body = builder.build();
+            } catch (IllegalStateException ignored) {
+                // 如果参数为空则会抛出异常：Multipart body must have at least one part.
+                body = new FormBody.Builder().build();
             }
-            return builder.build();
+
+        } else if (type == BodyType.JSON) {
+            body = new JsonBody(params.getParams());
+        } else {
+            FormBody.Builder builder = new FormBody.Builder();
+            if (!params.isEmpty()) {
+                for (String key : params.getNames()) {
+                    builder.add(key, String.valueOf(params.get(key)));
+                }
+            }
+            body = builder.build();
         }
 
-        if (type == BodyType.JSON) {
-            if (mUpdateListener != null) {
-                return new ProgressBody(new JsonBody(params.getParams()), getLifecycleOwner(), mUpdateListener);
-            }
-            return new JsonBody(params.getParams());
-        }
-
-        FormBody.Builder builder = new FormBody.Builder();
-        if (!params.isEmpty()) {
-            for (String key : params.getNames()) {
-                builder.add(key, String.valueOf(params.get(key)));
-            }
-        }
-        if (mUpdateListener != null) {
-            return new ProgressBody(builder.build(), getLifecycleOwner(), mUpdateListener);
-        }
-
-        return builder.build();
+        return mUpdateListener == null ? body : new ProgressBody(body, getLifecycleOwner(), mUpdateListener);
     }
 }
