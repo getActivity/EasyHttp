@@ -165,6 +165,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onStart(Call call) {
+                            mProgressBar.setProgress(0);
                             mProgressBar.setVisibility(View.VISIBLE);
                         }
 
@@ -198,14 +199,15 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
             EasyHttp.download(this)
                     .method(HttpMethod.GET)
-                    .file(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "微信.apk"))
+                    .file(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "微信 7.0.14.apk"))
                     //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
-                    .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
-                    .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
+                    .url("https://dldir1.qq.com/weixin/android/weixin7014android1660.apk")
+                    .md5("6ec99cb762ffd9158e8b27dc33d9680d")
                     .listener(new OnDownloadListener() {
 
                         @Override
                         public void onStart(File file) {
+                            mProgressBar.setProgress(0);
                             mProgressBar.setVisibility(View.VISIBLE);
                         }
 

@@ -16,7 +16,8 @@ public final class LogStrategy implements ILogStrategy {
 
     @Override
     public void print(String log) {
-        Log.d(EasyConfig.getInstance().getLogTag(), log != null ? log : "null");
+        // 这里解释一下，为什么不用 Log.d，而用 Log.i，因为 Log.d 在魅族 16th 手机上面无法输出日志
+        Log.i(EasyConfig.getInstance().getLogTag(), log != null ? log : "null");
     }
 
     @Override

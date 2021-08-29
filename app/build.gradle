@@ -11,8 +11,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 96
-        versionName '9.6'
+        versionCode 1000
+        versionName '10.0'
     }
 
     // 支持 JDK 1.8
@@ -21,14 +21,34 @@ android {
         sourceCompatibility JavaVersion.VERSION_1_8
     }
 
+    // Apk 签名的那些事：https://www.jianshu.com/p/a1f8e5896aa2
+    signingConfigs {
+        config {
+            storeFile file(StoreFile)
+            storePassword StorePassword
+            keyAlias KeyAlias
+            keyPassword KeyPassword
+        }
+    }
+
     buildTypes {
         debug {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
         }
+
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.config
+        }
+    }
+
+    applicationVariants.all { variant ->
+        // apk 输出文件名配置
+        variant.outputs.all { output ->
+            outputFileName = rootProject.getName() + '.apk'
         }
     }
 }
@@ -40,28 +60,31 @@ dependencies {
     
     implementation project(':library')
 
+    // AppCompat 库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
+    implementation 'androidx.appcompat:appcompat:1.3.0'
+
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
-    // 谷歌兼容库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
-    implementation 'androidx.appcompat:appcompat:1.2.0'
-
     // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.github.getActivity:ToastUtils:9.2'
+    implementation 'com.github.getActivity:ToastUtils:9.5'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:10.8'
+    implementation 'com.github.getActivity:XXPermissions:12.0'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
     implementation 'com.github.getActivity:TitleBar:8.6'
 
     // Json 解析框架：https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.8.6'
+    implementation 'com.google.code.gson:gson:2.8.8'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
     implementation 'com.github.getActivity:GsonFactory:5.2'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:9.6'
+    debugImplementation 'com.github.getActivity:Logcat:9.8'
+
+    // 腾讯 MMKV：https://github.com/Tencent/MMKV
+    implementation 'com.tencent:mmkv-static:1.2.10'
 }

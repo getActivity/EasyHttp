@@ -1,6 +1,6 @@
 # 简单易用的网络框架
 
-* 码云地址：[Gitee](https://gitee.com/getActivity/EasyHttp)
+* 项目地址：[Github](https://github.com/getActivity/EasyHttp)、[码云](https://gitee.com/getActivity/EasyHttp)
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
@@ -52,7 +52,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:9.6'
+    implementation 'com.github.getActivity:EasyHttp:10.0'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -65,14 +65,16 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  9.6 |  2.9.0  |  3.0.4    |
-|    **aar 包大小**  |  [70 KB](https://jitpack.io/#getActivity/EasyHttp)  | [123 KB](https://bintray.com/bintray/jcenter/com.squareup.retrofit2%3Aretrofit#files)  |  [131 KB](https://bintray.com/jeasonlzy/maven/okgo#files/com/lzy/net/okgo)  |
+|    对应版本  |  10.0 |  2.9.0  |  3.0.4    |
+|    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
+|    **aar 包大小**  |  74 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
 |    全局参数   |  ✅  |  ❌  |    ✅   |
 |    日志打印   |  ✅  |  ❌  |    ✅   |
 |    超时重试   |  ✅  |  ✅  |    ✅   |
+|    **请求缓存**   |  ✅  |  ❌  |    ✅   |
 |    **下载校验**   |  ✅  |  ❌  |   ❌  |
 |    **极速下载**   |  ✅  |  ❌  |   ❌  |
 |    批量上传文件   |  ✅  |   ❌   |    ✅    |
@@ -99,7 +101,7 @@ dependencies {
     
     3. 接口信息完整信息展示：使用 OkGo 请求网络，只能在调用的地方看到传递的接口参数，而一些被其他地方引用的参数，我们无法很直观的看到，只能通过追踪代码或者查看文档来得知，而 EasyHttp 将一个接口的信息全部通过一个类来管理的，这个类其实就相当于一个接口文档。
 
-    4. 接口的动态化配置：除了接口的参数之外，一个接口还有可能单独配置OkHttpClient 对象、参数的提交方式、接口响应处理方式等，这些用 OkGo 是可以实现，但是每个地方都要写一次，而 EasyHttp 可以直接在 API 类中配置，真正做到一劳永逸。
+    4. 接口的动态化配置：除了接口的参数之外，一个接口还有可能单独配置 OkHttpClient 对象、参数的提交方式、接口响应处理方式等，这些用 OkGo 是可以实现，但是每个地方都要写一次，而 EasyHttp 可以直接在 API 类中配置，真正做到一劳永逸。
 
 * EasyHttp 采用了 OOP 思想，一个请求代表一个对象，通过类继承和实现的特性来对接口进行动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。而 Retrofit 采用的是注解方式，缺点是灵活性极低，因为注解上面只能放常量，也就会限定你在注解上面的一切参数只能是事先定义好的，这对接口的动态化配置极不利的。
 
@@ -183,6 +185,8 @@ EasyHttp.post(this)
 * 国际化框架：[MultiLanguages](https://github.com/getActivity/MultiLanguages)
 
 * 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
+
+* Shape 框架：[ShapeView](https://github.com/getActivity/ShapeView)
 
 * Gson 解析容错：[GsonFactory](https://github.com/getActivity/GsonFactory)
 

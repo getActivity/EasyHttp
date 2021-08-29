@@ -12,6 +12,7 @@ import com.hjq.http.body.UpdateBody;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.BodyType;
+import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
@@ -20,6 +21,7 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import okhttp3.CacheControl;
 import okhttp3.FormBody;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
@@ -86,25 +88,30 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
 
     @Override
     protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        Request.Builder request = new Request.Builder();
-        request.url(url);
+        Request.Builder requestBuilder = new Request.Builder();
+        requestBuilder.url(url);
 
         EasyLog.print("RequestUrl", url);
         EasyLog.print("RequestMethod", getRequestMethod());
 
         if (tag != null) {
-            request.tag(tag);
+            requestBuilder.tag(tag);
+        }
+
+        // 如果设置了不缓存数据
+        if (getRequestCache().getMode() == CacheMode.NO_CACHE) {
+            requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
         }
 
         // 添加请求头
         if (!headers.isEmpty()) {
             for (String key : headers.getNames()) {
-                request.addHeader(key, headers.get(key));
+                requestBuilder.addHeader(key, headers.get(key));
             }
         }
 
         RequestBody body = mRequestBody != null ? mRequestBody : createBody(params, type);
-        request.method(getRequestMethod(), body);
+        requestBuilder.method(getRequestMethod(), body);
 
         // 打印请求头和参数的日志
         if (EasyConfig.getInstance().isLogEnabled()) {
@@ -146,29 +153,29 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), request.build());
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder.build());
     }
 
     /**
      * 执行异步请求（执行传入上传进度监听器）
      */
     @Override
-    public T request(OnHttpListener<?> listener) {
+    public void request(OnHttpListener<?> listener) {
         if (listener instanceof OnUpdateListener) {
             mUpdateListener = (OnUpdateListener<?>) listener;
         }
-        return super.request(listener);
+        super.request(listener);
     }
 
     /**
      * 组装 RequestBody 对象
      */
     private RequestBody createBody(HttpParams params, BodyType type) {
-        RequestBody body;
+        RequestBody requestBody;
 
         if (params.isMultipart() && !params.isEmpty()) {
-            MultipartBody.Builder builder = new MultipartBody.Builder();
-            builder.setType(MultipartBody.FORM);
+            MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
+            bodyBuilder.setType(MultipartBody.FORM);
             for (String key : params.getNames()) {
                 Object object = params.get(key);
 
@@ -176,7 +183,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                 if (object instanceof File) {
                     MultipartBody.Part part = EasyUtils.createPart(key, (File) object);
                     if (part != null) {
-                        builder.addPart(part);
+                        bodyBuilder.addPart(part);
                     }
                     continue;
                 }
@@ -185,23 +192,23 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                 if (object instanceof InputStream) {
                     MultipartBody.Part part = EasyUtils.createPart(key, (InputStream) object);
                     if (part != null) {
-                        builder.addPart(part);
+                        bodyBuilder.addPart(part);
                     }
                     continue;
                 }
 
                 // 如果这是一个自定义的 MultipartBody.Part 对象
                 if (object instanceof MultipartBody.Part) {
-                    builder.addPart((MultipartBody.Part) object);
+                    bodyBuilder.addPart((MultipartBody.Part) object);
                     continue;
                 }
 
                 // 如果这是一个自定义的 RequestBody 对象
                 if (object instanceof RequestBody) {
                     if (object instanceof UpdateBody) {
-                        builder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
+                        bodyBuilder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
                     } else {
-                        builder.addFormDataPart(key, null, (RequestBody) object);
+                        bodyBuilder.addFormDataPart(key, null, (RequestBody) object);
                     }
                     continue;
                 }
@@ -211,35 +218,35 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                     for (Object item : (List<?>) object) {
                         MultipartBody.Part part = EasyUtils.createPart(key, (File) item);
                         if (part != null) {
-                            builder.addPart(part);
+                            bodyBuilder.addPart(part);
                         }
                     }
                     continue;
                 }
 
                 // 如果这是一个普通参数
-                builder.addFormDataPart(key, String.valueOf(object));
+                bodyBuilder.addFormDataPart(key, String.valueOf(object));
             }
 
             try {
-                body = builder.build();
+                requestBody = bodyBuilder.build();
             } catch (IllegalStateException ignored) {
                 // 如果参数为空则会抛出异常：Multipart body must have at least one part.
-                body = new FormBody.Builder().build();
+                requestBody = new FormBody.Builder().build();
             }
 
         } else if (type == BodyType.JSON) {
-            body = new JsonBody(params.getParams());
+            requestBody = new JsonBody(params.getParams());
         } else {
-            FormBody.Builder builder = new FormBody.Builder();
+            FormBody.Builder bodyBuilder = new FormBody.Builder();
             if (!params.isEmpty()) {
                 for (String key : params.getNames()) {
-                    builder.add(key, String.valueOf(params.get(key)));
+                    bodyBuilder.add(key, String.valueOf(params.get(key)));
                 }
             }
-            body = builder.build();
+            requestBody = bodyBuilder.build();
         }
 
-        return mUpdateListener == null ? body : new ProgressBody(body, getLifecycleOwner(), mUpdateListener);
+        return mUpdateListener == null ? requestBody : new ProgressBody(requestBody, getLifecycleOwner(), mUpdateListener);
     }
 }

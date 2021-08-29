@@ -32,13 +32,13 @@ public class JsonBody extends RequestBody {
         this(new JSONObject(map));
     }
 
-    public JsonBody(JSONObject jsonObject) {
-       mJson = jsonObject.toString();
-       mBytes = mJson.getBytes();
-    }
-
     public JsonBody(List<?> list) {
         this(new JSONArray(list));
+    }
+
+    public JsonBody(JSONObject jsonObject) {
+        mJson = jsonObject.toString();
+        mBytes = mJson.getBytes();
     }
 
     public JsonBody(JSONArray jsonArray) {

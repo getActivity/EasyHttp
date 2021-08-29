@@ -10,6 +10,7 @@ import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
+import com.hjq.http.config.IRequestCache;
 import com.hjq.http.config.IRequestClient;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestHost;
@@ -22,12 +23,15 @@ import com.hjq.http.config.RequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
+import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.model.ResponseClass;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -54,10 +58,12 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
     /** 接口路径地址 */
     private IRequestPath mRequestPath = EasyConfig.getInstance().getServer();
-    /** 提交参数类型 */
-    private IRequestType mRequestType = EasyConfig.getInstance().getServer();
     /** OkHttp 客户端 */
     private IRequestClient mRequestClient = EasyConfig.getInstance().getServer();
+    /** 提交参数类型 */
+    private IRequestType mRequestType = EasyConfig.getInstance().getServer();
+    /** 接口缓存方式 */
+    private IRequestCache mRequestCache = EasyConfig.getInstance().getServer();
 
     /** 请求接口配置 */
     private IRequestApi mRequestApi;
@@ -75,9 +81,6 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
     private long mDelayMillis;
 
     public BaseRequest(LifecycleOwner lifecycleOwner) {
-        if (lifecycleOwner == null) {
-            throw new IllegalArgumentException("are you ok?");
-        }
         mLifecycleOwner = lifecycleOwner;
         tag(lifecycleOwner);
     }
@@ -107,11 +110,14 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
         if (api instanceof IRequestPath) {
             mRequestPath = (IRequestPath) api;
         }
+        if (api instanceof IRequestClient) {
+            mRequestClient = (IRequestClient) api;
+        }
         if (api instanceof IRequestType) {
             mRequestType = (IRequestType) api;
         }
-        if (api instanceof IRequestClient) {
-            mRequestClient = (IRequestClient) api;
+        if (api instanceof IRequestCache) {
+            mRequestCache = (IRequestCache) api;
         }
         if (api instanceof IRequestHandler) {
             mRequestHandler = (IRequestHandler) api;
@@ -139,8 +145,9 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
     public T server(IRequestServer server) {
         mRequestHost = server;
         mRequestPath = server;
-        mRequestType = server;
         mRequestClient = server;
+        mRequestType = server;
+        mRequestCache = server;
         return (T) this;
     }
 
@@ -312,7 +319,7 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
     /**
      * 执行异步请求
      */
-    public T request(OnHttpListener<?> listener) {
+    public void request(OnHttpListener<?> listener) {
         if (mDelayMillis > 0) {
             // 打印请求延迟时间
             EasyLog.print("RequestDelay", String.valueOf(mDelayMillis));
@@ -326,19 +333,21 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
                 return;
             }
             EasyLog.print(stackTrace);
+
             mCallProxy = new CallProxy(createCall());
-            mCallProxy.enqueue(new NormalCallback(getLifecycleOwner(), mCallProxy, mRequestApi, mRequestHandler, listener));
+            new NormalCallback(this)
+                    .setListener(listener)
+                    .setCall(mCallProxy)
+                    .start();
 
         }, mDelayMillis);
-
-        return (T) this;
     }
 
     /**
      * 执行同步请求
      * @param responseClass                 需要解析泛型的对象
-     * @return                  返回解析完成的对象
-     * @throws Exception        如果请求失败或者解析失败则抛出异常
+     * @return                              返回解析完成的对象
+     * @throws Exception                    如果请求失败或者解析失败则抛出异常
      */
     public <Bean> Bean execute(ResponseClass<Bean> responseClass) throws Exception {
         if (mDelayMillis > 0) {
@@ -353,12 +362,65 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
         }
 
         EasyLog.print(new Throwable().getStackTrace());
+
+        Type reflectType = EasyUtils.getReflectType(responseClass);
+
+        // 必须将 Call 对象创建放到这里来，否则无法显示请求日志
+        mCallProxy = new CallProxy(createCall());
+
+        CacheMode cacheMode = getRequestCache().getMode();
+        if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_FIRST) {
+            try {
+                Object result = mRequestHandler.readCache(mLifecycleOwner, mRequestApi, reflectType);
+                EasyLog.print("ReadCache result：" + result);
+                if (cacheMode == CacheMode.USE_CACHE_FIRST) {
+                    // 使用异步请求来刷新缓存
+                    new NormalCallback(this)
+                            .setCall(mCallProxy)
+                            .start();
+                }
+                if (result != null) {
+                    return (Bean) result;
+                }
+            } catch (Throwable throwable) {
+                EasyLog.print("ReadCache error");
+                EasyLog.print(throwable);
+            }
+        }
+
         try {
-            mCallProxy = new CallProxy(createCall());
             Response response = mCallProxy.execute();
-            return (Bean) mRequestHandler.requestSucceed(getLifecycleOwner(), getRequestApi(), response, EasyUtils.getReflectType(responseClass));
+            Object result = mRequestHandler.requestSucceed(mLifecycleOwner, mRequestApi, response, reflectType);
+
+            if (cacheMode == CacheMode.USE_CACHE_ONLY) {
+                try {
+                    boolean writeSucceed = mRequestHandler.writeCache(mLifecycleOwner, mRequestApi, response, result);
+                    EasyLog.print("WriteCache result：" + writeSucceed);
+                } catch (Throwable throwable) {
+                    EasyLog.print("WriteCache error");
+                    EasyLog.print(throwable);
+                }
+            }
+
+            return (Bean) result;
+
         } catch (Exception e) {
-            throw mRequestHandler.requestFail(getLifecycleOwner(), getRequestApi(), e);
+
+            // 如果设置了只在网络请求失败才去读缓存
+            if (e instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
+                try {
+                    Object result = mRequestHandler.readCache(mLifecycleOwner, mRequestApi, reflectType);
+                    EasyLog.print("ReadCache result：" + result);
+                    if (result != null) {
+                        return (Bean) result;
+                    }
+                } catch (Throwable throwable) {
+                    EasyLog.print("ReadCache error");
+                    EasyLog.print(throwable);
+                }
+            }
+
+            throw mRequestHandler.requestFail(mLifecycleOwner, mRequestApi, e);
         }
     }
 
@@ -375,8 +437,29 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
     /**
      * 获取生命周期管控对象
      */
-    protected LifecycleOwner getLifecycleOwner() {
+    public LifecycleOwner getLifecycleOwner() {
         return mLifecycleOwner;
+    }
+
+    /**
+     * 获取请求接口对象
+     */
+    public IRequestApi getRequestApi() {
+        return mRequestApi;
+    }
+
+    /**
+     * 获取请求处理对象
+     */
+    public IRequestHandler getRequestHandler() {
+        return mRequestHandler;
+    }
+
+    /**
+     * 获取请求缓存策略
+     */
+    public IRequestCache getRequestCache() {
+        return mRequestCache;
     }
 
     /**
@@ -389,20 +472,6 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
      */
     protected long getDelayMillis() {
         return mDelayMillis;
-    }
-
-    /**
-     * 获取请求接口对象
-     */
-    protected IRequestApi getRequestApi() {
-        return mRequestApi;
-    }
-
-    /**
-     * 获取请求处理对象
-     */
-    protected IRequestHandler getRequestHandler() {
-        return mRequestHandler;
     }
 
     /**

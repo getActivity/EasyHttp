@@ -22,6 +22,7 @@ import com.hjq.http.exception.ResultException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.exception.TokenException;
+import com.tencent.mmkv.MMKV;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -46,9 +47,11 @@ import okhttp3.ResponseBody;
 public final class RequestHandler implements IRequestHandler {
 
     private final Application mApplication;
+    private final MMKV mMmkv;
 
     public RequestHandler(Application application) {
         mApplication = application;
+        mMmkv = MMKV.mmkvWithID("http_cache_id");
     }
 
     @Override
@@ -119,13 +122,17 @@ public final class RequestHandler implements IRequestHandler {
 
         if (result instanceof HttpData) {
             HttpData<?> model = (HttpData<?>) result;
-            if (model.getCode() == 0) {
+
+            if (model.isRequestSucceed()) {
                 // 代表执行成功
                 return result;
-            } else if (model.getCode() == 1001) {
+            }
+
+            if (model.isTokenFailure()) {
                 // 代表登录失效，需要重新登录
                 throw new TokenException(mApplication.getString(R.string.http_token_error));
             }
+
             // 代表执行失败
             throw new ResultException(model.getMessage(), model);
         }
@@ -164,5 +171,33 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         return new HttpException(e.getMessage(), e);
+    }
+
+    @Override
+    public Object readCache(LifecycleOwner lifecycle, IRequestApi api, Type type) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheValue = mMmkv.getString(cacheKey, null);
+        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+            return null;
+        }
+        EasyLog.print("---------- cacheKey ----------");
+        EasyLog.json(cacheKey);
+        EasyLog.print("---------- cacheValue ----------");
+        EasyLog.json(cacheValue);
+        return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
+    }
+
+    @Override
+    public boolean writeCache(LifecycleOwner lifecycle, IRequestApi api, Response response, Object result) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheValue = GsonFactory.getSingletonGson().toJson(result);
+        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+            return false;
+        }
+        EasyLog.print("---------- cacheKey ----------");
+        EasyLog.json(cacheKey);
+        EasyLog.print("---------- cacheValue ----------");
+        EasyLog.json(cacheValue);
+        return mMmkv.putString(cacheKey, cacheValue).commit();
     }
 }

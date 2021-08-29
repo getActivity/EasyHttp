@@ -81,10 +81,8 @@ public class ProgressBody extends RequestBody {
                     if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                         mListener.onProgress(progress);
                     }
-                    EasyLog.print("正在进行上传" +
-                            "，总字节：" + mTotalByte +
-                            "，已上传：" + mUpdateByte +
-                            "，进度：" + progress + "%");
+                    EasyLog.print("正在进行上传" + "，总字节：" + mTotalByte +
+                            "，已上传：" + mUpdateByte + "，进度：" + progress + "%");
                 }
             });
         }

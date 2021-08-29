@@ -65,11 +65,30 @@ public interface ILogStrategy {
                         .append(getSpaceOrTab(tabNum))
                         .append(c);
             } else if (c == ',') {
-                builder.append(c).append("\n")
-                        .append(getSpaceOrTab(tabNum));
+                // 是否格式化处理
+                boolean formatFlag = true;
+                // 获取冒号最后所在位置
+                int colonIndex = json.lastIndexOf(":", i);
+                // 再获取引号最后所在位置
+                int quoteIndex = json.lastIndexOf(":\"", i);
+                if (colonIndex != -1) {
+                    if (quoteIndex == colonIndex) {
+                        // {"code":"12.0101.0122651.00,300.200000,210428,,,,,,10002,,01"}
+                        if (json.charAt(i - 1) != '"') {
+                            formatFlag = false;
+                        }
+                    }
+                }
+
+                if (formatFlag) {
+                    builder.append(c).append("\n").append(getSpaceOrTab(tabNum));
+                } else {
+                    builder.append(c);
+                }
+
             } else if (c == ':') {
                 if (i > 0 && json.charAt(i - 1) == '"') {
-                    builder.append(c).append(" ");
+                    builder.append(" ").append(c).append(" ");
                 } else {
                     builder.append(c);
                 }
@@ -94,6 +113,7 @@ public interface ILogStrategy {
             }
             last = c;
         }
+
         return builder.toString();
     }
 
@@ -101,10 +121,10 @@ public interface ILogStrategy {
      * 创建对应数量的制表符
      */
     static String getSpaceOrTab(int tabNum) {
-        StringBuffer sb = new StringBuffer();
+        StringBuilder builder = new StringBuilder();
         for (int i = 0; i < tabNum; i++) {
-            sb.append('\t');
+            builder.append('\t');
         }
-        return sb.toString();
+        return builder.toString();
     }
 }

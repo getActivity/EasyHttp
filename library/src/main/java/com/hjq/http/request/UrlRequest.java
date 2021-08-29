@@ -5,6 +5,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.model.BodyType;
+import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
@@ -18,51 +19,42 @@ import okhttp3.Request;
  *    time   : 2020/10/07
  *    desc   : 不带 RequestBody 的请求
  */
-@SuppressWarnings("unchecked")
 public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T> {
-
-    private CacheControl mCacheControl;
 
     public UrlRequest(LifecycleOwner lifecycleOwner) {
         super(lifecycleOwner);
     }
 
-    /**
-     * 设置缓存模式
-     */
-    public T cache(CacheControl cacheControl) {
-        mCacheControl = cacheControl;
-        return (T) this;
-    }
-
     @Override
     protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        Request.Builder request = new Request.Builder();
-        if (mCacheControl != null) {
-            request.cacheControl(mCacheControl);
-        }
+        Request.Builder requestBuilder = new Request.Builder();
 
         if (tag != null) {
-            request.tag(tag);
+            requestBuilder.tag(tag);
+        }
+
+        // 如果设置了不缓存数据
+        if (getRequestCache().getMode() == CacheMode.NO_CACHE) {
+            requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
         }
 
         // 添加请求头
         if (!headers.isEmpty()) {
             for (String key : headers.getNames()) {
-                request.addHeader(key, headers.get(key));
+                requestBuilder.addHeader(key, headers.get(key));
             }
         }
 
-        HttpUrl.Builder builder = HttpUrl.get(url).newBuilder();
+        HttpUrl.Builder urlBuilder = HttpUrl.get(url).newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
             for (String key : params.getNames()) {
-                builder.addEncodedQueryParameter(key, String.valueOf(params.get(key)));
+                urlBuilder.addQueryParameter(key, String.valueOf(params.get(key)));
             }
         }
-        HttpUrl link = builder.build();
-        request.url(link);
-        request.method(getRequestMethod(), null);
+        HttpUrl link = urlBuilder.build();
+        requestBuilder.url(link);
+        requestBuilder.method(getRequestMethod(), null);
 
         EasyLog.print("RequestUrl", String.valueOf(link));
         EasyLog.print("RequestMethod", getRequestMethod());
@@ -91,6 +83,6 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T>
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), request.build());
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder.build());
     }
 }

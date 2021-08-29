@@ -8,7 +8,7 @@ import okhttp3.Call;
  *    time   : 2019/05/19
  *    desc   : 请求回调包装类
  */
-@SuppressWarnings("rawtypes")
+@SuppressWarnings({"rawtypes", "unchecked"})
 public class HttpCallback<T> implements OnHttpListener<T> {
 
     private final OnHttpListener mListener;
@@ -25,7 +25,11 @@ public class HttpCallback<T> implements OnHttpListener<T> {
         mListener.onStart(call);
     }
 
-    @SuppressWarnings("unchecked")
+    @Override
+    public void onSucceed(T result, boolean cache) {
+        onSucceed(result);
+    }
+
     @Override
     public void onSucceed(T result) {
         if (mListener == null) {

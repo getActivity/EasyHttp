@@ -20,8 +20,7 @@ public final class ResultException extends HttpException {
         mData = data;
     }
 
-    @SuppressWarnings("unchecked")
-    public <T extends Object> T getData() {
-        return (T) mData;
+    public Object getData() {
+        return mData;
     }
 }

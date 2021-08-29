@@ -1,12 +1,11 @@
 package com.hjq.http.callback;
 
-import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
+import com.hjq.http.request.BaseRequest;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -23,27 +22,32 @@ import okhttp3.Response;
  */
 public abstract class BaseCallback implements Callback {
 
-    /** 生命周期管理 */
-    private final LifecycleOwner mLifecycleOwner;
+    /** 请求配置 */
+    private final BaseRequest<?> mBaseRequest;
 
     /** 请求任务对象 */
-    private final CallProxy mCall;
+    private CallProxy mCall;
 
     /** 当前重试次数 */
     private int mRetryCount;
 
-    public BaseCallback(LifecycleOwner lifecycleOwner, CallProxy call) {
-        mLifecycleOwner = lifecycleOwner;
+    public BaseCallback(BaseRequest<?> request) {
+        mBaseRequest = request;
+        HttpLifecycleManager.bind(mBaseRequest.getLifecycleOwner());
+    }
+
+    public BaseCallback setCall(CallProxy call) {
         mCall = call;
-        HttpLifecycleManager.bind(lifecycleOwner);
+        return this;
+    }
+
+    public void start() {
+        mCall.enqueue(this);
+        onStart(mCall);
     }
 
     protected CallProxy getCall() {
         return mCall;
-    }
-
-    protected LifecycleOwner getLifecycleOwner() {
-        return mLifecycleOwner;
     }
 
     @Override
@@ -68,7 +72,7 @@ public abstract class BaseCallback implements Callback {
             EasyUtils.postDelayed(() -> {
 
                 // 前提是宿主还没有被销毁
-                if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+                if (!HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                     EasyLog.print("宿主已被销毁，无法对请求进行重试");
                     return;
                 }
@@ -86,7 +90,18 @@ public abstract class BaseCallback implements Callback {
         onFailure(e);
     }
 
+    /**
+     * 请求开始
+     */
+    protected abstract void onStart(Call call);
+
+    /**
+     * 请求成功
+     */
     protected abstract void onResponse(Response response) throws Exception;
 
+    /**
+     * 请求失败
+     */
     protected abstract void onFailure(Exception e);
 }

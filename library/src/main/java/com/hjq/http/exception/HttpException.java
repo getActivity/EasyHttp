@@ -8,7 +8,7 @@ package com.hjq.http.exception;
  */
 public class HttpException extends Exception {
 
-    private String mMessage;
+    private final String mMessage;
 
     public HttpException(String message) {
         super(message);

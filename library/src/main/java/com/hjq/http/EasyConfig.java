@@ -19,6 +19,7 @@ import okhttp3.OkHttpClient;
  *    time   : 2019/05/19
  *    desc   : 网络请求配置类
  */
+@SuppressWarnings("unused")
 public final class EasyConfig {
 
     private static volatile EasyConfig sConfig;
@@ -122,9 +123,23 @@ public final class EasyConfig {
         return this;
     }
 
+    public EasyConfig removeHeader(String key) {
+        if (key != null) {
+            mHeaders.remove(key);
+        }
+        return this;
+    }
+
     public EasyConfig addParam(String key, String value) {
         if (key != null && value != null) {
             mParams.put(key, value);
+        }
+        return this;
+    }
+
+    public EasyConfig removeParam(String key) {
+        if (key != null) {
+            mParams.remove(key);
         }
         return this;
     }

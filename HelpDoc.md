@@ -24,6 +24,8 @@
 
     * [同步请求](#同步请求)
 
+    * [请求缓存](#请求缓存)
+
 * [疑难解答](#疑难解答)
 
     * [如何添加全局参数](#如何添加全局参数)
@@ -238,6 +240,8 @@ public final class LoginApi implements IRequestApi {
 
     * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
 
+    * implements IRequestCache：实现这个接口之后可以重新指定这个请求的缓存模式
+
     * implements IRequestClient：实现这个接口之后可以重新指定这个请求所用的 OkHttpClient 对象
 
 * 字段作为请求参数的衡量标准
@@ -416,6 +420,127 @@ try {
 } catch (Exception e) {
     e.printStackTrace();
     ToastUtils.show(e.getMessage());
+}
+```
+
+#### 请求缓存
+
+* 需要先实现读取和写入缓存的接口，如果已配置则可以跳过，这里以 MMKV 为例
+
+```java
+public final class RequestHandler implements IRequestHandler {
+
+    private final Application mApplication;
+    private final MMKV mMmkv;
+
+    public RequestHandler(Application application) {
+        mApplication = application;
+        mMmkv = MMKV.mmkvWithID("http_cache_id");
+    }
+    
+    ..................
+
+    @Override
+    public Object readCache(LifecycleOwner lifecycle, IRequestApi api, Type type) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheValue = mMmkv.getString(cacheKey, null);
+        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+            return null;
+        }
+        EasyLog.print("---------- cacheKey ----------");
+        EasyLog.json(cacheKey);
+        EasyLog.print("---------- cacheValue ----------");
+        EasyLog.json(cacheValue);
+        return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
+    }
+
+    @Override
+    public boolean writeCache(LifecycleOwner lifecycle, IRequestApi api, Response response, Object result) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheValue = GsonFactory.getSingletonGson().toJson(result);
+        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+            return false;
+        }
+        EasyLog.print("---------- cacheKey ----------");
+        EasyLog.json(cacheKey);
+        EasyLog.print("---------- cacheValue ----------");
+        EasyLog.json(cacheValue);
+        return mMmkv.putString(cacheKey, cacheValue).commit();
+    }
+}
+```
+
+* 首先请求缓存模式有四种方式，都在 `CacheMode` 这个枚举类中
+
+```java
+public enum CacheMode {
+
+    /**
+     * 默认（按照 Http 协议来缓存）
+     */
+    DEFAULT,
+
+    /**
+     * 不使用缓存（禁用 Http 协议缓存）
+     */
+    NO_CACHE,
+
+    /**
+     * 只使用缓存
+     *
+     * 有缓存的情况下：读取缓存 -> 回调成功
+     * 无缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
+     */
+    USE_CACHE_ONLY,
+
+    /**
+     * 优先使用缓存
+     *
+     * 有缓存的情况下：先读缓存 —> 回调成功 —> 请求网络 —> 刷新缓存
+     * 无缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
+     */
+    USE_CACHE_FIRST,
+
+    /**
+     * 只在网络请求失败才去读缓存
+     */
+    USE_CACHE_AFTER_FAILURE
+}
+```
+
+* 为某个接口设置缓存模式
+
+```java
+public final class XxxApi implements IRequestApi, IRequestCache {
+
+    @Override
+    public String getApi() {
+        return "xxx/";
+    }
+
+    @Override
+    public CacheMode getMode() {
+        // 设置优先使用缓存
+        return CacheMode.USE_CACHE_FIRST;
+    }
+}
+```
+
+* 全局设置缓存模式
+
+```java
+public class XxxServer implements IRequestServer {
+
+    @Override
+    public String getHost() {
+        return "https://www.xxxxxxx.com/";
+    }
+
+    @Override
+    public CacheMode getMode() {
+        // 只在请求失败才去读缓存
+        return CacheMode.USE_CACHE_AFTER_FAILURE;
+    }
 }
 ```
 

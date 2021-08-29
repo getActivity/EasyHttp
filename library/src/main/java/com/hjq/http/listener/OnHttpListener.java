@@ -17,6 +17,15 @@ public interface OnHttpListener<T> {
 
     /**
      * 请求成功
+     *
+     * @param cache         是否是通过缓存请求成功的
+     */
+    default void onSucceed(T result, boolean cache) {
+        onSucceed(result);
+    }
+
+    /**
+     * 请求成功
      */
     void onSucceed(T result);
 

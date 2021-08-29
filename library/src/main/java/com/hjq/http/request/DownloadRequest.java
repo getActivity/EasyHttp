@@ -145,7 +145,12 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
             }
             EasyLog.print(stackTrace);
             mCallProxy = new CallProxy(createCall());
-            mCallProxy.enqueue(new DownloadCallback(getLifecycleOwner(), mCallProxy, mFile, mMd5, mListener));
+            new DownloadCallback(this)
+                    .setFile(mFile)
+                    .setMd5(mMd5)
+                    .setListener(mListener)
+                    .setCall(mCallProxy)
+                    .start();
         }, delayMillis);
 
         return this;
@@ -162,7 +167,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     @Override
-    public DownloadRequest request(OnHttpListener<?> listener) {
+    public void request(OnHttpListener<?> listener) {
         // 请调用 start 方法
         throw new IllegalStateException("Call the start method");
     }

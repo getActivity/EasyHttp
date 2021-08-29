@@ -2,21 +2,20 @@ package com.hjq.http.callback;
 
 import android.text.TextUtils;
 
-import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.MD5Exception;
 import com.hjq.http.exception.NullBodyException;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
-import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.FileWrapper;
+import com.hjq.http.request.BaseRequest;
 
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
 
+import okhttp3.Call;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -28,17 +27,20 @@ import okhttp3.ResponseBody;
  */
 public final class DownloadCallback extends BaseCallback {
 
+    /** 请求配置 */
+    private final BaseRequest<?> mBaseRequest;
+
     /** 文件 MD5 正则表达式 */
     private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
 
     /** 保存的文件 */
-    private final FileWrapper mFile;
+    private FileWrapper mFile;
 
     /** 校验的 MD5 */
     private String mMd5;
 
     /** 下载监听回调 */
-    private final OnDownloadListener mListener;
+    private OnDownloadListener mListener;
 
     /** 下载总字节 */
     private long mTotalByte;
@@ -49,14 +51,30 @@ public final class DownloadCallback extends BaseCallback {
     /** 下载进度 */
     private int mDownloadProgress;
 
-    public DownloadCallback(LifecycleOwner lifecycleOwner, CallProxy call, FileWrapper file, String md5, OnDownloadListener listener) {
-        super(lifecycleOwner, call);
-        mFile = file;
-        mMd5 = md5;
-        mListener = listener;
+    public DownloadCallback(BaseRequest<?> request) {
+        super(request);
+        mBaseRequest = request;
+    }
 
+    public DownloadCallback setFile(FileWrapper file) {
+        mFile = file;
+        return this;
+    }
+
+    public DownloadCallback setMd5(String md5) {
+        mMd5 = md5;
+        return this;
+    }
+
+    public DownloadCallback setListener(OnDownloadListener listener) {
+        mListener = listener;
+        return this;
+    }
+
+    @Override
+    protected void onStart(Call call) {
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                 return;
             }
             mListener.onStart(mFile);
@@ -92,7 +110,7 @@ public final class DownloadCallback extends BaseCallback {
         if (!TextUtils.isEmpty(mMd5) && mFile.isFile() &&
                 mMd5.equalsIgnoreCase(FileWrapper.getFileMd5(mFile.getInputStream()))) {
             EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                     return;
                 }
                 mListener.onComplete(mFile);
@@ -110,7 +128,7 @@ public final class DownloadCallback extends BaseCallback {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
             EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                     return;
                 }
                 mListener.onByte(mFile, mTotalByte, mDownloadByte);
@@ -119,8 +137,8 @@ public final class DownloadCallback extends BaseCallback {
                 if (progress != mDownloadProgress) {
                     mDownloadProgress = progress;
                     mListener.onProgress(mFile, mDownloadProgress);
-                    EasyLog.print(mFile.getPath() + " 正在下载，总字节：" + mTotalByte + "，已下载：" + mDownloadByte +
-                            "，进度：" + progress + " %");
+                    EasyLog.print(mFile.getPath() + " 正在下载，总字节：" + mTotalByte +
+                            "，已下载：" + mDownloadByte + "，进度：" + progress + " %");
                 }
             });
         }
@@ -134,7 +152,7 @@ public final class DownloadCallback extends BaseCallback {
         }
 
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                 return;
             }
             mListener.onComplete(mFile);
@@ -145,12 +163,15 @@ public final class DownloadCallback extends BaseCallback {
     @Override
     protected void onFailure(final Exception e) {
         // 打印错误堆栈
-        EasyLog.print(e);
+        final Exception exception = mBaseRequest.getRequestHandler().requestFail(
+                mBaseRequest.getLifecycleOwner(), mBaseRequest.getRequestApi(), e);
+        EasyLog.print(exception);
+
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                 return;
             }
-            mListener.onError(mFile, e);
+            mListener.onError(mFile, exception);
             mListener.onEnd(mFile);
         });
     }

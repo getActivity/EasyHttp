@@ -12,6 +12,7 @@ import com.hjq.http.config.IRequestServer;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.toast.ToastUtils;
+import com.tencent.mmkv.MMKV;
 
 import okhttp3.OkHttpClient;
 
@@ -27,6 +28,7 @@ public final class AppApplication extends Application {
     public void onCreate() {
         super.onCreate();
         ToastUtils.init(this);
+        MMKV.initialize(this);
 
         // 网络请求框架初始化
         IRequestServer server;
@@ -60,7 +62,7 @@ public final class AppApplication extends Application {
                 // 添加全局请求参数
                 .addParam("token", "6666666")
                 // 添加全局请求头
-                //.addHeader("time", "20191030")
+                //.addHeader("date", "20191030")
                 .into();
     }
 }

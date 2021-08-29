@@ -21,6 +21,7 @@ import okhttp3.OkHttpClient;
  *    time   : 2019/05/19
  *    desc   : 网络请求类
  */
+@SuppressWarnings("unused")
 public final class EasyHttp {
 
     /**
