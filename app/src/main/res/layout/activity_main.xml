@@ -12,7 +12,7 @@
     <com.hjq.bar.TitleBar
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        app:backButton="false"
+        app:leftIcon="@null"
         app:title="https://github.com/getActivity/EasyHttp" />
 
     <ProgressBar

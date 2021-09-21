@@ -26,6 +26,8 @@
 
     * [请求缓存](#请求缓存)
 
+    * [分区存储适配](#分区存储适配)
+
 * [疑难解答](#疑难解答)
 
     * [如何添加全局参数](#如何添加全局参数)
@@ -76,13 +78,13 @@
 
     * [我想取消请求时显示的加载对话框该怎么办](#我想取消请求时显示的加载对话框该怎么办)
 
+    * [如何在 ViewModel 中使用 EasyHttp 请求网络](如何在-viewmodel-中使用-easyhttp-请求网络)
+
 * [搭配 RxJava](#搭配-rxjava)
 
     * [准备工作](#准备工作)
 
     * [多个请求串行](#多个请求串行)
-
-    * [多个请求并行](#多个请求并行)
 
     * [发起轮询请求](#发起轮询请求)
 
@@ -230,7 +232,7 @@ public final class LoginApi implements IRequestApi {
 
     * @HttpIgnore：标记这个字段不会被发送给后台
 
-    * @HttpRename：重新定义这个字段发送给后台的参数名称
+    * @HttpRename：重新定义这个字段发送给后台的参数或者请求头名称
 
 * 可在这个类实现一些接口
 
@@ -543,6 +545,37 @@ public class XxxServer implements IRequestServer {
     }
 }
 ```
+
+#### 分区存储适配
+
+* 在 Android 10 之前，我们在读写外部存储的时候，可以直接使用 File 对象来上传或者下载文件，但是在 Android 10 之后，如果你的项目需要 Android 10 分区存储的特性，那么在读写外部存储文件的时候，就不能直接使用 File 对象，因为 `ContentResolver.insert` 返回是一个 `Uri` 对象，这个时候就需要使用到 `FileContentResolver` 对象了（这个对象是 File 的子类），具体使用案例如下：
+
+```java
+File outputFile;
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    ContentValues values = new ContentValues();
+    .........
+    // 生成一个新的 uri 路径
+    Uri outputUri = getContentResolver().insert(MediaStore.Xxx.Media.EXTERNAL_CONTENT_URI, values);
+    // 适配 Android 10 分区存储特性
+    outputFile = new FileContentResolver(context, outputUri);
+} else {
+    outputFile = new File(xxxx);
+}
+
+EasyHttp.post(this)
+        .api(new XxxApi()
+                .setImage(outputFile))
+        .request(new HttpCallback<Xxx <Xxx>>(this) {
+
+            @Override
+            public void onSucceed(Xxx<Xxx> data) {
+                
+            }
+        });
+```
+
+* 这是上传的案例，下载也同理，这里不再赘述。
 
 # 疑难解答
 
@@ -1224,6 +1257,58 @@ EasyHttp.post(this)
         });
 ```
 
+#### 如何在 ViewModel 中使用 EasyHttp 请求网络
+
+* 第一步：封装一个 BaseViewModel，并将 LifecycleOwner 特性植入进去
+
+```java
+public class BaseViewModel extends ViewModel implements LifecycleOwner {
+
+    private final LifecycleRegistry mLifecycle = new LifecycleRegistry(this);
+
+    public BaseViewModel() {
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE);
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+    }
+
+    @Override
+    protected void onCleared() {
+        super.onCleared();
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
+    }
+
+    @NonNull
+    @Override
+    public Lifecycle getLifecycle() {
+        return mLifecycle;
+    }
+}
+```
+
+* 第二步：让业务 ViewModel 类继承至 BaseViewModel，具体案例如下
+
+```java
+public class XxxViewModel extends BaseViewModel {
+
+    public void xxxx() {
+        EasyHttp.post(this)
+                .api(new XxxApi())
+                .request(new OnHttpListener<HttpData<Xxx>>() {
+
+                    @Override
+                    public void onSucceed(HttpData<Xxx> result) {
+
+                    }
+
+                    @Override
+                    public void onFail(Exception e) {
+
+                    }
+                });
+    }
+}
+```
+
 # 搭配 RxJava
 
 #### 准备工作
@@ -1288,52 +1373,9 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 });
 ```
 
-#### 多个请求并行
-
-```java
-Observable.create(new ObservableOnSubscribe<IRequestApi>() {
-
-    @Override
-    public void subscribe(ObservableEmitter<IRequestApi> emitter) throws Exception {
-        SearchBlogsApi api1 = new SearchBlogsApi()
-                .setKeyword("1");
-        SearchBlogsApi api2 = new SearchBlogsApi()
-                .setKeyword("2");
-
-        emitter.onNext(api1);
-        emitter.onNext(api2);
-        emitter.onComplete();
-    }
-})
-.map(new Function<IRequestApi, HttpData<Void>>() {
-
-    @Override
-    public HttpData<Void> apply(IRequestApi api) throws Exception {
-        try {
-            return EasyHttp.post(MainActivity.this)
-                    .api(api)
-                    .execute(new ResponseClass<HttpData<Void>>() {});
-        } catch (Exception e) {
-            e.printStackTrace();
-            ToastUtils.show(e.getMessage());
-            throw e;
-        }
-    }
-})
-// 让被观察者执行在 IO 线程
-.subscribeOn(Schedulers.io())
-// 让观察者执行在主线程
-.observeOn(AndroidSchedulers.mainThread())
-.subscribe(new Consumer<HttpData<Void>>() {
-
-    @Override
-    public void accept(HttpData<Void> data) throws Exception {
-        Log.d("EasyHttp", "最终结果为：" + data.getMessage());
-    }
-});
-```
-
 #### 发起轮询请求
+
+* 如果轮询的次数是有限，可以考虑使用 Http 请求来实现，但是如果轮询的次数是无限的，那么不推荐使用 Http 请求来实现，应当使用 WebSocket 来做，又或者其他长链接协议来做。
 
 ```java
 // 发起轮询请求，共发起三次请求，第一次请求在 5 秒后触发，剩下两次在 1 秒 和 2 秒后触发

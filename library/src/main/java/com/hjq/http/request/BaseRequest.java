@@ -313,7 +313,12 @@ public abstract class BaseRequest<T extends BaseRequest<?>> {
         if (interceptor != null) {
             interceptor.interceptArguments(mRequestApi, params, headers);
         }
-        return mRequestClient.getClient().newCall(createRequest(url, mTag, params, headers, type));
+
+        Request request = createRequest(url, mTag, params, headers, type);
+        if (request == null) {
+            throw new NullPointerException("The request object cannot be empty");
+        }
+        return mRequestClient.getClient().newCall(request);
     }
 
     /**

@@ -1,17 +1,26 @@
 package com.hjq.http.model;
 
 import android.content.ContentResolver;
+import android.content.Context;
 import android.net.Uri;
+import android.text.TextUtils;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.hjq.http.EasyLog;
+import com.hjq.http.EasyUtils;
 
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
 import java.io.FilenameFilter;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+
+import okhttp3.MediaType;
+import okhttp3.RequestBody;
 
 /**
  *    author : Android 轮子哥
@@ -22,27 +31,86 @@ import java.io.OutputStream;
 public class FileContentResolver extends FileWrapper {
 
     private final ContentResolver mContentResolver;
-    private final Uri mFileUri;
+    private final Uri mContentUri;
 
-    public FileContentResolver(@NonNull ContentResolver resolver, Uri uri) {
+    private MediaType mContentType;
+    private String mFileName;
+
+    public FileContentResolver(Context context, Uri uri) {
+        this(context.getContentResolver(), uri);
+    }
+
+    public FileContentResolver(ContentResolver resolver, Uri uri) {
+        this(resolver, uri, null);
+    }
+
+    public FileContentResolver(Context context, Uri uri, String fileName) {
+        this(context.getContentResolver(), uri, fileName);
+    }
+
+    public FileContentResolver(ContentResolver resolver, Uri uri, String fileName) {
         super(new File(uri.toString()));
         mContentResolver = resolver;
-        mFileUri = uri;
+        // 请注意这个 uri 是通过 ContentResolver.insert 方法生成的，并且没有经过修改的，否则会导致文件流读取失败
+        // 经过测试，ContentResolver.insert 生成的 uri 类型为 Uri.HierarchicalUri 这个内部类的
+        mContentUri = uri;
+        if (!TextUtils.isEmpty(fileName)) {
+            mFileName = fileName;
+            mContentType = ContentType.guessMimeType(fileName);
+        } else {
+            mFileName = getName();
+            mContentType = ContentType.STREAM;
+        }
+    }
+
+    /**
+     * 设置真实的文件名（用于 {@link okhttp3.MultipartBody.Builder#addFormDataPart(String, String, RequestBody)} 方法中的 fileName 属性）
+     */
+    public void setFileName(String fileName) {
+        mFileName = fileName;
+    }
+
+    /**
+     * 获取真实的文件名
+     */
+    public String getFileName() {
+        return mFileName;
+    }
+
+    /**
+     * 设置内容类型（用于 {@link RequestBody#contentType()} 方法）
+     */
+    public void setContentType(MediaType type) {
+        mContentType = type;
+    }
+
+    /**
+     * 获取内容类型
+     */
+    public MediaType getContentType() {
+        return mContentType;
+    }
+
+    /**
+     * 获取内容的 uri
+     */
+    public Uri getContentUri() {
+        return mContentUri;
     }
 
     @Override
-    public InputStream getInputStream() throws FileNotFoundException {
-        return mContentResolver.openInputStream(mFileUri);
+    public InputStream openInputStream() throws FileNotFoundException {
+        return mContentResolver.openInputStream(mContentUri);
     }
 
     @Override
-    public OutputStream getOutputStream() throws FileNotFoundException {
-        return mContentResolver.openOutputStream(mFileUri);
+    public OutputStream openOutputStream() throws FileNotFoundException {
+        return mContentResolver.openOutputStream(mContentUri);
     }
 
     @Override
     public boolean delete() {
-        return mContentResolver.delete(mFileUri, null, null) > 0;
+        return mContentResolver.delete(mContentUri, null, null) > 0;
     }
 
     @Override
@@ -57,6 +125,19 @@ public class FileContentResolver extends FileWrapper {
 
     @Override
     public long length() {
+        InputStream inputStream = null;
+        try {
+            inputStream = openInputStream();
+            if (inputStream != null) {
+                return inputStream.available();
+            }
+        } catch (FileNotFoundException e) {
+            EasyLog.print(e);
+        } catch (IOException e) {
+            EasyLog.print(e);
+        } finally {
+            EasyUtils.closeStream(inputStream);
+        }
         return 0;
     }
 

@@ -153,7 +153,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder.build());
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder);
     }
 
     /**
@@ -206,7 +206,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
                 // 如果这是一个自定义的 RequestBody 对象
                 if (object instanceof RequestBody) {
                     if (object instanceof UpdateBody) {
-                        bodyBuilder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getName()), (RequestBody) object);
+                        bodyBuilder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getKeyName()), (RequestBody) object);
                     } else {
                         bodyBuilder.addFormDataPart(key, null, (RequestBody) object);
                     }

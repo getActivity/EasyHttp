@@ -7,7 +7,7 @@ import android.text.TextUtils;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.body.UpdateBody;
-import com.hjq.http.model.ContentType;
+import com.hjq.http.model.FileContentResolver;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -22,17 +22,15 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.net.FileNameMap;
-import java.net.URLConnection;
 import java.net.URLEncoder;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import okio.Okio;
 
 /**
  *    author : Android 轮子哥
@@ -315,33 +313,36 @@ public final class EasyUtils {
     }
 
     /**
-     * 根据文件名获取 MIME 类型
-     */
-    public static MediaType guessMimeType(String fileName) {
-        FileNameMap fileNameMap = URLConnection.getFileNameMap();
-        // 解决文件名中含有#号异常的问题
-        fileName = fileName.replace("#", "");
-        String contentType = fileNameMap.getContentTypeFor(fileName);
-        if (contentType == null) {
-            return ContentType.STREAM;
-        }
-        MediaType type = MediaType.parse(contentType);
-        if (type == null) {
-            type = ContentType.STREAM;
-        }
-        return type;
-    }
-
-    /**
      * 根据 File 对象创建一个流媒体
      */
     public static MultipartBody.Part createPart(String key, File file) {
-        try {
-            // 文件名必须不能带中文，所以这里要编码
-            return MultipartBody.Part.createFormData(key, encodeString(file.getName()), new UpdateBody(file));
-        } catch (FileNotFoundException e) {
-            EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
-            return null;
+        // 文件名必须不能带中文，所以这里要编码
+        String fileName = encodeString(file.getName());
+        if (file instanceof FileContentResolver) {
+            try {
+                FileContentResolver fileContentResolver = (FileContentResolver) file;
+                InputStream inputStream = fileContentResolver.openInputStream();
+                if (inputStream == null) {
+                    return null;
+                }
+                String name = fileContentResolver.getFileName();
+                if (TextUtils.isEmpty(name)) {
+                    name = fileContentResolver.getName();
+                }
+                return MultipartBody.Part.createFormData(key, fileName, new UpdateBody(
+                        Okio.source(inputStream), fileContentResolver.getContentType(), name, inputStream.available()));
+            } catch (IOException e) {
+                EasyLog.print(e);
+                EasyLog.print("文件流读取失败，将被忽略上传：" + key + " = " + file.getPath());
+                return null;
+            }
+        } else {
+            try {
+                return MultipartBody.Part.createFormData(key, fileName, new UpdateBody(file));
+            } catch (FileNotFoundException e) {
+                EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
+                return null;
+            }
         }
     }
 

@@ -83,6 +83,6 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T>
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder.build());
+        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder);
     }
 }

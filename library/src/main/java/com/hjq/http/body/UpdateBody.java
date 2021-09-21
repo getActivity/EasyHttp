@@ -29,13 +29,13 @@ public class UpdateBody extends RequestBody {
     private final MediaType mMediaType;
 
     /** 内容名称 */
-    private final String mName;
+    private final String mKeyName;
 
     /** 内容大小 */
     private final long mLength;
 
     public UpdateBody(File file) throws FileNotFoundException {
-        this(Okio.source(file), EasyUtils.guessMimeType(file.getName()), file.getName(), file.length());
+        this(Okio.source(file), ContentType.guessMimeType(file.getName()), file.getName(), file.length());
     }
 
     public UpdateBody(InputStream inputStream, String name) throws IOException {
@@ -45,7 +45,7 @@ public class UpdateBody extends RequestBody {
     public UpdateBody(Source source, MediaType type, String name, long length) {
         mSource = source;
         mMediaType = type;
-        mName = name;
+        mKeyName = name;
         mLength = length;
     }
 
@@ -56,6 +56,10 @@ public class UpdateBody extends RequestBody {
 
     @Override
     public long contentLength() {
+        if (mLength == 0) {
+            // 如果不能获取到大小，则返回 -1，参考 RequestBody.contentLength 方法实现
+            return -1;
+        }
         return mLength;
     }
 
@@ -68,7 +72,7 @@ public class UpdateBody extends RequestBody {
         }
     }
 
-    public String getName() {
-        return mName;
+    public String getKeyName() {
+        return mKeyName;
     }
 }

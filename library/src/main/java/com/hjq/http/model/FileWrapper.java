@@ -29,17 +29,17 @@ public class FileWrapper extends File {
     }
 
     /**
-     * 获取文件的输出流
+     * 打开文件的输入流
      */
-    public OutputStream getOutputStream() throws FileNotFoundException {
-        return new FileOutputStream(this);
+    public InputStream openInputStream() throws FileNotFoundException {
+        return new FileInputStream(this);
     }
 
     /**
-     * 获取文件的输入流
+     * 打开文件的输出流
      */
-    public InputStream getInputStream() throws FileNotFoundException {
-        return new FileInputStream(this);
+    public OutputStream openOutputStream() throws FileNotFoundException {
+        return new FileOutputStream(this);
     }
 
     /**
@@ -83,6 +83,7 @@ public class FileWrapper extends File {
         } catch (NoSuchAlgorithmException | IOException e) {
             EasyLog.print(e);
         } finally {
+            EasyUtils.closeStream(inputStream);
             EasyUtils.closeStream(digestInputStream);
         }
         return null;

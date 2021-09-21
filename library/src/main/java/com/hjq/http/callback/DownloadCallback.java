@@ -108,7 +108,7 @@ public final class DownloadCallback extends BaseCallback {
         }
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
         if (!TextUtils.isEmpty(mMd5) && mFile.isFile() &&
-                mMd5.equalsIgnoreCase(FileWrapper.getFileMd5(mFile.getInputStream()))) {
+                mMd5.equalsIgnoreCase(FileWrapper.getFileMd5(mFile.openInputStream()))) {
             EasyUtils.post(() -> {
                 if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
                     return;
@@ -123,7 +123,7 @@ public final class DownloadCallback extends BaseCallback {
         mDownloadByte = 0;
         byte[] bytes = new byte[8192];
         InputStream inputStream = body.byteStream();
-        OutputStream outputStream = mFile.getOutputStream();
+        OutputStream outputStream = mFile.openOutputStream();
         while ((readLength = inputStream.read(bytes)) != -1) {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
@@ -145,7 +145,7 @@ public final class DownloadCallback extends BaseCallback {
         EasyUtils.closeStream(inputStream);
         EasyUtils.closeStream(outputStream);
 
-        String md5 = FileWrapper.getFileMd5(mFile.getInputStream());
+        String md5 = FileWrapper.getFileMd5(mFile.openInputStream());
         if (!TextUtils.isEmpty(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
             // 文件 MD5 值校验失败
             throw new MD5Exception("MD5 verify failure", md5);

@@ -11,8 +11,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 30
-        versionCode 1000
-        versionName '10.0'
+        versionCode 1020
+        versionName '10.2'
     }
 
     // 支持 JDK 1.8
@@ -60,8 +60,8 @@ dependencies {
     
     implementation project(':library')
 
-    // AppCompat 库：https://developer.android.google.cn/jetpack/androidx/releases/appcompat?hl=zh-cn
-    implementation 'androidx.appcompat:appcompat:1.3.0'
+    // AndroidX 库：https://github.com/androidx/androidx
+    implementation 'androidx.appcompat:appcompat:1.3.1'
 
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
@@ -72,10 +72,10 @@ dependencies {
     implementation 'com.github.getActivity:ToastUtils:9.5'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:12.0'
+    implementation 'com.github.getActivity:XXPermissions:12.3'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
-    implementation 'com.github.getActivity:TitleBar:8.6'
+    implementation 'com.github.getActivity:TitleBar:9.2'
 
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.8.8'
@@ -83,8 +83,11 @@ dependencies {
     implementation 'com.github.getActivity:GsonFactory:5.2'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:9.8'
+    debugImplementation 'com.github.getActivity:Logcat:9.9'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
     implementation 'com.tencent:mmkv-static:1.2.10'
+
+    // 内存泄漏监测框架：https://github.com/square/leakcanary
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
 }

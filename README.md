@@ -52,7 +52,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:10.0'
+    implementation 'com.github.getActivity:EasyHttp:10.2'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -65,9 +65,9 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  10.0 |  2.9.0  |  3.0.4    |
+|    对应版本  |  10.2 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
-|    **aar 包大小**  |  74 KB  | 123 KB  |  131 KB  |
+|    **aar 包大小**  |  76 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
@@ -82,7 +82,8 @@ dependencies {
 |    Json 参数提交  |  ✅  |   ❌   |    ✅   |
 |    **请求代码定位**   |  ✅  |   ❌   |    ❌    |
 |    **延迟发起请求**   |  ✅  |   ❌   |    ❌    |
-|    上传文件类型   | File / InputStream / RequestBody | RequestBody |  File  |
+|    **分区存储适配**   |  ✅  |   ❌   |    ❌    |
+|    上传文件类型   | File / FileContentResolver <br> InputStream / RequestBody | RequestBody |  File  |
 |    **请求生命周期**  | 自动管控 |   需要封装  |   需要封装  |
 |    参数传值方式  |  字段名 + 字段值  | 参数名 + 参数值 |  定义 Key + Value  |
 |    框架灵活性  |    高     |     低      |     中    |
@@ -105,9 +106,39 @@ dependencies {
 
 * EasyHttp 采用了 OOP 思想，一个请求代表一个对象，通过类继承和实现的特性来对接口进行动态化配置，几乎涵盖接口开发中所有的功能，使用起来非常简单灵活。而 Retrofit 采用的是注解方式，缺点是灵活性极低，因为注解上面只能放常量，也就会限定你在注解上面的一切参数只能是事先定义好的，这对接口的动态化配置极不利的。
 
-* 有很多人觉得写一个接口类很麻烦，这个点确实有点麻烦，但是这块的付出是有收获的，从前期开发的效率考虑：OkGo > EasyHttp > Retrofit，但是从后期维护的效率考虑：EasyHttp > Retrofit > OkGo，之所以比较这三个框架，是因为框架的设计思想不同，但是我始终认为 EasyHttp 才是最好的设计，所以我创造了它。
+* 有很多人觉得写一个接口类很麻烦，关于这个问题我后面已经想到一个好方案了，大家可以将 Api 类和 Bean 类写在一起，这样大家就不需要多写一个类了，具体写法示例如下：
 
-* 前期开发和后期维护哪个更重要？我觉得都重要，但是如果两者之间存在利益冲突，我会毫不犹豫地选择后期维护，因为前期开发占据的是小头，后期的持续维护才是大头。
+```java
+public final class XxxApi implements IRequestApi {
+
+    @Override
+    public String getApi() {
+        return "xxx/xxx";
+    }
+    
+    private int xxx;
+
+    public XxxApi setXxx(int xxx) {
+        this.xxx = xxx;
+        return this;
+    }
+
+    ......
+
+    public final static class Bean {
+
+        private int xyz;
+
+        public int getXyz() {
+            return xyz;
+        }
+
+        ......
+    }
+}
+```
+
+* 是不是很机智？这样不仅很好地解决了这一问题，还能将一个接口所有的信息都包裹在这个类中，非常直观，一览如云，妥妥的一箭双雕。
 
 #### 生命周期自动管控介绍
 

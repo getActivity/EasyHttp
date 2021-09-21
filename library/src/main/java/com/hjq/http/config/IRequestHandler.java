@@ -20,11 +20,11 @@ public interface IRequestHandler {
      *
      * @param lifecycle     有生命周期的对象（例如 Activity、Fragment）
      * @param api           请求接口对象
-     * @param request       请求对象
+     * @param builder       请求构建对象
      * @return              返回新的请求对象
      */
-    default Request requestStart(LifecycleOwner lifecycle, IRequestApi api, Request request) {
-        return request;
+    default Request requestStart(LifecycleOwner lifecycle, IRequestApi api, Request.Builder builder) {
+        return builder.build();
     }
 
     /**
