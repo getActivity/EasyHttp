@@ -1,5 +1,7 @@
 package com.hjq.http.model;
 
+import androidx.annotation.NonNull;
+
 import java.io.IOException;
 
 import okhttp3.Call;
@@ -18,75 +20,55 @@ public final class CallProxy implements Call {
 
     private Call mCall;
 
-    public CallProxy(Call call) {
+    public CallProxy(@NonNull Call call) {
         mCall = call;
     }
 
-    public void setCall(Call call) {
+    public void setCall(@NonNull Call call) {
         mCall = call;
     }
 
+    @NonNull
     @Override
     public Request request() {
-        if (mCall == null) {
-            return null;
-        }
         return mCall.request();
     }
 
+    @NonNull
     @Override
     public Response execute() throws IOException {
-        if (mCall == null) {
-            return null;
-        }
         return mCall.execute();
     }
 
     @Override
-    public void enqueue(Callback responseCallback) {
-        if (mCall == null) {
-            return;
-        }
+    public void enqueue(@NonNull Callback responseCallback) {
         mCall.enqueue(responseCallback);
     }
 
     @Override
     public void cancel() {
-        if (mCall == null) {
-            return;
-        }
         mCall.cancel();
     }
 
     @Override
     public boolean isExecuted() {
-        if (mCall == null) {
-            return false;
-        }
         return mCall.isExecuted();
     }
 
     @Override
     public boolean isCanceled() {
-        if (mCall == null) {
-            return false;
-        }
         return mCall.isCanceled();
     }
 
+    @NonNull
     @Override
     public Timeout timeout() {
-        if (mCall == null) {
-            return null;
-        }
         return mCall.timeout();
     }
 
+    @NonNull
     @Override
     public Call clone() {
-        if (mCall == null) {
-            return null;
-        }
         return mCall.clone();
     }
 }

@@ -4,9 +4,9 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* [点击此处下载Demo](EasyHttp.apk)
+* [点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/10.5/EasyHttp.apk)
 
-![](EasyHttp.jpg)
+![](picture/demo_code.png)
 
 * 另外对 OkHttp 原理感兴趣的同学推荐你看以下源码分析文章
 
@@ -21,6 +21,8 @@
 * [OkHttp 精讲：ConnectInterceptor](https://www.jianshu.com/p/a3a774fdff4f)
 
 * [OkHttp 精讲：CallServerInterceptor](https://www.jianshu.com/p/aa77af6251ff)
+
+![](picture/demo_preview.jpg)
 
 #### 集成步骤
 
@@ -52,7 +54,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:10.2'
+    implementation 'com.github.getActivity:EasyHttp:10.5'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -65,9 +67,9 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  10.2 |  2.9.0  |  3.0.4    |
+|    对应版本  |  10.5 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
-|    **aar 包大小**  |  76 KB  | 123 KB  |  131 KB  |
+|    **aar 包大小**  |  78 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
@@ -77,13 +79,14 @@ dependencies {
 |    **请求缓存**   |  ✅  |  ❌  |    ✅   |
 |    **下载校验**   |  ✅  |  ❌  |   ❌  |
 |    **极速下载**   |  ✅  |  ❌  |   ❌  |
-|    批量上传文件   |  ✅  |   ❌   |    ✅    |
 |    上传进度监听   |  ✅  |   ❌   |    ✅    |
 |    Json 参数提交  |  ✅  |   ❌   |    ✅   |
+|    Json 日志打印格式化  |  ✅  |   ❌   |    ❌   |
 |    **请求代码定位**   |  ✅  |   ❌   |    ❌    |
 |    **延迟发起请求**   |  ✅  |   ❌   |    ❌    |
 |    **分区存储适配**   |  ✅  |   ❌   |    ❌    |
 |    上传文件类型   | File / FileContentResolver <br> InputStream / RequestBody | RequestBody |  File  |
+|    批量上传文件   |  ✅  |   ❌   |    ✅    |
 |    **请求生命周期**  | 自动管控 |   需要封装  |   需要封装  |
 |    参数传值方式  |  字段名 + 字段值  | 参数名 + 参数值 |  定义 Key + Value  |
 |    框架灵活性  |    高     |     低      |     中    |
@@ -180,9 +183,9 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
 
 #### 代码定位功能介绍
 
-* 框架会在日志打印中输出在网络请求的代码位置，这样开发者可以直接通过点击 Log 来定位代码是在哪个类哪行代码，这样可以极大提升我们排查问题的效率，特别是在请求一多且业务复杂的情况下，我相信没有一个人会拒绝这样的功能。
+* 框架会在日志打印中输出在网络请求的代码位置，这样开发者可以直接通过点击 Log 来定位是在哪个类哪行代码，这样可以极大提升我们排查问题的效率，特别是在请求一多且业务复杂的情况下，我相信没有一个人会拒绝这样的功能。
 
-![](RequestCode.png)
+![](picture/request_code.png)
 
 #### 延迟发起请求功能介绍
 

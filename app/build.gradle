@@ -1,7 +1,9 @@
 apply plugin: 'com.android.application'
+apply plugin: 'kotlin-android'
+apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
 
     lintOptions {
         abortOnError false
@@ -10,9 +12,9 @@ android {
     defaultConfig {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
-        targetSdkVersion 30
-        versionCode 1020
-        versionName '10.2'
+        targetSdkVersion 31
+        versionCode 1050
+        versionName '10.5'
     }
 
     // 支持 JDK 1.8
@@ -69,16 +71,16 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
     // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.github.getActivity:ToastUtils:9.5'
+    implementation 'com.github.getActivity:ToastUtils:9.6'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:12.3'
+    implementation 'com.github.getActivity:XXPermissions:12.8'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
     implementation 'com.github.getActivity:TitleBar:9.2'
 
     // Json 解析框架：https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.8.8'
+    implementation 'com.google.code.gson:gson:2.8.9'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
     implementation 'com.github.getActivity:GsonFactory:5.2'
 
@@ -86,7 +88,7 @@ dependencies {
     debugImplementation 'com.github.getActivity:Logcat:9.9'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
-    implementation 'com.tencent:mmkv-static:1.2.10'
+    implementation 'com.tencent:mmkv-static:1.2.11'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'

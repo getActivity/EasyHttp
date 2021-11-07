@@ -1,7 +1,5 @@
 package com.hjq.http.ssl;
 
-import com.hjq.http.EasyLog;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.security.KeyManagementException;
@@ -69,7 +67,7 @@ public final class HttpSslFactory {
      *
      * @param trustManager          可以额外配置信任服务端的证书策略，否则默认是按CA证书去验证的，若不是CA可信任的证书，则无法通过验证
      * @param bksFile               客户端使用 bks 证书校验服务端证书
-     * @param password
+     * @param password              客户端的 bks 证书密码
      * @param certificates          用含有服务端公钥的证书校验服务端证书
      */
     private static HttpSslConfig generateSslConfigBase(X509TrustManager trustManager, InputStream bksFile, String password, InputStream... certificates) {
@@ -110,7 +108,7 @@ public final class HttpSslFactory {
             factory.init(keyStore, password.toCharArray());
             return factory.getKeyManagers();
         } catch (IOException | CertificateException | UnrecoverableKeyException | NoSuchAlgorithmException | KeyStoreException e) {
-            EasyLog.print(e);
+            e.printStackTrace();
             return null;
         }
     }
@@ -136,7 +134,7 @@ public final class HttpSslFactory {
                         certStream.close();
                     }
                 } catch (IOException e) {
-                    EasyLog.print(e);
+                    e.printStackTrace();
                 }
             }
             // 我们创建一个默认类型的 TrustManagerFactory
@@ -146,7 +144,7 @@ public final class HttpSslFactory {
             // 通过 tmf 获取 TrustManager 数组，TrustManager 也会信任 KeyStore 中的证书
             return factory.getTrustManagers();
         } catch (IOException | CertificateException | KeyStoreException | NoSuchAlgorithmException e) {
-            EasyLog.print(e);
+            e.printStackTrace();
             return null;
         }
     }

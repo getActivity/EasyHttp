@@ -6,6 +6,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnUpdateListener;
+import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
 
@@ -25,6 +26,7 @@ import okio.Sink;
  */
 public class ProgressBody extends RequestBody {
 
+    private final HttpRequest<?> mHttpRequest;
     private final RequestBody mRequestBody;
     private final OnUpdateListener<?> mListener;
     private final LifecycleOwner mLifecycleOwner;
@@ -36,7 +38,8 @@ public class ProgressBody extends RequestBody {
     /** 上传进度值 */
     private int mUpdateProgress;
 
-    public ProgressBody(RequestBody body, LifecycleOwner lifecycleOwner, OnUpdateListener<?> listener) {
+    public ProgressBody(HttpRequest<?> httpRequest, RequestBody body, LifecycleOwner lifecycleOwner, OnUpdateListener<?> listener) {
+        mHttpRequest = httpRequest;
         mRequestBody = body;
         mLifecycleOwner = lifecycleOwner;
         mListener = listener;
@@ -81,8 +84,9 @@ public class ProgressBody extends RequestBody {
                     if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                         mListener.onProgress(progress);
                     }
-                    EasyLog.print("正在进行上传" + "，总字节：" + mTotalByte +
-                            "，已上传：" + mUpdateByte + "，进度：" + progress + "%");
+                    EasyLog.printLog(mHttpRequest, "Uploading in progress, uploaded: " +
+                            mUpdateByte + " / " + mTotalByte +
+                            ", progress: " + progress + "%");
                 }
             });
         }

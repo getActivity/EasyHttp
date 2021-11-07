@@ -14,15 +14,11 @@ import java.util.Set;
 public final class HttpHeaders {
 
     /** 请求头存放集合 */
-    private HashMap<String, String> mHeaders = EasyConfig.getInstance().getHeaders();
+    private final HashMap<String, String> mHeaders = new HashMap<>(EasyConfig.getInstance().getHeaders());
 
     public void put(String key, String value) {
         if (key == null || value == null) {
             return;
-        }
-
-        if (mHeaders == EasyConfig.getInstance().getHeaders()) {
-            mHeaders = new HashMap<>(mHeaders);
         }
         mHeaders.put(key, value);
     }
@@ -31,10 +27,6 @@ public final class HttpHeaders {
         if (key == null) {
             return;
         }
-
-        if (mHeaders == EasyConfig.getInstance().getHeaders()) {
-            mHeaders = new HashMap<>(mHeaders);
-        }
         mHeaders.remove(key);
     }
 
@@ -42,11 +34,15 @@ public final class HttpHeaders {
         return mHeaders.get(key);
     }
 
+    public void clear() {
+        mHeaders.clear();
+    }
+
     public boolean isEmpty() {
         return mHeaders == null || mHeaders.isEmpty();
     }
 
-    public Set<String> getNames() {
+    public Set<String> getKeys() {
         return mHeaders.keySet();
     }
 

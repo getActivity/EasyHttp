@@ -1,5 +1,7 @@
 package com.hjq.http.request;
 
+import android.text.TextUtils;
+
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
@@ -7,16 +9,19 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.body.JsonBody;
 import com.hjq.http.body.ProgressBody;
-import com.hjq.http.body.StringBody;
+import com.hjq.http.body.TextBody;
 import com.hjq.http.body.UpdateBody;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CacheMode;
+import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +31,7 @@ import okhttp3.FormBody;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
+import okio.Okio;
 
 /**
  *    author : Android 轮子哥
@@ -34,7 +40,7 @@ import okhttp3.RequestBody;
  *    desc   : 带 RequestBody 请求
  */
 @SuppressWarnings("unchecked")
-public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<T> {
+public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<T> {
 
     private OnUpdateListener<?> mUpdateListener;
 
@@ -75,7 +81,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
         if (text == null) {
             return (T) this;
         }
-        return body(new StringBody(text));
+        return body(new TextBody(text));
     }
 
     /**
@@ -91,21 +97,21 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
 
-        EasyLog.print("RequestUrl", url);
-        EasyLog.print("RequestMethod", getRequestMethod());
+        EasyLog.printKeyValue(this, "RequestUrl", url);
+        EasyLog.printKeyValue(this, "RequestMethod", getRequestMethod());
 
         if (tag != null) {
             requestBuilder.tag(tag);
         }
 
         // 如果设置了不缓存数据
-        if (getRequestCache().getMode() == CacheMode.NO_CACHE) {
+        if (getRequestCache().getCacheMode() == CacheMode.NO_CACHE) {
             requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
         }
 
         // 添加请求头
         if (!headers.isEmpty()) {
-            for (String key : headers.getNames()) {
+            for (String key : headers.getKeys()) {
                 requestBuilder.addHeader(key, headers.get(key));
             }
         }
@@ -117,43 +123,64 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
         if (EasyConfig.getInstance().isLogEnabled()) {
 
             if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
 
-            for (String key : headers.getNames()) {
-                EasyLog.print(key, headers.get(key));
+            for (String key : headers.getKeys()) {
+                EasyLog.printKeyValue(this, key, headers.get(key));
             }
 
             if (!headers.isEmpty() && !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
 
             if (body instanceof FormBody ||
                     body instanceof MultipartBody ||
                     body instanceof ProgressBody) {
                 // 打印表单
-                for (String key : params.getNames()) {
+                for (String key : params.getKeys()) {
                     Object value = params.get(key);
-                    if (value instanceof String) {
-                        EasyLog.print(key, "\"" + value + "\"");
+                    if (value instanceof Map) {
+                        // 如果这是一个 Map 集合
+                        Map<?, ?> map = ((Map<?, ?>) value);
+                        for (Object itemKey : map.keySet()) {
+                            if (itemKey == null) {
+                                continue;
+                            }
+                            Object itemValue = map.get(itemKey);
+                            if (itemValue == null) {
+                                continue;
+                            }
+                            printKeyValue(this, String.valueOf(itemKey), itemValue);
+                        }
+                    } else if (value instanceof List) {
+                        // 如果这是一个 List 集合
+                        List<?> list = (List<?>) value;
+                        for (int i = 0; i < list.size(); i++) {
+                            Object itemValue = list.get(i);
+                            if (itemValue == null) {
+                                continue;
+                            }
+                            printKeyValue(this, key + "[" + i + "]", itemValue);
+                        }
                     } else {
-                        EasyLog.print(key, String.valueOf(value));
+                        printKeyValue(this, key, value);
                     }
                 }
             } else if (body instanceof JsonBody) {
                 // 打印 Json
-                EasyLog.json(body.toString());
+                EasyLog.printJson(this, body.toString());
             } else {
                 // 打印文本
-                EasyLog.print(body.toString());
+                EasyLog.printLog(this, body.toString());
             }
 
             if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder);
+        return requestBuilder.build();
     }
 
     /**
@@ -176,56 +203,34 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
         if (params.isMultipart() && !params.isEmpty()) {
             MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
             bodyBuilder.setType(MultipartBody.FORM);
-            for (String key : params.getNames()) {
-                Object object = params.get(key);
+            for (String key : params.getKeys()) {
+                Object value = params.get(key);
 
-                // 如果这是一个 File 对象
-                if (object instanceof File) {
-                    MultipartBody.Part part = EasyUtils.createPart(key, (File) object);
-                    if (part != null) {
-                        bodyBuilder.addPart(part);
-                    }
-                    continue;
-                }
-
-                // 如果这是一个 InputStream 对象
-                if (object instanceof InputStream) {
-                    MultipartBody.Part part = EasyUtils.createPart(key, (InputStream) object);
-                    if (part != null) {
-                        bodyBuilder.addPart(part);
-                    }
-                    continue;
-                }
-
-                // 如果这是一个自定义的 MultipartBody.Part 对象
-                if (object instanceof MultipartBody.Part) {
-                    bodyBuilder.addPart((MultipartBody.Part) object);
-                    continue;
-                }
-
-                // 如果这是一个自定义的 RequestBody 对象
-                if (object instanceof RequestBody) {
-                    if (object instanceof UpdateBody) {
-                        bodyBuilder.addFormDataPart(key, EasyUtils.encodeString(((UpdateBody) object).getKeyName()), (RequestBody) object);
-                    } else {
-                        bodyBuilder.addFormDataPart(key, null, (RequestBody) object);
-                    }
-                    continue;
-                }
-
-                // 如果这是一个 List<File> 对象
-                if (object instanceof List && EasyUtils.isFileList((List<?>) object)) {
-                    for (Object item : (List<?>) object) {
-                        MultipartBody.Part part = EasyUtils.createPart(key, (File) item);
-                        if (part != null) {
-                            bodyBuilder.addPart(part);
+                if (value instanceof Map) {
+                    // 如果这是一个 Map 集合
+                    Map<?, ?> map = ((Map<?, ?>) value);
+                    for (Object itemKey : map.keySet()) {
+                        if (itemKey == null) {
+                           continue;
                         }
+                        Object itemValue = map.get(itemKey);
+                        if (itemValue == null) {
+                            continue;
+                        }
+                        addFormData(bodyBuilder, String.valueOf(itemKey), itemValue);
                     }
-                    continue;
+                } else if (value instanceof List) {
+                    // 如果这是一个 List 集合
+                    List<?> list = (List<?>) value;
+                    for (Object itemValue : list) {
+                        if (itemValue == null) {
+                            continue;
+                        }
+                        addFormData(bodyBuilder, key, itemValue);
+                    }
+                } else {
+                    addFormData(bodyBuilder, key, value);
                 }
-
-                // 如果这是一个普通参数
-                bodyBuilder.addFormDataPart(key, String.valueOf(object));
             }
 
             try {
@@ -240,13 +245,101 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends BaseRequest<
         } else {
             FormBody.Builder bodyBuilder = new FormBody.Builder();
             if (!params.isEmpty()) {
-                for (String key : params.getNames()) {
-                    bodyBuilder.add(key, String.valueOf(params.get(key)));
+                for (String key : params.getKeys()) {
+                    Object value = params.get(key);
+                    if (value instanceof List) {
+                        List<?> list = (List<?>) value;
+                        for (Object item : list) {
+                            bodyBuilder.add(key, String.valueOf(item));
+                        }
+                        continue;
+                    }
+
+                    bodyBuilder.add(key, String.valueOf(value));
                 }
             }
             requestBody = bodyBuilder.build();
         }
 
-        return mUpdateListener == null ? requestBody : new ProgressBody(requestBody, getLifecycleOwner(), mUpdateListener);
+        return mUpdateListener == null ? requestBody : new ProgressBody(this, requestBody, getLifecycleOwner(), mUpdateListener);
+    }
+
+    /**
+     * 添加参数
+     */
+    private void addFormData(MultipartBody.Builder bodyBuilder, String key, Object object) {
+        if (object instanceof File) {
+            // 如果这是一个 File 对象
+            File file = (File) object;
+            String fileName = null;
+            if (file instanceof FileContentResolver) {
+                fileName = ((FileContentResolver) file).getFileName();
+            }
+            if (TextUtils.isEmpty(fileName)) {
+                fileName = file.getName();
+            }
+            // // 文件名必须不能带中文，所以这里要编码
+            String encodeFileName = EasyUtils.encodeString(fileName);
+
+            try {
+                MultipartBody.Part part;
+                if (file instanceof FileContentResolver) {
+                    FileContentResolver fileContentResolver = (FileContentResolver) file;
+                    InputStream inputStream = fileContentResolver.openInputStream();
+                    part = MultipartBody.Part.createFormData(key, encodeFileName, new UpdateBody(
+                            Okio.source(inputStream), fileContentResolver.getContentType(),
+                            fileName, inputStream.available()));
+                } else {
+                    part = MultipartBody.Part.createFormData(key, encodeFileName, new UpdateBody(file));
+                }
+                bodyBuilder.addPart(part);
+            } catch (FileNotFoundException e) {
+                // 文件不存在，将被忽略上传
+                EasyLog.printLog(this, "File does not exist, will be ignored upload: " +
+                        key + " = " + file.getPath());
+            } catch (IOException e) {
+                EasyLog.printThrowable(this, e);
+                // 文件流读取失败，将被忽略上传
+                EasyLog.printLog(this, "File stream reading failed and will be ignored upload: " +
+                        key + " = " + file.getPath());
+            }
+        } else if (object instanceof InputStream) {
+            // 如果这是一个 InputStream 对象
+            InputStream inputStream = (InputStream) object;
+            try {
+                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key)));
+            } catch (IOException e) {
+                EasyLog.printThrowable(this, e);
+            }
+        } else if (object instanceof RequestBody) {
+            // 如果这是一个自定义的 RequestBody 对象
+            RequestBody requestBody = (RequestBody) object;
+            if (requestBody instanceof UpdateBody) {
+                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, EasyUtils.encodeString(
+                        ((UpdateBody) requestBody).getKeyName()), requestBody));
+            } else {
+                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, requestBody));
+            }
+        } else if (object instanceof MultipartBody.Part) {
+            // 如果这是一个自定义的 MultipartBody.Part 对象
+            bodyBuilder.addPart((MultipartBody.Part) object);
+        } else {
+            // 如果这是一个普通参数
+            bodyBuilder.addFormDataPart(key, String.valueOf(object));
+        }
+    }
+
+    /**
+     * 打印键值对
+     */
+    private void printKeyValue(HttpRequest<?> httpRequest, String key, Object value) {
+        if (value instanceof Enum) {
+            // 如果这是一个枚举类型
+            EasyLog.printKeyValue(httpRequest, key, "\"" + value + "\"");
+        } else if (value instanceof String) {
+            EasyLog.printKeyValue(httpRequest, key, "\"" + value + "\"");
+        } else {
+            EasyLog.printKeyValue(httpRequest, key, String.valueOf(value));
+        }
     }
 }

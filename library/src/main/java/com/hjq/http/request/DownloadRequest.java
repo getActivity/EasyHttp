@@ -3,6 +3,7 @@ package com.hjq.http.request;
 import android.content.ContentResolver;
 import android.net.Uri;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
@@ -16,7 +17,6 @@ import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.FileContentResolver;
-import com.hjq.http.model.FileWrapper;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.HttpParams;
@@ -32,13 +32,13 @@ import okhttp3.Request;
  *    time   : 2019/07/20
  *    desc   : 下载请求
  */
-public final class DownloadRequest extends BaseRequest<DownloadRequest> {
+public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
     /** 下载请求方式 */
     private HttpMethod mMethod = HttpMethod.GET;
 
     /** 保存的文件 */
-    private FileWrapper mFile;
+    private File mFile;
 
     /** 校验的 md5 */
     private String mMd5;
@@ -79,11 +79,7 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
     }
 
     public DownloadRequest file(File file) {
-        if (file instanceof FileContentResolver) {
-            return file((FileContentResolver) file);
-        }
-
-        mFile = new FileWrapper(file);
+        mFile = file;
         return this;
     }
 
@@ -117,10 +113,10 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
         switch (mMethod) {
             case GET:
                 // 如果这个下载请求方式是 Get
-                return new GetRequest(getLifecycleOwner()).createRequest(url, tag, params, headers, type);
+                return new GetRequest(getLifecycleOwner()).api(getRequestApi()).createRequest(url, tag, params, headers, type);
             case POST:
                 // 如果这个下载请求方式是 Post
-                return new PostRequest(getLifecycleOwner()).createRequest(url, tag, params, headers, type);
+                return new PostRequest(getLifecycleOwner()).api(getRequestApi()).createRequest(url, tag, params, headers, type);
             default:
                 throw new IllegalStateException("method nonsupport");
         }
@@ -133,17 +129,18 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
         long delayMillis = getDelayMillis();
         if (delayMillis > 0) {
             // 打印请求延迟时间
-            EasyLog.print("RequestDelay", String.valueOf(delayMillis));
+            EasyLog.printKeyValue(this, "RequestDelay", String.valueOf(delayMillis));
         }
 
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
 
         EasyUtils.postDelayed(() -> {
             if (!HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
-                EasyLog.print("宿主已被销毁，请求无法进行");
+                // 宿主已被销毁，请求无法进行
+                EasyLog.printLog(this, "LifecycleOwner has been destroyed and the request cannot be made");
                 return;
             }
-            EasyLog.print(stackTrace);
+            EasyLog.printStackTrace(this, stackTrace);
             mCallProxy = new CallProxy(createCall());
             new DownloadCallback(this)
                     .setFile(mFile)
@@ -184,8 +181,9 @@ public final class DownloadRequest extends BaseRequest<DownloadRequest> {
         throw new IllegalStateException("Call the start method");
     }
 
+    @NonNull
     @Override
-    protected String getRequestMethod() {
+    public String getRequestMethod() {
         return String.valueOf(mMethod);
     }
 }

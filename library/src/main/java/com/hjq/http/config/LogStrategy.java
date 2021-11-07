@@ -3,8 +3,8 @@ package com.hjq.http.config;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyHttp;
+import com.hjq.http.EasyUtils;
 
 /**
  *    author : Android 轮子哥
@@ -15,14 +15,14 @@ import com.hjq.http.EasyHttp;
 public final class LogStrategy implements ILogStrategy {
 
     @Override
-    public void print(String log) {
+    public void printLog(String tag, String log) {
         // 这里解释一下，为什么不用 Log.d，而用 Log.i，因为 Log.d 在魅族 16th 手机上面无法输出日志
-        Log.i(EasyConfig.getInstance().getLogTag(), log != null ? log : "null");
+        Log.i(tag, log != null ? log : "null");
     }
 
     @Override
-    public void json(String json) {
-        String text = ILogStrategy.formatJson(json);
+    public void printJson(String tag, String json) {
+        String text = EasyUtils.formatJson(json);
         if (TextUtils.isEmpty(text)) {
             return;
         }
@@ -34,7 +34,7 @@ public final class LogStrategy implements ILogStrategy {
         long length = text.length();
         if (length <= segmentSize) {
             // 长度小于等于限制直接打印
-            print(text);
+            printLog(tag, text);
             return;
         }
 
@@ -42,25 +42,25 @@ public final class LogStrategy implements ILogStrategy {
         while (text.length() > segmentSize) {
             String logContent = text.substring(0, segmentSize);
             text = text.replace(logContent, "");
-            print(logContent);
+            printLog(tag, logContent);
         }
 
         // 打印剩余日志
-        print(text);
+        printLog(tag, text);
     }
 
     @Override
-    public void print(String key, String value) {
-        print(key + " = " + value);
+    public void printKeyValue(String tag, String key, String value) {
+        printLog(tag, key + " = " + value);
     }
 
     @Override
-    public void print(Throwable throwable) {
-        Log.e(EasyConfig.getInstance().getLogTag(), throwable.getMessage(), throwable);
+    public void printThrowable(String tag, Throwable throwable) {
+        Log.e(tag, throwable.getMessage(), throwable);
     }
 
     @Override
-    public void print(StackTraceElement[] stackTrace) {
+    public void printStackTrace(String tag, StackTraceElement[] stackTrace) {
         for (StackTraceElement element : stackTrace) {
             // 获取代码行数
             int lineNumber = element.getLineNumber();
@@ -70,7 +70,7 @@ public final class LogStrategy implements ILogStrategy {
                 continue;
             }
 
-            print("RequestCode = (" + element.getFileName() + ":" + lineNumber + ") ");
+            printLog(tag, "RequestCode = (" + element.getFileName() + ":" + lineNumber + ") ");
             break;
         }
     }

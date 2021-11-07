@@ -8,7 +8,6 @@ import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 
 import java.io.File;
@@ -28,7 +27,7 @@ import okhttp3.RequestBody;
  *    time   : 2021/04/18
  *    desc   : 文件内容解析器
  */
-public class FileContentResolver extends FileWrapper {
+public class FileContentResolver extends File {
 
     private final ContentResolver mContentResolver;
     private final Uri mContentUri;
@@ -49,7 +48,7 @@ public class FileContentResolver extends FileWrapper {
     }
 
     public FileContentResolver(ContentResolver resolver, Uri uri, String fileName) {
-        super(new File(uri.toString()));
+        super(new File(uri.toString()).getPath());
         mContentResolver = resolver;
         // 请注意这个 uri 是通过 ContentResolver.insert 方法生成的，并且没有经过修改的，否则会导致文件流读取失败
         // 经过测试，ContentResolver.insert 生成的 uri 类型为 Uri.HierarchicalUri 这个内部类的
@@ -98,12 +97,16 @@ public class FileContentResolver extends FileWrapper {
         return mContentUri;
     }
 
-    @Override
+    /**
+     * 打开文件输入流
+     */
     public InputStream openInputStream() throws FileNotFoundException {
         return mContentResolver.openInputStream(mContentUri);
     }
 
-    @Override
+    /**
+     * 打开文件输出流
+     */
     public OutputStream openOutputStream() throws FileNotFoundException {
         return mContentResolver.openOutputStream(mContentUri);
     }
@@ -132,9 +135,9 @@ public class FileContentResolver extends FileWrapper {
                 return inputStream.available();
             }
         } catch (FileNotFoundException e) {
-            EasyLog.print(e);
+            e.printStackTrace();
         } catch (IOException e) {
-            EasyLog.print(e);
+            e.printStackTrace();
         } finally {
             EasyUtils.closeStream(inputStream);
         }
@@ -143,12 +146,23 @@ public class FileContentResolver extends FileWrapper {
 
     @Override
     public boolean exists() {
-        return true;
+        try {
+            // 通过输入流来验证文件是否存在
+            InputStream inputStream = openInputStream();
+            if (inputStream != null) {
+                // 关闭输入流
+                EasyUtils.closeStream(inputStream);
+                return true;
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
     public boolean isFile() {
-        return true;
+        return exists();
     }
 
     @Override

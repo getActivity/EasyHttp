@@ -11,7 +11,7 @@ import com.hjq.http.model.BodyType;
 public interface IRequestType {
 
     /**
-     * 参数提交类型
+     * 获取参数的提交类型
      */
-    BodyType getType();
+    BodyType getBodyType();
 }

@@ -14,17 +14,8 @@ public final class RequestServer implements IRequestServer {
     @HttpIgnore
     private final String mHost;
 
-    /** 接口路径 */
-    @HttpIgnore
-    private final String mPath;
-
     public RequestServer(String host) {
-        this(host, "");
-    }
-
-    public RequestServer(String host, String path) {
         mHost = host;
-        mPath = path;
     }
 
     @Override
@@ -33,12 +24,7 @@ public final class RequestServer implements IRequestServer {
     }
 
     @Override
-    public String getPath() {
-        return mPath;
-    }
-
-    @Override
     public String toString() {
-        return mHost + mPath;
+        return mHost;
     }
 }

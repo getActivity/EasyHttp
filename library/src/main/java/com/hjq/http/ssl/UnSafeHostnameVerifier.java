@@ -1,5 +1,7 @@
 package com.hjq.http.ssl;
 
+import android.annotation.SuppressLint;
+
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.SSLSession;
 
@@ -11,6 +13,7 @@ import javax.net.ssl.SSLSession;
  */
 public final class UnSafeHostnameVerifier implements HostnameVerifier {
 
+    @SuppressLint("BadHostnameVerifier")
     @Override
     public boolean verify(String hostname, SSLSession session) {
         // 此类是用于主机名验证的基接口。 在握手期间，如果 URL 的主机名和服务器的标识主机名不匹配，

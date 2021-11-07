@@ -2,6 +2,7 @@ package com.hjq.http.body;
 
 import androidx.annotation.NonNull;
 
+import com.hjq.http.EasyUtils;
 import com.hjq.http.model.ContentType;
 
 import org.json.JSONArray;
@@ -37,12 +38,12 @@ public class JsonBody extends RequestBody {
     }
 
     public JsonBody(JSONObject jsonObject) {
-        mJson = jsonObject.toString();
+        mJson = EasyUtils.unescapeJson(jsonObject.toString());
         mBytes = mJson.getBytes();
     }
 
     public JsonBody(JSONArray jsonArray) {
-        mJson = jsonArray.toString();
+        mJson = EasyUtils.unescapeJson(jsonArray.toString());
         mBytes = mJson.getBytes();
     }
 

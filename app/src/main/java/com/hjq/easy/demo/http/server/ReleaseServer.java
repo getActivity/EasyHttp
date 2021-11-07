@@ -14,9 +14,4 @@ public class ReleaseServer implements IRequestServer {
     public String getHost() {
         return "https://www.wanandroid.com/";
     }
-
-    @Override
-    public String getPath() {
-        return "";
-    }
 }

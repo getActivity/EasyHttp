@@ -30,7 +30,9 @@
 
 * [疑难解答](#疑难解答)
 
-    * [如何添加全局参数](#如何添加全局参数)
+    * [如何设置 Cookie](如何设置-cookie)
+
+    * [如何添加或者删除全局参数](#如何添加或者删除全局参数)
 
     * [如何定义全局的动态参数](#如何定义全局的动态参数)
 
@@ -44,7 +46,7 @@
 
     * [如何修改参数的提交方式](#如何修改参数的提交方式)
 
-    * [如何对整个 Json 字符串进行加密](#如何对整个-json-字符串进行加密)
+    * [如何对接口进行加密或者解密](#如何对接口进行加密或者解密)
 
     * [如何忽略某个参数](#如何忽略某个参数)
 
@@ -66,8 +68,6 @@
 
     * [如何延迟发起一个请求](如何延迟发起一个请求)
 
-    * [如何对请求头和响应头进行加解密](#如何对请求头和响应头进行加解密)
-
     * [如何对接口路径进行动态化拼接](#如何对接口路径进行动态化拼接)
 
     * [Https 如何配置信任所有证书](#https-如何配置信任所有证书)
@@ -79,6 +79,12 @@
     * [我想取消请求时显示的加载对话框该怎么办](#我想取消请求时显示的加载对话框该怎么办)
 
     * [如何在 ViewModel 中使用 EasyHttp 请求网络](如何在-viewmodel-中使用-easyhttp-请求网络)
+
+    * [我想用 Json 数组作为参数进行上传该怎么办](#我想用-json-数组作为参数进行上传该怎么办)
+
+    * [接口参数的 Key 值是动态变化的该怎么办](#接口参数的-key-值是动态变化的该怎么办)
+
+    * [我想自定义一个 RequestBody 进行请求该怎么办](我想自定义一个-requestbody-进行请求该怎么办)
 
 * [搭配 RxJava](#搭配-rxjava)
 
@@ -135,12 +141,7 @@ public class RequestServer implements IRequestServer {
     }
 
     @Override
-    public String getPath() {
-        return "api/";
-    }
-
-    @Override
-    public BodyType getType() {
+    public BodyType getBodyType() {
         // 参数以 Json 格式提交（默认是表单）
         return BodyType.JSON;
     }
@@ -238,8 +239,6 @@ public final class LoginApi implements IRequestApi {
 
     * implements IRequestHost：实现这个接口之后可以重新指定这个请求的主机地址
 
-    * implements IRequestPath：实现这个接口之后可以重新指定这个请求的接口路径
-
     * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
 
     * implements IRequestCache：实现这个接口之后可以重新指定这个请求的缓存模式
@@ -254,14 +253,6 @@ public final class LoginApi implements IRequestApi {
 
     * 假设某个字段类型是 int，因为基本数据类型没有空值，所以这个字段一定会作为请求参数，但是可以换成 Integer 对象来避免，因为 Integer 的默认值是 null
 
-* getHost、getPath、getApi 方法之间的作用和区别？
-
-    * Host：主机地址
-
-    * Path：模块地址
-
-    * Api：业务地址
-
 * 我举个栗子：[https://www.baidu.com/api/user/getInfo](https://www.baidu.com/)，那么标准的写法就是
 
 ```java
@@ -270,11 +261,6 @@ public final class XxxApi implements IRequestServer, IRequestApi {
     @Override
     public String getHost() {
         return "https://www.baidu.com/";
-    }
-
-    @Override
-    public String getPath() {
-        return "api/";
     }
 
     @Override
@@ -315,7 +301,7 @@ public final class UpdateImageApi implements IRequestApi, IRequestType {
     }
 
     @Override
-    public BodyType getType() {
+    public BodyType getBodyType() {
         // 上传文件需要使用表单的形式提交
         return BodyType.FORM;
     }
@@ -368,6 +354,8 @@ EasyHttp.post(this)
 
 * **需要注意的是：如果上传的文件过多或者过大，可能会导致请求超时，可以重新设置本次请求超时时间，超时时间建议根据文件大小而定，具体设置超时方式文档有介绍，可以在本页面直接搜索。**
 
+* 当然除了可以使用 **File** 类型的对象进行上传，还可以使用 **FileContentResolver** / **InputStream** / **RequestBody** 类型的对象进行上传，如果你需要批量上传，请使用 `List<File>` 或者 `List<MultipartBody.Part>` 类型的对象来做批量上传。
+
 #### 下载文件
 
 * 下载缓存策略：在指定下载文件 md5 或者后台有返回 md5 的情况下，下载框架默认开启下载缓存模式，如果这个文件已经存在手机中，并且经过 md5 校验文件完整，框架就不会重复下载，而是直接回调下载监听。减轻服务器压力，减少用户等待时间。
@@ -413,14 +401,15 @@ EasyHttp.download(this)
 #### 同步请求
 
 ```java
+PostRequest postRequest = EasyHttp.post(MainActivity.this);
 try {
-    HttpData<SearchBean> data = EasyHttp.post(MainActivity.this)
+    HttpData<SearchBean> data = postRequest
             .api(new SearchBlogsApi()
                     .setKeyword("搬砖不再有"))
             .execute(new ResponseClass<HttpData<SearchBean>>() {});
     ToastUtils.show("请求成功，请看日志");
 } catch (Exception e) {
-    e.printStackTrace();
+    EasyLog.printThrowable(postRequest, e);
     ToastUtils.show(e.getMessage());
 }
 ```
@@ -443,30 +432,30 @@ public final class RequestHandler implements IRequestHandler {
     ..................
 
     @Override
-    public Object readCache(LifecycleOwner lifecycle, IRequestApi api, Type type) {
+    public Object readCache(HttpRequest<?> httpRequest, Type type, long cacheTime) {
         String cacheKey = GsonFactory.getSingletonGson().toJson(api);
         String cacheValue = mMmkv.getString(cacheKey, null);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.print("---------- cacheKey ----------");
-        EasyLog.json(cacheKey);
-        EasyLog.print("---------- cacheValue ----------");
-        EasyLog.json(cacheValue);
+        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printJson(httpRequest, cacheKey);
+        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printJson(httpRequest, cacheValue);
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
     @Override
-    public boolean writeCache(LifecycleOwner lifecycle, IRequestApi api, Response response, Object result) {
+    public boolean writeCache(HttpRequest<?> httpRequest, Response response, Object result) {
         String cacheKey = GsonFactory.getSingletonGson().toJson(api);
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.print("---------- cacheKey ----------");
-        EasyLog.json(cacheKey);
-        EasyLog.print("---------- cacheValue ----------");
-        EasyLog.json(cacheValue);
+        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printJson(httpRequest, cacheKey);
+        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printJson(httpRequest, cacheValue);
         return mMmkv.putString(cacheKey, cacheValue).commit();
     }
 }
@@ -521,7 +510,7 @@ public final class XxxApi implements IRequestApi, IRequestCache {
     }
 
     @Override
-    public CacheMode getMode() {
+    public CacheMode getCacheMode() {
         // 设置优先使用缓存
         return CacheMode.USE_CACHE_FIRST;
     }
@@ -539,7 +528,7 @@ public class XxxServer implements IRequestServer {
     }
 
     @Override
-    public CacheMode getMode() {
+    public CacheMode getCacheMode() {
         // 只在请求失败才去读缓存
         return CacheMode.USE_CACHE_AFTER_FAILURE;
     }
@@ -548,7 +537,7 @@ public class XxxServer implements IRequestServer {
 
 #### 分区存储适配
 
-* 在 Android 10 之前，我们在读写外部存储的时候，可以直接使用 File 对象来上传或者下载文件，但是在 Android 10 之后，如果你的项目需要 Android 10 分区存储的特性，那么在读写外部存储文件的时候，就不能直接使用 File 对象，因为 `ContentResolver.insert` 返回是一个 `Uri` 对象，这个时候就需要使用到 `FileContentResolver` 对象了（这个对象是 File 的子类），具体使用案例如下：
+* 在 Android 10 之前，我们在读写外部存储的时候，可以直接使用 File 对象来上传或者下载文件，但是在 Android 10 之后，如果你的项目需要 Android 10 分区存储的特性，那么在读写外部存储文件的时候，就不能直接使用 File 对象，因为 `ContentResolver.insert` 返回是一个 `Uri` 对象，这个时候就需要使用到框架提供的 `FileContentResolver` 对象了（这个对象是 File 的子类），具体使用案例如下：
 
 ```java
 File outputFile;
@@ -579,13 +568,44 @@ EasyHttp.post(this)
 
 # 疑难解答
 
-#### 如何添加全局参数
+#### 如何设置 Cookie
+
+* EasyHttp 是基于 OkHttp 封装的，而 OkHttp 本身就是支持设置 Cookie，所以用法和 OkHttp 是一样的
 
 ```java
-// 添加全局请求参数
-EasyConfig.getInstance().addParam("token", "abc");
-// 添加全局请求头
-EasyConfig.getInstance().addHeader("token", "abc");
+OkHttpClient okHttpClient = new OkHttpClient.Builder()
+        .cookieJar(new XxxCookieJar())
+        .build();
+
+EasyConfig.with(okHttpClient)
+        .setXxx()
+        .into();
+```
+
+#### 如何添加或者删除全局参数
+
+* 添加全局请求参数
+
+```java
+EasyConfig.getInstance().addParam("key", "value");
+```
+
+* 移除全局请求参数
+
+```java
+EasyConfig.getInstance().removeParam("key");
+```
+
+* 添加全局请求头
+
+```java
+EasyConfig.getInstance().addHeader("key", "value");
+```
+
+* 移除全局请求头
+
+```java
+EasyConfig.getInstance().removeHeader("key");
 ```
 
 #### 如何定义全局的动态参数
@@ -594,8 +614,9 @@ EasyConfig.getInstance().addHeader("token", "abc");
 EasyConfig.getInstance().setInterceptor(new IRequestInterceptor() {
 
     @Override
-    public void interceptArguments(IRequestApi api, HttpParams params, HttpHeaders headers) {
-        headers.put("timestamp", String.valueOf(System.currentTimeMillis()));
+    public void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {
+        headers.put("key", "value");
+        params.put("key", "value");
     }
 });
 ```
@@ -621,8 +642,6 @@ public final class XxxApi implements IRequestApi {
 IRequestServer server = EasyConfig.getInstance().getServer();
 // 获取当前全局的服务器主机地址
 String host = server.getHost();
-// 获取当前全局的服务器路径地址
-String path = server.getPath();
 ```
 
 #### 如何修改接口的服务器配置
@@ -635,11 +654,6 @@ public class XxxServer implements IRequestServer {
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
-    }
-
-    @Override
-    public String getPath() {
-        return "api/";
     }
 }
 ```
@@ -673,11 +687,6 @@ public final class XxxApi implements IRequestServer, IRequestApi {
     }
 
     @Override
-    public String getPath() {
-        return "api/";
-    }
-
-    @Override
     public String getApi() {
         return "xxx/xxxx";
     }
@@ -695,11 +704,6 @@ public class TestServer implements IRequestServer {
     public String getHost() {
         return "https://www.test.xxxxxxx.com/";
     }
-
-    @Override
-    public String getPath() {
-        return "api/";
-    }
 }
 ```
 
@@ -709,11 +713,6 @@ public class ReleaseServer implements IRequestServer {
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
-    }
-
-    @Override
-    public String getPath() {
-        return "api/";
     }
 }
 ```
@@ -743,11 +742,6 @@ public class H5Server implements IRequestServer {
         }
         return "https://www.h5.xxxxxxx.com/";
     }
-
-    @Override
-    public String getPath() {
-        return "api/";
-    }
 }
 ```
 
@@ -774,14 +768,9 @@ public class XxxServer implements IRequestServer {
     public String getHost() {
         return "https://www.xxxxxxx.com/";
     }
-
-    @Override
-    public String getPath() {
-        return "api/";
-    }
     
     @Override
-    public BodyType getType() {
+    public BodyType getBodyType() {
         return BodyType.FORM;
     }
 }
@@ -798,12 +787,7 @@ public class XxxServer implements IRequestServer {
     }
 
     @Override
-    public String getPath() {
-        return "api/";
-    }
-    
-    @Override
-    public BodyType getType() {
+    public BodyType getBodyType() {
         return BodyType.JSON;
     }
 }
@@ -820,7 +804,7 @@ public final class XxxApi implements IRequestApi, IRequestType {
     }
 
     @Override
-    public BodyType getType() {
+    public BodyType getBodyType() {
         return BodyType.JSON;
     }
 }
@@ -833,38 +817,55 @@ public final class XxxApi implements IRequestApi, IRequestType {
 |   多级参数  |  不支持  |   支持  |
 |   文件上传  |   支持  |  不支持  |
 
-#### 如何对整个 Json 字符串进行加密
+#### 如何对接口进行加密或者解密
 
-* 这块的需求比较奇葩，但是搭配 OkHttp 拦截器仍然是可以实现的，这得益于 EasyHttp 良好的框架设计
+* 关于这个问题，其实可以利用框架中提供的 IRequestInterceptor 接口来实现，通过重写接口中的对应方法进行拦截，修改对象的内容从而达到加密的效果。
 
 ```java
-OkHttpClient okHttpClient = new OkHttpClient.Builder()
-        .addInterceptor(new Interceptor() {
-            @Override
-            public Response intercept(Chain chain) throws IOException {
-                Request request = chain.request();
-                RequestBody body = request.body();
-                if (body instanceof JsonBody) {
-                    body = new JsonBody("假装加密了：" + ((JsonBody) body).getJson());
-                    Request.Builder builder = request.newBuilder();
-                    builder.method(request.method(), body);
-                    request = builder.build();
-                }
-                return chain.proceed(request);
-            }
-        })
-        .build();
+public interface IRequestInterceptor {
+
+    /**
+     * 拦截参数
+     *
+     * @param httpRequest   接口对象
+     * @param params        请求参数
+     * @param headers       请求头参数
+     */
+    default void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {}
+
+    /**
+     * 拦截请求头
+     *
+     * @param httpRequest   接口对象
+     * @param request       请求头对象
+     * @return              返回新的请求头
+     */
+    default Request interceptRequest(HttpRequest<?> httpRequest, Request request) {
+        return request;
+    }
+
+    /**
+     * 拦截器响应头
+     *
+     * @param httpRequest   接口对象
+     * @param response      响应头对象
+     * @return              返回新的响应头
+     */
+    default Response interceptResponse(HttpRequest<?> httpRequest, Response response) {
+        return response;
+    }
+}
 ```
 
-* 在 Application 初始化 EasyHttp 的时候配置进去
-
 ```java
+// 在框架初始化的时候设置拦截器
 EasyConfig.with(okHttpClient)
-        //.setXxxx(Xxxx)
-        //.setXxxx(Xxxx)
-        //.setXxxx(Xxxx)
+        // 设置请求参数拦截器
+        .setInterceptor(new XxxInterceptor())
         .into();
 ```
+
+* 如果你只想对某个接口进行加解密，可以让 Api 类单独实现 IRequestInterceptor 接口，这样它就不会走全局的配置。
 
 #### 如何忽略某个参数
 
@@ -1003,8 +1004,8 @@ public final class XxxApi implements IRequestApi, IRequestClient {
     }
 
     @Override
-    public OkHttpClient getClient() {
-        OkHttpClient.Builder builder = EasyConfig.getInstance().getClient().newBuilder();
+    public OkHttpClient getOkHttpClient() {
+        OkHttpClient.Builder builder = EasyConfig.getInstance().getOkHttpClient().newBuilder();
         builder.readTimeout(5000, TimeUnit.MILLISECONDS);
         builder.writeTimeout(5000, TimeUnit.MILLISECONDS);
         builder.connectTimeout(5000, TimeUnit.MILLISECONDS);
@@ -1045,34 +1046,6 @@ EasyHttp.post(MainActivity.this)
             }
         });
 ```
-
-#### 如何对请求头和响应头进行加解密
-
-* 关于这个问题，其实可以利用框架中提供的 IRequestHandler 接口，在 requestStart 方法中对 Request 对象进行加密，而在 requestSucceed  方法中对 Response 对象解密，然后在 EasyHttp 初始化的时候将 IRequestHandler 实现对象传入给框架即可。
-
-```java
-public interface IRequestHandler {
-
-    /**
-     * 请求开始
-     */
-    default Request requestStart(LifecycleOwner lifecycle, IRequestApi api, Request request) {
-        return request;
-    }
-
-    /**
-     * 请求成功时回调
-     */
-    Object requestSucceed(LifecycleOwner lifecycle, IRequestApi api, Response response, Type type) throws Exception;
-
-    /**
-     * 请求失败
-     */
-    Exception requestFail(LifecycleOwner lifecycle, IRequestApi api, Exception e);
-}
-```
-
-* 如果你想对某个接口进行加解密，可以根据方法中的 api 参数对象来判断 ，如果你想对部分接口进行加解密，可以让外层的 IRequestApi 类实现统一的接口来标识这些接口，然后在 requestStart 和 requestFail 方法中判断 api 参数对象是否实现了这个接口来决定要不要进行加解密。
 
 #### 如何对接口路径进行动态化拼接
 
@@ -1309,6 +1282,81 @@ public class XxxViewModel extends BaseViewModel {
 }
 ```
 
+#### 我想用 Json 数组作为参数进行上传该怎么办
+
+* 由于 Api 类最终会转换成一个 JsonObject 类型的字符串，如果你需要上传 JsonArray 类型的字符串，请使用以下方式实现
+
+```java
+List<Xxx> parameter = new ArrayList<>();
+list.add(xxx);
+list.add(xxx);
+String json = gson.toJson(parameter);
+
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .body(new JsonBody(json))
+        .request(new HttpCallback<HttpData<Xxx>>(this) {
+
+            @Override
+            public void onSucceed(HttpData<Xxx> result) {
+
+            }
+        });
+```
+
+* 但是我个人不推荐将 JsonArray 作为参数的根部类型，因为这样的接口后续的扩展性极差。
+
+#### 接口参数的 Key 值是动态变化的该怎么办
+
+* 框架是通过反射解析 Api 类中的字段来作为参数的，字段名作为参数的 Key 值，字段值作为参数的 Value 值，由于 Java 无法动态更改类的字段名，所以无法通过正常的手段进行修改，你如果有这种需求，请通过以下方式进行实现
+
+```java
+HashMap<String, Object> parameter = new HashMap<>();
+
+// 添加全局参数
+HashMap<String, Object> globalParams = EasyConfig.getInstance().getParams();
+Set<String> keySet = globalParams.keySet();
+for (String key : keySet) {
+    parameter.put(key, globalParams.get(key));
+}
+
+// 添加自定义参数
+parameter.put("key1", value1);
+parameter.put("key2", value2);
+
+String json = gson.toJson(parameter);
+
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .body(new JsonBody(json))
+        .request(new HttpCallback<HttpData<Xxx>>(this) {
+
+            @Override
+            public void onSucceed(HttpData<Xxx> result) {
+
+            }
+        });
+```
+
+#### 我想自定义一个 RequestBody 进行请求该怎么办
+
+* 在一些极端的情况下，框架无法满足使用的前提下，这个时候需要自定义 `RequestBody` 来实现，那么怎么使用自定义 `RequestBody` 呢？框架其实有开放方法，具体使用示例如下：
+
+```java
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .body(RequestBody body)
+        .request(new HttpCallback<HttpData<Xxx>>(this) {
+
+            @Override
+            public void onSucceed(HttpData<Xxx> result) {
+                
+            }
+        });
+```
+
+* 需要注意的是：由于 Post 请求是将参数放置到 `RequestBody` 上面，而一个请求只能设置一个 `RequestBody`，如果你设置了自定义 `body(RequestBody body)`，那么框架将不会去将 `XxxApi` 类中的字段解析成参数。另外除了 Post 请求，Put 请求和 Patch 请求也可以使用这种方式进行设置，这里不再赘述。
+
 # 搭配 RxJava
 
 #### 准备工作
@@ -1332,26 +1380,28 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void subscribe(ObservableEmitter<HttpData<SearchBean>> emitter) throws Exception {
+        PostRequest postRequest1 = EasyHttp.post(MainActivity.this);
         HttpData<SearchBean> data1;
         try {
-            data1 = EasyHttp.post(MainActivity.this)
+            data1 = postRequest1
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
         } catch (Exception e) {
-            e.printStackTrace();
+            EasyLog.printThrowable(postRequest1, e);
             ToastUtils.show(e.getMessage());
             throw e;
         }
 
+        PostRequest postRequest2 = EasyHttp.post(MainActivity.this);
         HttpData<SearchBean> data2;
         try {
-            data2 = EasyHttp.post(MainActivity.this)
+            data2 = postRequest2
                     .api(new SearchBlogsApi()
                             .setKeyword(data1.getMessage()))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
         } catch (Exception e) {
-            e.printStackTrace();
+            EasyLog.printThrowable(postRequest2, e);
             ToastUtils.show(e.getMessage());
             throw e;
         }

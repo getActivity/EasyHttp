@@ -15,7 +15,7 @@ public interface IRequestClient {
     /**
      * 获取 OkHttpClient
      */
-    default OkHttpClient getClient() {
+    default OkHttpClient getOkHttpClient() {
         return EasyConfig.getInstance().getClient();
     }
 }

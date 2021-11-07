@@ -11,7 +11,12 @@ import com.hjq.http.model.CacheMode;
 public interface IRequestCache {
 
     /**
-     * 接口缓存方式
+     * 获取缓存的模式
      */
-    CacheMode getMode();
+    CacheMode getCacheMode();
+
+    /**
+     * 获取缓存的有效时长（以毫秒为单位）
+     */
+    long getCacheTime();
 }

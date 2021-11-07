@@ -2,12 +2,14 @@ package com.hjq.http.callback;
 
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.CacheMode;
-import com.hjq.http.request.BaseRequest;
+import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 
 import okhttp3.Call;
 import okhttp3.Response;
@@ -22,33 +24,35 @@ import okhttp3.Response;
 public final class NormalCallback extends BaseCallback {
 
     /** 请求配置 */
-    private final BaseRequest mBaseRequest;
-
+    private final HttpRequest mHttpRequest;
     /** 接口回调 */
     private OnHttpListener mListener;
+    /** 解析类型 */
+    private Type mReflectType;
 
-    public NormalCallback(BaseRequest request) {
+    public NormalCallback(HttpRequest request) {
         super(request);
-        mBaseRequest = request;
+        mHttpRequest = request;
     }
 
     public NormalCallback setListener(OnHttpListener listener) {
         mListener = listener;
+        mReflectType = EasyUtils.getGenericType(mListener);
         return this;
     }
 
     @Override
     public void start() {
-        CacheMode cacheMode = mBaseRequest.getRequestCache().getMode();
+        CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
         if (cacheMode != CacheMode.USE_CACHE_ONLY && cacheMode != CacheMode.USE_CACHE_FIRST) {
             super.start();
             return;
         }
 
         try {
-            Object result = mBaseRequest.getRequestHandler().readCache(mBaseRequest.getLifecycleOwner(),
-                    mBaseRequest.getRequestApi(), EasyUtils.getReflectType(mListener));
-            EasyLog.print("ReadCache result：" + result);
+            Object result = mHttpRequest.getRequestHandler().readCache(mHttpRequest,
+                    mReflectType, mHttpRequest.getRequestCache().getCacheTime());
+            EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
 
             // 如果没有缓存，就请求网络
             if (result == null) {
@@ -58,7 +62,7 @@ public final class NormalCallback extends BaseCallback {
 
             // 读取缓存成功
             EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                     return;
                 }
                 mListener.onStart(getCall());
@@ -69,7 +73,7 @@ public final class NormalCallback extends BaseCallback {
             // 如果当前模式是先读缓存再写请求
             if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                 EasyUtils.postDelayed(() -> {
-                    if (!HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+                    if (!HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                         return;
                     }
                     // 将回调置为空，避免出现两次回调
@@ -78,9 +82,9 @@ public final class NormalCallback extends BaseCallback {
                 }, 1);
             }
 
-        } catch (Throwable throwable) {
-            EasyLog.print("ReadCache error");
-            EasyLog.print(throwable);
+        } catch (Exception cacheException) {
+            EasyLog.printLog(mHttpRequest, "ReadCache error");
+            EasyLog.printThrowable(mHttpRequest, cacheException);
             super.start();
         }
     }
@@ -88,7 +92,7 @@ public final class NormalCallback extends BaseCallback {
     @Override
     protected void onStart(Call call) {
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                 return;
             }
             mListener.onStart(call);
@@ -98,28 +102,31 @@ public final class NormalCallback extends BaseCallback {
     @Override
     protected void onResponse(Response response) throws Exception {
         // 打印请求耗时时间
-        EasyLog.print("RequestConsuming：" +
+        EasyLog.printLog(mHttpRequest, "RequestConsuming：" +
                 (response.receivedResponseAtMillis() - response.sentRequestAtMillis()) + " ms");
 
-        // 解析 Bean 类对象
-        final Object result = mBaseRequest.getRequestHandler().requestSucceed(
-                mBaseRequest.getLifecycleOwner(), mBaseRequest.getRequestApi(),
-                response, EasyUtils.getReflectType(mListener));
+        IRequestInterceptor interceptor = mHttpRequest.getRequestInterceptor();
+        if (interceptor != null) {
+            response = interceptor.interceptResponse(mHttpRequest, response);
+        }
 
-        CacheMode cacheMode = mBaseRequest.getRequestCache().getMode();
+        // 解析 Bean 类对象
+        final Object result = mHttpRequest.getRequestHandler().requestSucceed(
+                mHttpRequest, response, mReflectType);
+
+        CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
         if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_FIRST) {
             try {
-                boolean writeSucceed = mBaseRequest.getRequestHandler().writeCache(mBaseRequest.getLifecycleOwner(),
-                        mBaseRequest.getRequestApi(), response, result);
-                EasyLog.print("WriteCache result：" + writeSucceed);
-            } catch (Throwable throwable) {
-                EasyLog.print("WriteCache error");
-                EasyLog.print(throwable);
+                boolean writeSucceed = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
+                EasyLog.printLog(mHttpRequest, "WriteCache result：" + writeSucceed);
+            } catch (Exception cacheException) {
+                EasyLog.printLog(mHttpRequest, "WriteCache error");
+                EasyLog.printThrowable(mHttpRequest, cacheException);
             }
         }
 
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                 return;
             }
             mListener.onSucceed(result, false);
@@ -128,16 +135,18 @@ public final class NormalCallback extends BaseCallback {
     }
 
     @Override
-    protected void onFailure(Exception e) {
+    protected void onFailure(Exception exception) {
+        // 打印错误堆栈
+        EasyLog.printThrowable(mHttpRequest, exception);
         // 如果设置了只在网络请求失败才去读缓存
-        if (e instanceof IOException && mBaseRequest.getRequestCache().getMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
+        if (exception instanceof IOException && mHttpRequest.getRequestCache().getCacheMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
-                Object result = mBaseRequest.getRequestHandler().readCache(mBaseRequest.getLifecycleOwner(),
-                        mBaseRequest.getRequestApi(), EasyUtils.getReflectType(mListener));
-                EasyLog.print("ReadCache result：" + result);
+                Object result = mHttpRequest.getRequestHandler().readCache(mHttpRequest,
+                        mReflectType, mHttpRequest.getRequestCache().getCacheTime());
+                EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
                 if (result != null) {
                     EasyUtils.post(() -> {
-                        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+                        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                             return;
                         }
                         mListener.onSucceed(result, true);
@@ -145,23 +154,22 @@ public final class NormalCallback extends BaseCallback {
                     });
                     return;
                 }
-            } catch (Throwable throwable) {
-                EasyLog.print("ReadCache error");
-                EasyLog.print(throwable);
+            } catch (Exception cacheException) {
+                EasyLog.printLog(mHttpRequest, "ReadCache error");
+                EasyLog.printThrowable(mHttpRequest, cacheException);
             }
         }
 
-        final Exception exception = mBaseRequest.getRequestHandler().requestFail(
-                mBaseRequest.getLifecycleOwner(), mBaseRequest.getRequestApi(), e);
-
-        // 打印错误堆栈
-        EasyLog.print(exception);
+        final Exception finalException = mHttpRequest.getRequestHandler().requestFail(mHttpRequest, exception);
+        if (finalException != exception) {
+            EasyLog.printThrowable(mHttpRequest, finalException);
+        }
 
         EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
+            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                 return;
             }
-            mListener.onFail(exception);
+            mListener.onFail(finalException);
             mListener.onEnd(getCall());
         });
     }

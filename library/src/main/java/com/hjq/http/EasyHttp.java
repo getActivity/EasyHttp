@@ -133,16 +133,13 @@ public final class EasyHttp {
     }
 
     /**
-     * 取消请求
-     */
-    public static void cancel(LifecycleOwner lifecycleOwner) {
-        cancel(String.valueOf(lifecycleOwner));
-    }
-
-    /**
      * 根据 TAG 取消请求任务
      */
     public static void cancel(Object tag) {
+        cancel(EasyUtils.getObjectTag(tag));
+    }
+
+    public static void cancel(String tag) {
         if (tag == null) {
             return;
         }

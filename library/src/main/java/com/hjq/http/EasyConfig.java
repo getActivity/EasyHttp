@@ -236,8 +236,9 @@ public final class EasyConfig {
 
         try {
             // 校验主机和路径的 url 是否合法
-            new URL(mServer.getHost() + mServer.getPath());
+            new URL(mServer.getHost());
         } catch (MalformedURLException e) {
+            e.printStackTrace();
             throw new IllegalArgumentException("The configured host path url address is not correct");
         }
 

@@ -21,19 +21,23 @@ import com.hjq.easy.demo.http.api.SearchBlogsApi;
 import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
+import com.hjq.http.EasyLog;
+import com.hjq.http.EasyUtils;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
+import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.ResponseClass;
+import com.hjq.http.request.PostRequest;
 import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.toast.ToastUtils;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 
 import okhttp3.Call;
@@ -65,7 +69,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
     private void requestPermission() {
         XXPermissions.with(this)
-                .permission(Permission.MANAGE_EXTERNAL_STORAGE)
+                .permission(Permission.Group.STORAGE)
                 .request(this);
     }
 
@@ -92,7 +96,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (XXPermissions.isGranted(this, Permission.MANAGE_EXTERNAL_STORAGE)) {
+        if (XXPermissions.isGranted(this, Permission.Group.STORAGE)) {
             onGranted(null, true);
         } else {
             requestPermission();
@@ -133,14 +137,15 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             // 在主线程中不能做耗时操作
             new Thread(() -> {
                 runOnUiThread(this::showDialog);
+                PostRequest postRequest = EasyHttp.post(MainActivity.this);
                 try {
-                    HttpData<SearchBlogsApi.Bean> data = EasyHttp.post(MainActivity.this)
+                    HttpData<SearchBlogsApi.Bean> data = postRequest
                             .api(new SearchBlogsApi()
                                     .setKeyword("搬砖不再有"))
                             .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
                     ToastUtils.show("同步请求成功，请看日志");
                 } catch (Exception e) {
-                    e.printStackTrace();
+                    EasyLog.printThrowable(postRequest, e);
                     ToastUtils.show(e.getMessage());
                 }
                 runOnUiThread(this::hideDialog);
@@ -153,10 +158,38 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 return;
             }
 
-            File file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), getString(R.string.app_name) + ".png");
+            // 如果是放到外部存储目录下则需要适配分区存储
+//            String fileName = "EasyHttp.png";
+//            File file;
+//            Uri outputUri;
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                // 适配 Android 10 分区存储特性
+//                ContentValues values = new ContentValues();
+//                // 设置显示的文件名
+//                values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+//                // 生成一个新的 uri 路径
+//                outputUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+//                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
+//            } else {
+//                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), fileName);
+//            }
+
+            // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "EasyHttp.png");
+
             if (!file.exists()) {
                 // 生成图片到本地
-                drawableToFile(ContextCompat.getDrawable(this, R.drawable.bg_material), file);
+                try {
+                    Drawable drawable = ContextCompat.getDrawable(this, R.drawable.bg_material);
+                    OutputStream outputStream = EasyUtils.openFileOutputStream(file);
+                    if (((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
+                        outputStream.flush();
+                    }
+                    // 通知系统多媒体扫描该文件，否则会导致拍摄出来的图片或者视频没有及时显示到相册中，而需要通过重启手机才能看到
+                    MediaScannerConnection.scanFile(this, new String[]{file.getPath()}, null, null);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
             }
 
             EasyHttp.post(this)
@@ -197,12 +230,32 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 return;
             }
 
+            // 如果是放到外部存储目录下则需要适配分区存储
+//            String fileName = "微信 8.0.15.apk";
+//
+//            File file;
+//            Uri outputUri;
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+//                // 适配 Android 10 分区存储特性
+//                ContentValues values = new ContentValues();
+//                // 设置显示的文件名
+//                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+//                // 生成一个新的 uri 路径
+//                outputUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+//                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
+//            } else {
+//                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+//            }
+
+            // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "微信 8.0.15.apk");
+
             EasyHttp.download(this)
                     .method(HttpMethod.GET)
-                    .file(new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "微信 7.0.14.apk"))
+                    .file(file)
                     //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
-                    .url("https://dldir1.qq.com/weixin/android/weixin7014android1660.apk")
-                    .md5("6ec99cb762ffd9158e8b27dc33d9680d")
+                    .url("https://dldir1.qq.com/weixin/android/weixin8015android2020_arm64.apk")
+                    .md5("b05b25d4738ea31091dd9f80f4416469")
                     .listener(new OnDownloadListener() {
 
                         @Override
@@ -231,7 +284,6 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         public void onEnd(File file) {
                             mProgressBar.setVisibility(View.GONE);
                         }
-
                     })
                     .start();
         }
@@ -252,7 +304,11 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                             intent.setAction(Intent.ACTION_VIEW);
                             Uri uri;
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                                if (file instanceof FileContentResolver) {
+                                    uri = ((FileContentResolver) file).getContentUri();
+                                } else {
+                                    uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                                }
                                 intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                             } else {
                                 uri = Uri.fromFile(file);
@@ -269,45 +325,5 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                     }
                 });
-    }
-
-    /**
-     * 将 Drawable 写入到文件中
-     */
-    private void drawableToFile(Drawable drawable, File file) {
-        if (drawable == null) {
-            return;
-        }
-
-        FileOutputStream outputStream = null;
-
-        try {
-            if (file.exists()) {
-                file.delete();
-            }
-
-            if (!file.exists()) {
-                file.createNewFile();
-            }
-
-            outputStream = new FileOutputStream(file);
-            if (((BitmapDrawable) drawable).getBitmap().compress(Bitmap.CompressFormat.PNG, 100, outputStream)) {
-                outputStream.flush();
-            }
-
-            // 通知系统多媒体扫描该文件，否则会导致拍摄出来的图片或者视频没有及时显示到相册中，而需要通过重启手机才能看到
-            MediaScannerConnection.scanFile(this, new String[]{file.getPath()}, null, null);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        } finally {
-            try {
-                if (outputStream != null) {
-                    outputStream.close();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
     }
 }

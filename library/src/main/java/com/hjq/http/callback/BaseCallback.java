@@ -5,7 +5,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
-import com.hjq.http.request.BaseRequest;
+import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
 import java.net.SocketTimeoutException;
@@ -23,7 +23,7 @@ import okhttp3.Response;
 public abstract class BaseCallback implements Callback {
 
     /** 请求配置 */
-    private final BaseRequest<?> mBaseRequest;
+    private final HttpRequest<?> mHttpRequest;
 
     /** 请求任务对象 */
     private CallProxy mCall;
@@ -31,9 +31,9 @@ public abstract class BaseCallback implements Callback {
     /** 当前重试次数 */
     private int mRetryCount;
 
-    public BaseCallback(BaseRequest<?> request) {
-        mBaseRequest = request;
-        HttpLifecycleManager.bind(mBaseRequest.getLifecycleOwner());
+    public BaseCallback(HttpRequest<?> request) {
+        mHttpRequest = request;
+        HttpLifecycleManager.bind(mHttpRequest.getLifecycleOwner());
     }
 
     public BaseCallback setCall(CallProxy call) {
@@ -60,7 +60,7 @@ public abstract class BaseCallback implements Callback {
             onFailure(e);
         } finally {
             // 关闭响应
-            response.close();
+            EasyUtils.closeStream(response);
         }
     }
 
@@ -72,8 +72,9 @@ public abstract class BaseCallback implements Callback {
             EasyUtils.postDelayed(() -> {
 
                 // 前提是宿主还没有被销毁
-                if (!HttpLifecycleManager.isLifecycleActive(mBaseRequest.getLifecycleOwner())) {
-                    EasyLog.print("宿主已被销毁，无法对请求进行重试");
+                if (!HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+                    // 宿主已被销毁，请求无法进行
+                    EasyLog.printLog(mHttpRequest, "LifecycleOwner has been destroyed and the request cannot be made");
                     return;
                 }
 
@@ -81,7 +82,9 @@ public abstract class BaseCallback implements Callback {
                 Call newCall = call.clone();
                 mCall.setCall(newCall);
                 newCall.enqueue(BaseCallback.this);
-                EasyLog.print("请求超时，正在延迟重试，重试次数：" + mRetryCount + "/" + EasyConfig.getInstance().getRetryCount());
+                // 请求超时，正在执行延迟重试
+                EasyLog.printLog(mHttpRequest, "The request timed out, a delayed retry is being performed, the number of retries: " +
+                        mRetryCount + " / " + EasyConfig.getInstance().getRetryCount());
 
             }, EasyConfig.getInstance().getRetryTime());
 

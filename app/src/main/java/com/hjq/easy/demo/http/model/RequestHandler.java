@@ -2,16 +2,15 @@ package com.hjq.easy.demo.http.model;
 
 import android.app.Application;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-
-import androidx.lifecycle.LifecycleOwner;
 
 import com.google.gson.JsonSyntaxException;
 import com.hjq.easy.demo.R;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.http.EasyLog;
-import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.exception.CancelException;
 import com.hjq.http.exception.DataException;
@@ -22,6 +21,7 @@ import com.hjq.http.exception.ResultException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.exception.TokenException;
+import com.hjq.http.request.HttpRequest;
 import com.tencent.mmkv.MMKV;
 
 import org.json.JSONArray;
@@ -30,6 +30,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
@@ -55,14 +56,15 @@ public final class RequestHandler implements IRequestHandler {
     }
 
     @Override
-    public Object requestSucceed(LifecycleOwner lifecycle, IRequestApi api, Response response, Type type) throws Exception {
+    public Object requestSucceed(HttpRequest<?> httpRequest, Response response, Type type) throws Exception {
         if (Response.class.equals(type)) {
             return response;
         }
 
         if (!response.isSuccessful()) {
             // 返回响应异常
-            throw new ResponseException(mApplication.getString(R.string.http_response_error) + "，responseCode：" + response.code() + "，message：" + response.message(), response);
+            throw new ResponseException(mApplication.getString(R.string.http_response_error) + ", responseCode: " +
+                    response.code() + ", message: " + response.message(), response);
         }
 
         if (Headers.class.equals(type)) {
@@ -74,8 +76,24 @@ public final class RequestHandler implements IRequestHandler {
             return null;
         }
 
+        if (ResponseBody.class.equals(type)) {
+            return body;
+        }
+
+        // 如果是用数组接收，判断一下是不是用 byte[] 类型进行接收的
+        if(type instanceof GenericArrayType) {
+            Type genericComponentType = ((GenericArrayType) type).getGenericComponentType();
+            if (byte.class.equals(genericComponentType)) {
+                return body.bytes();
+            }
+        }
+
         if (InputStream.class.equals(type)) {
             return body.byteStream();
+        }
+
+        if (Bitmap.class.equals(type)) {
+            return BitmapFactory.decodeStream(body.byteStream());
         }
 
         String text;
@@ -87,12 +105,13 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         // 打印这个 Json 或者文本
-        EasyLog.json(text);
+        EasyLog.printJson(httpRequest, text);
 
         if (String.class.equals(type)) {
             return text;
         }
 
+        // 安卓自带的 JSONObject 的 Gson 是不支持解析的
         if (JSONObject.class.equals(type)) {
             try {
                 // 如果这是一个 JSONObject 对象
@@ -102,6 +121,7 @@ public final class RequestHandler implements IRequestHandler {
             }
         }
 
+        // 安卓自带的 JSONArray 的 Gson 是不支持解析的
         if (JSONArray.class.equals(type)) {
             try {
                 // 如果这是一个 JSONArray 对象
@@ -140,7 +160,7 @@ public final class RequestHandler implements IRequestHandler {
     }
 
     @Override
-    public Exception requestFail(LifecycleOwner lifecycle, IRequestApi api, Exception e) {
+    public Exception requestFail(HttpRequest<?> httpRequest, Exception e) {
         // 判断这个异常是不是自己抛的
         if (e instanceof HttpException) {
             if (e instanceof TokenException) {
@@ -166,38 +186,37 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         if (e instanceof IOException) {
-            //e = new CancelException(context.getString(R.string.http_request_cancel), e);
-            return new CancelException("", e);
+            return new CancelException(mApplication.getString(R.string.http_request_cancel), e);
         }
 
         return new HttpException(e.getMessage(), e);
     }
 
     @Override
-    public Object readCache(LifecycleOwner lifecycle, IRequestApi api, Type type) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+    public Object readCache(HttpRequest<?> httpRequest, Type type, long cacheTime) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
         String cacheValue = mMmkv.getString(cacheKey, null);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.print("---------- cacheKey ----------");
-        EasyLog.json(cacheKey);
-        EasyLog.print("---------- cacheValue ----------");
-        EasyLog.json(cacheValue);
+        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printJson(httpRequest, cacheKey);
+        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printJson(httpRequest, cacheValue);
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
     @Override
-    public boolean writeCache(LifecycleOwner lifecycle, IRequestApi api, Response response, Object result) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+    public boolean writeCache(HttpRequest<?> httpRequest, Response response, Object result) {
+        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.print("---------- cacheKey ----------");
-        EasyLog.json(cacheKey);
-        EasyLog.print("---------- cacheValue ----------");
-        EasyLog.json(cacheValue);
+        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printJson(httpRequest, cacheKey);
+        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printJson(httpRequest, cacheValue);
         return mMmkv.putString(cacheKey, cacheValue).commit();
     }
 }

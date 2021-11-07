@@ -19,7 +19,7 @@ import okhttp3.Request;
  *    time   : 2020/10/07
  *    desc   : 不带 RequestBody 的请求
  */
-public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T> {
+public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T> {
 
     public UrlRequest(LifecycleOwner lifecycleOwner) {
         super(lifecycleOwner);
@@ -34,13 +34,13 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T>
         }
 
         // 如果设置了不缓存数据
-        if (getRequestCache().getMode() == CacheMode.NO_CACHE) {
+        if (getRequestCache().getCacheMode() == CacheMode.NO_CACHE) {
             requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
         }
 
         // 添加请求头
         if (!headers.isEmpty()) {
-            for (String key : headers.getNames()) {
+            for (String key : headers.getKeys()) {
                 requestBuilder.addHeader(key, headers.get(key));
             }
         }
@@ -48,7 +48,7 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T>
         HttpUrl.Builder urlBuilder = HttpUrl.get(url).newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
-            for (String key : params.getNames()) {
+            for (String key : params.getKeys()) {
                 urlBuilder.addQueryParameter(key, String.valueOf(params.get(key)));
             }
         }
@@ -56,33 +56,33 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends BaseRequest<T>
         requestBuilder.url(link);
         requestBuilder.method(getRequestMethod(), null);
 
-        EasyLog.print("RequestUrl", String.valueOf(link));
-        EasyLog.print("RequestMethod", getRequestMethod());
+        EasyLog.printKeyValue(this, "RequestUrl", String.valueOf(link));
+        EasyLog.printKeyValue(this, "RequestMethod", getRequestMethod());
 
         // 打印请求头和参数的日志
         if (EasyConfig.getInstance().isLogEnabled()) {
 
             if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
 
-            for (String key : headers.getNames()) {
-                EasyLog.print(key, headers.get(key));
+            for (String key : headers.getKeys()) {
+                EasyLog.printKeyValue(this, key, headers.get(key));
             }
 
             if (!headers.isEmpty() && !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
 
-            for (String key : params.getNames()) {
-                EasyLog.print(key, String.valueOf(params.get(key)));
+            for (String key : params.getKeys()) {
+                EasyLog.printKeyValue(this, key, String.valueOf(params.get(key)));
             }
 
             if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.print();
+                EasyLog.printLine(this);
             }
         }
 
-        return getRequestHandler().requestStart(getLifecycleOwner(), getRequestApi(), requestBuilder);
+        return requestBuilder.build();
     }
 }

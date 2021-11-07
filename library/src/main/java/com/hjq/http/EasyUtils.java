@@ -4,9 +4,11 @@ import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
-import com.hjq.http.body.UpdateBody;
 import com.hjq.http.model.FileContentResolver;
 
 import org.json.JSONArray;
@@ -15,14 +17,21 @@ import org.json.JSONObject;
 
 import java.io.Closeable;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.lang.reflect.WildcardType;
 import java.net.URLEncoder;
+import java.security.DigestInputStream;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,7 +39,6 @@ import java.util.Set;
 
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
-import okio.Okio;
 
 /**
  *    author : Android 轮子哥
@@ -40,6 +48,7 @@ import okio.Okio;
  */
 public final class EasyUtils {
 
+    /** Handler 对象 */
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 
     /**
@@ -57,6 +66,13 @@ public final class EasyUtils {
     }
 
     /**
+     * 判断当前是否为主线程
+     */
+    public static boolean isMainThread() {
+        return Looper.getMainLooper() == Looper.myLooper();
+    }
+
+    /**
      * 关闭流
      */
     public static void closeStream(Closeable closeable) {
@@ -66,7 +82,7 @@ public final class EasyUtils {
         try {
             closeable.close();
         } catch (Exception e) {
-            EasyLog.print(e);
+            e.printStackTrace();
         }
     }
 
@@ -75,6 +91,9 @@ public final class EasyUtils {
      */
     public static boolean isBeanType(Object object) {
         if (object == null) {
+            return false;
+        }
+        if (object instanceof Enum) {
             return false;
         }
         // Number：Long、Integer、Short、Double、Float、Byte
@@ -87,7 +106,7 @@ public final class EasyUtils {
     /**
      * 判断是否包含存在流参数
      */
-    public static boolean isMultipart(List<Field> fields) {
+    public static boolean isMultipartParameter(List<Field> fields) {
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
@@ -106,16 +125,18 @@ public final class EasyUtils {
                 }
 
                 // 判断类型是否是 List<File>
-                if (List.class.equals(temp)) {
-                    Type[] actualTypeArguments = ((ParameterizedType) field.getGenericType()).getActualTypeArguments();
-                    if (actualTypeArguments.length == 1 && File.class.equals(actualTypeArguments[0])) {
-                        return true;
-                    }
+                if (!List.class.equals(temp)) {
+                    continue;
+                }
+
+                Type genericType = getFieldGenericType(field);
+                if (genericType != null && isFileClass(genericType)) {
+                    return true;
                 }
             }
 
             do {
-                if (File.class.equals(clazz) || InputStream.class.equals(clazz)
+                if (isFileClass(clazz) || InputStream.class.equals(clazz)
                         || RequestBody.class.equals(clazz) || MultipartBody.Part.class.equals(clazz)) {
                     return true;
                 }
@@ -127,33 +148,39 @@ public final class EasyUtils {
     }
 
     /**
-     * 判断一下这个集合装载的类型是不是 File
+     * 获取字段中携带的泛型类型
      */
-    public static boolean isFileList(List<?> list) {
-        if (list == null || list.isEmpty()) {
-            return false;
+    public static Type getFieldGenericType(Field field) {
+        Type type = field.getGenericType();
+        if (!(type instanceof ParameterizedType)) {
+            return null;
         }
 
-        for (Object object : list) {
-            if (!(object instanceof File)) {
-                return false;
-            }
+        // 获取泛型数组
+        Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
+        if (actualTypeArguments.length == 0) {
+            return null;
         }
-        return true;
+
+        // 获取第一个位置上的泛型
+        Type actualType = actualTypeArguments[0];
+        // 如果这是一个通配符类型
+        if (actualType instanceof WildcardType) {
+            // 获取上界通配符
+            Type[] upperBounds = ((WildcardType) actualType).getUpperBounds();
+            if (upperBounds.length == 0) {
+                return null;
+            }
+            return upperBounds[0];
+        }
+        return actualType;
     }
 
     /**
-     * 判断对象或者集合是否为空
+     * 判断 Type 是否为文件类型
      */
-    public static boolean isEmpty(Object object) {
-        if (object == null) {
-            return true;
-        }
-
-        if (object instanceof List && ((List<?>) object).isEmpty()) {
-            return true;
-        }
-        return object instanceof Map && ((Map<?, ?>) object).isEmpty();
+    public static boolean isFileClass(Type type) {
+        return File.class.equals(type) || FileContentResolver.class.equals(type);
     }
 
     /**
@@ -166,18 +193,10 @@ public final class EasyUtils {
         }
 
         for (Object value : list) {
-            if (isEmpty(value)) {
+            if (value == null) {
                 continue;
             }
-            if (value instanceof List) {
-                jsonArray.put(listToJsonArray(((List<?>) value)));
-            } else if (value instanceof Map) {
-                jsonArray.put(mapToJsonObject(((Map<?, ?>) value)));
-            } else if (isBeanType(value)) {
-                jsonArray.put(mapToJsonObject(beanToHashMap(value)));
-            } else {
-                jsonArray.put(value);
-            }
+            jsonArray.put(convertObject(value));
         }
         return jsonArray;
     }
@@ -194,21 +213,13 @@ public final class EasyUtils {
         Set<?> keySet = map.keySet();
         for (Object key : keySet) {
             Object value = map.get(key);
-            if (isEmpty(value)) {
+            if (value == null) {
                 continue;
             }
             try {
-                if (value instanceof List) {
-                    jsonObject.put(String.valueOf(key), listToJsonArray(((List<?>) value)));
-                } else if (value instanceof Map) {
-                    jsonObject.put(String.valueOf(key), mapToJsonObject(((Map<?, ?>) value)));
-                } else if (isBeanType(value)) {
-                    jsonObject.put(String.valueOf(key), mapToJsonObject(beanToHashMap(value)));
-                } else {
-                    jsonObject.put(String.valueOf(key), value);
-                }
+                jsonObject.put(String.valueOf(key), convertObject(value));
             } catch (JSONException e) {
-                EasyLog.print(e);
+                e.printStackTrace();
             }
         }
         return jsonObject;
@@ -221,6 +232,9 @@ public final class EasyUtils {
         if (object == null) {
             return null;
         }
+        if (object instanceof Enum) {
+            return null;
+        }
 
         Field[] fields = object.getClass().getDeclaredFields();
         HashMap<String, Object> data = new HashMap<>(fields.length);
@@ -229,20 +243,20 @@ public final class EasyUtils {
             field.setAccessible(true);
 
             try {
-
                 // 获取字段的对象
                 Object value = field.get(object);
 
                 // 前提是这个字段值不能为空（基本数据类型有默认的值，而对象默认的值为 null）
                 // 又或者这个字段需要忽略，则进行忽略
-                if (isEmpty(value) || field.isAnnotationPresent(HttpIgnore.class)) {
+                if (value == null || field.isAnnotationPresent(HttpIgnore.class)) {
                     continue;
                 }
 
                 // 获取字段的名称
                 String key;
-                if (field.isAnnotationPresent(HttpRename.class)) {
-                    key = field.getAnnotation(HttpRename.class).value();
+                HttpRename annotation = field.getAnnotation(HttpRename.class);
+                if (annotation != null) {
+                    key = annotation.value();
                 } else {
                     key = field.getName();
                     // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉，如果使用静态内部类则不会出现这个问题
@@ -252,39 +266,62 @@ public final class EasyUtils {
                     }
                 }
 
-                if (value instanceof List) {
-                    data.put(key, listToJsonArray(((List<?>) value)));
-                } else if (value instanceof Map) {
-                    data.put(key, mapToJsonObject(((Map<?, ?>) value)));
-                } else if (isBeanType(value)) {
-                    data.put(key, beanToHashMap(value));
-                } else {
-                    data.put(key, value);
-                }
+                data.put(key, convertObject(value));
 
             } catch (IllegalAccessException e) {
-                EasyLog.print(e);
+                e.printStackTrace();
             }
         }
 
         return data;
     }
 
+    public static Object convertObject(Object object) {
+        if (object instanceof List) {
+            // 如果这是一个 List 参数
+            return listToJsonArray(((List<?>) object));
+        } else if (object instanceof Map) {
+            // 如果这是一个 Map 参数
+            return mapToJsonObject(((Map<?, ?>) object));
+        } else if (object instanceof Enum) {
+            // 如果这是一个枚举的参数
+            return String.valueOf(object);
+        } else if (isBeanType(object)) {
+            // 如果这是一个 Bean 参数
+            return beanToHashMap(object);
+        } else {
+            // 如果这是一个普通的参数
+            return object;
+        }
+    }
+
     /**
-     * 获取对象反射类型
+     * 获取对象上面的泛型
      */
-    public static Type getReflectType(Object object) {
+    public static Type getGenericType(Object object) {
         if (object == null) {
             return Void.class;
         }
+        // 获取接口上面的泛型
         Type[] types = object.getClass().getGenericInterfaces();
         if (types.length > 0) {
-            // 如果这个监听对象是直接实现了接口
+            // 如果这个对象是直接实现了接口，并且携带了泛型
             return ((ParameterizedType) types[0]).getActualTypeArguments()[0];
         }
 
-        // 如果这个监听对象是通过类继承
-        return ((ParameterizedType) object.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        // 获取父类上面的泛型
+        Type genericSuperclass = object.getClass().getGenericSuperclass();
+        if (!(genericSuperclass instanceof ParameterizedType)) {
+            return Void.class;
+        }
+
+        Type[] actualTypeArguments = ((ParameterizedType) genericSuperclass).getActualTypeArguments();
+        if (actualTypeArguments.length == 0) {
+            return Void.class;
+        }
+
+        // 如果这个对象是通过类继承，并且携带了泛型
+        return actualTypeArguments[0];
     }
 
     /**
@@ -313,48 +350,112 @@ public final class EasyUtils {
     }
 
     /**
-     * 根据 File 对象创建一个流媒体
+     * 格式化 Json 字符串
      */
-    public static MultipartBody.Part createPart(String key, File file) {
-        // 文件名必须不能带中文，所以这里要编码
-        String fileName = encodeString(file.getName());
-        if (file instanceof FileContentResolver) {
-            try {
-                FileContentResolver fileContentResolver = (FileContentResolver) file;
-                InputStream inputStream = fileContentResolver.openInputStream();
-                if (inputStream == null) {
-                    return null;
-                }
-                String name = fileContentResolver.getFileName();
-                if (TextUtils.isEmpty(name)) {
-                    name = fileContentResolver.getName();
-                }
-                return MultipartBody.Part.createFormData(key, fileName, new UpdateBody(
-                        Okio.source(inputStream), fileContentResolver.getContentType(), name, inputStream.available()));
-            } catch (IOException e) {
-                EasyLog.print(e);
-                EasyLog.print("文件流读取失败，将被忽略上传：" + key + " = " + file.getPath());
-                return null;
-            }
-        } else {
-            try {
-                return MultipartBody.Part.createFormData(key, fileName, new UpdateBody(file));
-            } catch (FileNotFoundException e) {
-                EasyLog.print("文件不存在，将被忽略上传：" + key + " = " + file.getPath());
-                return null;
-            }
+    @SuppressWarnings("AlibabaUndefineMagicConstant")
+    public static String formatJson(String json) {
+        if (json == null) {
+            return "";
         }
+
+        try {
+            if (json.startsWith("{")) {
+                return unescapeJson(new JSONObject(json).toString(4));
+            } else if (json.startsWith("[")) {
+                return unescapeJson(new JSONArray(json).toString(4));
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        return json;
     }
 
     /**
-     * 根据 InputStream 对象创建一个流媒体
+     * 去除 Json 中非必要的字符转义
      */
-    public static MultipartBody.Part createPart(String key, InputStream inputStream) {
-        try {
-            return MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key));
-        } catch (IOException e) {
-            EasyLog.print(e);
+    @NonNull
+    public static String unescapeJson(String json) {
+        if (TextUtils.isEmpty(json)) {
+            return "";
+        }
+        return json.replace("\\/", "/");
+    }
+
+    /**
+     * 获取对象的唯一标记
+     */
+    @Nullable
+    public static String getObjectTag(Object object) {
+        if (object == null) {
             return null;
         }
+        return String.valueOf(object);
+    }
+
+    /**
+     * 创建文件夹
+     */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
+    public static void createFolder(File targetFolder) {
+        if (targetFolder.exists()) {
+            if (targetFolder.isDirectory()) {
+                return;
+            }
+            targetFolder.delete();
+        }
+        targetFolder.mkdirs();
+    }
+
+    /**
+     * 获取文件的 md5
+     */
+    public static String getFileMd5(InputStream inputStream) {
+        if (inputStream == null) {
+            return "";
+        }
+        DigestInputStream digestInputStream = null;
+        try {
+            MessageDigest messageDigest = MessageDigest.getInstance("MD5");
+            digestInputStream = new DigestInputStream(inputStream, messageDigest);
+            byte[] buffer = new byte[1024 * 256];
+            while (true) {
+                if (!(digestInputStream.read(buffer) > 0)) {
+                    break;
+                }
+            }
+            messageDigest = digestInputStream.getMessageDigest();
+            byte[] md5 = messageDigest.digest();
+            StringBuilder sb = new StringBuilder();
+            for (byte b : md5) {
+                sb.append(String.format("%02X", b));
+            }
+            return sb.toString().toLowerCase();
+        } catch (NoSuchAlgorithmException | IOException e) {
+            e.printStackTrace();
+        } finally {
+            EasyUtils.closeStream(inputStream);
+            EasyUtils.closeStream(digestInputStream);
+        }
+        return null;
+    }
+
+    /**
+     * 打开文件的输入流
+     */
+    public static InputStream openFileInputStream(File file) throws FileNotFoundException {
+        if (file instanceof FileContentResolver) {
+            return ((FileContentResolver) file).openInputStream();
+        }
+        return new FileInputStream(file);
+    }
+
+    /**
+     * 打开文件的输出流
+     */
+    public static OutputStream openFileOutputStream(File file) throws FileNotFoundException {
+        if (file instanceof FileContentResolver) {
+            return ((FileContentResolver) file).openOutputStream();
+        }
+        return new FileOutputStream(file);
     }
 }

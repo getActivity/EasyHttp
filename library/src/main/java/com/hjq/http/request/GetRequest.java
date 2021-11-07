@@ -1,5 +1,6 @@
 package com.hjq.http.request;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.model.HttpMethod;
@@ -16,8 +17,9 @@ public final class GetRequest extends UrlRequest<GetRequest> {
         super(lifecycleOwner);
     }
 
+    @NonNull
     @Override
-    protected String getRequestMethod() {
+    public String getRequestMethod() {
         return HttpMethod.GET.toString();
     }
 }

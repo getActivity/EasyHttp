@@ -6,11 +6,11 @@ import com.hjq.easy.demo.http.model.RequestHandler;
 import com.hjq.easy.demo.http.server.ReleaseServer;
 import com.hjq.easy.demo.http.server.TestServer;
 import com.hjq.http.EasyConfig;
-import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
+import com.hjq.http.request.HttpRequest;
 import com.hjq.toast.ToastUtils;
 import com.tencent.mmkv.MMKV;
 
@@ -51,7 +51,7 @@ public final class AppApplication extends Application {
                 // 设置请求参数拦截器
                 .setInterceptor(new IRequestInterceptor() {
                     @Override
-                    public void interceptArguments(IRequestApi api, HttpParams params, HttpHeaders headers) {
+                    public void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {
                         headers.put("timestamp", String.valueOf(System.currentTimeMillis()));
                     }
                 })

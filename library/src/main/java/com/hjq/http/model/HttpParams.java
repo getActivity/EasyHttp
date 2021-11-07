@@ -14,7 +14,7 @@ import java.util.Set;
 public final class HttpParams {
 
     /** 请求参数存放集合 */
-    private HashMap<String, Object> mParams = EasyConfig.getInstance().getParams();
+    private final HashMap<String, Object> mParams = new HashMap<>(EasyConfig.getInstance().getParams());
 
     /** 是否有流参数 */
     private boolean mMultipart;
@@ -23,20 +23,12 @@ public final class HttpParams {
         if (key == null || value == null) {
             return;
         }
-
-        if (mParams == EasyConfig.getInstance().getParams()) {
-            mParams = new HashMap<>(mParams);
-        }
         mParams.put(key, value);
     }
 
     public void remove(String key) {
         if (key == null) {
             return;
-        }
-
-        if (mParams == EasyConfig.getInstance().getParams()) {
-            mParams = new HashMap<>(mParams);
         }
         mParams.remove(key);
     }
@@ -45,11 +37,15 @@ public final class HttpParams {
         return mParams.get(key);
     }
 
+    public void clear() {
+        mParams.clear();
+    }
+
     public boolean isEmpty() {
         return mParams == null || mParams.isEmpty();
     }
 
-    public Set<String> getNames() {
+    public Set<String> getKeys() {
         return mParams.keySet();
     }
 
