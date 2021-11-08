@@ -13,8 +13,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 31
-        versionCode 1050
-        versionName '10.5'
+        versionCode 1060
+        versionName '10.6'
     }
 
     // 支持 JDK 1.8

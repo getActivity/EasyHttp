@@ -276,6 +276,9 @@ public final class EasyUtils {
         return data;
     }
 
+    /**
+     * 对象转换
+     */
     public static Object convertObject(Object object) {
         if (object instanceof List) {
             // 如果这是一个 List 参数
@@ -288,7 +291,7 @@ public final class EasyUtils {
             return String.valueOf(object);
         } else if (isBeanType(object)) {
             // 如果这是一个 Bean 参数
-            return beanToHashMap(object);
+            return mapToJsonObject(beanToHashMap(object));
         } else {
             // 如果这是一个普通的参数
             return object;

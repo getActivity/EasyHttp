@@ -4,7 +4,7 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* [点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/10.5/EasyHttp.apk)
+* * 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/10.6/EasyHttp.apk)
 
 ![](picture/demo_code.png)
 
@@ -54,7 +54,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:10.5'
+    implementation 'com.github.getActivity:EasyHttp:10.6'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -67,7 +67,7 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  10.5 |  2.9.0  |  3.0.4    |
+|    对应版本  |  10.6 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
 |    **aar 包大小**  |  78 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
