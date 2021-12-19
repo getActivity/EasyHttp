@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Request;
 import okhttp3.Response;
@@ -262,30 +263,11 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
                 // 如果这是一个请求头参数
                 if (field.isAnnotationPresent(HttpHeader.class)) {
-                    if (value instanceof Map) {
-                        Map<?, ?> map = ((Map<?, ?>) value);
-                        for (Object o : map.keySet()) {
-                            if (o != null && map.get(o) != null) {
-                                headers.put(String.valueOf(o), String.valueOf(map.get(o)));
-                            }
-                        }
-                    } else {
-                        headers.put(key, String.valueOf(value));
-                    }
+                    addHttpHeaders(headers, key, value);
                     continue;
                 }
 
-                // 否则这就是一个普通的参数
-                switch (type) {
-                    case FORM:
-                        params.put(key, value);
-                        break;
-                    case JSON:
-                        params.put(key, EasyUtils.convertObject(value));
-                        break;
-                    default:
-                        break;
-                }
+                addHttpParams(params, key, value, type);
 
             } catch (IllegalAccessException e) {
                 EasyLog.printThrowable(this, e);
@@ -368,7 +350,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         mCallProxy = new CallProxy(createCall());
 
         CacheMode cacheMode = getRequestCache().getCacheMode();
-        if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_FIRST) {
+        if (cacheMode == CacheMode.USE_CACHE_ONLY ||
+                cacheMode == CacheMode.USE_CACHE_FIRST) {
             try {
                 Object result = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
                 EasyLog.printLog(this, "ReadCache result：" + result);
@@ -391,7 +374,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             Response response = mCallProxy.execute();
             Object result = mRequestHandler.requestSucceed(this, response, reflectType);
 
-            if (cacheMode == CacheMode.USE_CACHE_ONLY) {
+            if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
                     boolean writeSucceed = mRequestHandler.writeCache(this, response, result);
                     EasyLog.printLog(this, "WriteCache result：" + writeSucceed);
@@ -523,7 +506,98 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     /**
+     * 打印键值对
+     */
+    protected void printKeyValue(String key, Object value) {
+        if (value instanceof Enum) {
+            // 如果这是一个枚举类型
+            EasyLog.printKeyValue(this, key, "\"" + value + "\"");
+        } else if (value instanceof String) {
+            EasyLog.printKeyValue(this, key, "\"" + value + "\"");
+        } else {
+            EasyLog.printKeyValue(this, key, String.valueOf(value));
+        }
+    }
+
+    /**
+     * 添加请求头
+     */
+    protected void addHttpHeaders(HttpHeaders headers, String key, Object value) {
+        if (value instanceof Map) {
+            Map<?, ?> map = ((Map<?, ?>) value);
+            for (Object o : map.keySet()) {
+                if (o != null && map.get(o) != null) {
+                    headers.put(String.valueOf(o), String.valueOf(map.get(o)));
+                }
+            }
+        } else {
+            headers.put(key, String.valueOf(value));
+        }
+    }
+
+    /**
+     * 添加请求参数
+     */
+    protected abstract void addHttpParams(HttpParams params, String key, Object value, BodyType type);
+
+    /**
      * 创建请求的对象
      */
-    protected abstract Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type);
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+        Request.Builder requestBuilder = createRequestBuilder(url, tag);
+        addRequestHeader(requestBuilder, headers);
+        addRequestParams(requestBuilder, params, type);
+
+        Request request = requestBuilder.build();
+        printRequestLog(request, params, headers, type);
+        return request;
+    }
+
+    /**
+     * 创建请求构建对象
+     */
+    public Request.Builder createRequestBuilder(String url, String tag) {
+        Request.Builder requestBuilder = new Request.Builder();
+        requestBuilder.url(url);
+        if (tag != null) {
+            requestBuilder.tag(tag);
+        }
+
+        // 如果设置了不缓存数据
+        if (mRequestCache.getCacheMode() == CacheMode.NO_CACHE) {
+            requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
+        }
+        return requestBuilder;
+    }
+
+    /**
+     * 添加请求头
+     */
+    protected void addRequestHeader(Request.Builder requestBuilder, HttpHeaders headers) {
+        if (headers.isEmpty()) {
+            return;
+        }
+
+        for (String key : headers.getKeys()) {
+            String value = headers.get(key);
+            try {
+                requestBuilder.addHeader(key, value);
+            } catch (IllegalArgumentException e) {
+                // 请求头中的 key 和 value 如果包含中文需要经过编码，否则 OkHttp 会报错
+                requestBuilder.addHeader(EasyUtils.encodeString(key), EasyUtils.encodeString(value));
+                // java.lang.IllegalArgumentException: Unexpected char 0x6211 at 0 in KeyName value: KeyValue
+                e.printStackTrace();
+            }
+        }
+    }
+
+    /**
+     * 添加请求参数
+     */
+    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type);
+
+    /**
+     * 打印请求日志
+     */
+    protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type);
 }

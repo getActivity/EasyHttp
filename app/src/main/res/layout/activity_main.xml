@@ -10,6 +10,7 @@
     tools:context=".MainActivity">
 
     <com.hjq.bar.TitleBar
+        android:id="@+id/tb_main_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:leftIcon="@null"

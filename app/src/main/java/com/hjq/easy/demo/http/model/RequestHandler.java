@@ -9,6 +9,8 @@ import android.net.NetworkInfo;
 
 import com.google.gson.JsonSyntaxException;
 import com.hjq.easy.demo.R;
+import com.hjq.easy.demo.http.exception.ResultException;
+import com.hjq.easy.demo.http.exception.TokenException;
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.http.EasyLog;
 import com.hjq.http.config.IRequestHandler;
@@ -17,10 +19,8 @@ import com.hjq.http.exception.DataException;
 import com.hjq.http.exception.HttpException;
 import com.hjq.http.exception.NetworkException;
 import com.hjq.http.exception.ResponseException;
-import com.hjq.http.exception.ResultException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
-import com.hjq.http.exception.TokenException;
 import com.hjq.http.request.HttpRequest;
 import com.tencent.mmkv.MMKV;
 

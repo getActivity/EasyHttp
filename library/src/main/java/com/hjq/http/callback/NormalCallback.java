@@ -44,7 +44,8 @@ public final class NormalCallback extends BaseCallback {
     @Override
     public void start() {
         CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
-        if (cacheMode != CacheMode.USE_CACHE_ONLY && cacheMode != CacheMode.USE_CACHE_FIRST) {
+        if (cacheMode != CacheMode.USE_CACHE_ONLY &&
+                cacheMode != CacheMode.USE_CACHE_FIRST) {
             super.start();
             return;
         }
@@ -115,7 +116,9 @@ public final class NormalCallback extends BaseCallback {
                 mHttpRequest, response, mReflectType);
 
         CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
-        if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_FIRST) {
+        if (cacheMode == CacheMode.USE_CACHE_ONLY ||
+                cacheMode == CacheMode.USE_CACHE_FIRST ||
+                cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
                 boolean writeSucceed = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
                 EasyLog.printLog(mHttpRequest, "WriteCache result：" + writeSucceed);

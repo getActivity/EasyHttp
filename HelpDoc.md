@@ -354,7 +354,7 @@ EasyHttp.post(this)
 
 * **需要注意的是：如果上传的文件过多或者过大，可能会导致请求超时，可以重新设置本次请求超时时间，超时时间建议根据文件大小而定，具体设置超时方式文档有介绍，可以在本页面直接搜索。**
 
-* 当然除了可以使用 **File** 类型的对象进行上传，还可以使用 **FileContentResolver** / **InputStream** / **RequestBody** 类型的对象进行上传，如果你需要批量上传，请使用 `List<File>` 或者 `List<MultipartBody.Part>` 类型的对象来做批量上传。
+* 当然除了可以使用 `File` 类型的对象进行上传，还可以使用 `FileContentResolver`、`InputStream`、`RequestBody`、`MultipartBody.Part` 类型的对象进行上传，如果你需要批量上传，请使用 `List<File>`、`List<FileContentResolver>`、`List<InputStream>`、`List<RequestBody>`、`List<MultipartBody.Part>`、 类型的对象来做批量上传。
 
 #### 下载文件
 
@@ -400,6 +400,8 @@ EasyHttp.download(this)
 
 #### 同步请求
 
+* 需要注意的是：同步请求是耗时操作，不能在主线程中执行，请务必保证此操作在子线程中执行
+
 ```java
 PostRequest postRequest = EasyHttp.post(MainActivity.this);
 try {
@@ -433,7 +435,7 @@ public final class RequestHandler implements IRequestHandler {
 
     @Override
     public Object readCache(HttpRequest<?> httpRequest, Type type, long cacheTime) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
         String cacheValue = mMmkv.getString(cacheKey, null);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
@@ -447,7 +449,7 @@ public final class RequestHandler implements IRequestHandler {
 
     @Override
     public boolean writeCache(HttpRequest<?> httpRequest, Response response, Object result) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(api);
+        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
@@ -479,16 +481,16 @@ public enum CacheMode {
     /**
      * 只使用缓存
      *
-     * 有缓存的情况下：读取缓存 -> 回调成功
-     * 无缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
+     * 已有缓存的情况下：读取缓存 -> 回调成功
+     * 没有缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
      */
     USE_CACHE_ONLY,
 
     /**
      * 优先使用缓存
      *
-     * 有缓存的情况下：先读缓存 —> 回调成功 —> 请求网络 —> 刷新缓存
-     * 无缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
+     * 已有缓存的情况下：先读缓存 —> 回调成功 —> 请求网络 —> 刷新缓存
+     * 没有缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
      */
     USE_CACHE_FIRST,
 
@@ -1114,9 +1116,9 @@ EasyHttp.post(this)
 
 #### 框架只能传入 LifecycleOwner 该怎么办
 
-* 其中 AndroidX.AppCompatActivity 和 AndroidX.Fragment 都是 LifecycleOwner 子类的，这个是毋庸置疑的
+* 其中 `androidx.appcompat.app.AppCompatActivity` 和 `androidx.fragment.app.Fragment` 都是 LifecycleOwner 子类的，这个是毋庸置疑的，可以直接当做 LifecycleOwner 传给框架
 
-* 但是你如果传入的是 Activity 对象，并非 AppCompatActivity 对象，那么你可以这样写
+* 但是你如果传入的是 `android.app.Activity` 对象，并非 `androidx.appcompat.app.AppCompatActivity` 对象，那么你可以这样写
 
 ```java
 EasyHttp.post(new ActivityLifecycle(this))
@@ -1130,32 +1132,9 @@ EasyHttp.post(new ActivityLifecycle(this))
         });
 ```
 
-* 你如果想在 Service 中使用 EasyHttp，请将 Service 直接继承框架中的 LifecycleService 类，又或者在项目中封装一个带有 Lifecycle 特性的 Service 基类，具体实现如下：
+* 如果你传入的是 `android.app.Fragment` 对象，并非 `androidx.fragment.app.Fragment` 对象，请将 Fragment 直接继承框架中的 LifecycleAppFragment 类，又或者在项目中封装一个带有 Lifecycle 特性的 Fragment 基类
 
-```java
-public abstract class LifecycleService extends Service implements LifecycleOwner {
-
-    private final LifecycleRegistry mLifecycle = new LifecycleRegistry(this);
-
-    @NonNull
-    @Override
-    public Lifecycle getLifecycle() {
-        return mLifecycle;
-    }
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE);
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
-    }
-}
-```
+* 你如果想在 `android.app.Service` 中使用 EasyHttp，请将 Service 直接继承框架中的 LifecycleService 类，又或者在项目中封装一个带有 Lifecycle 特性的 Service 基类
 
 * 如果以上条件都不满足，但是你就是想在某个地方请求网络，那么你可以这样写
 

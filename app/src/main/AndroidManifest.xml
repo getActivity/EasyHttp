@@ -32,6 +32,16 @@
             android:name="ScopedStorage"
             android:value="true" />
 
+        <!-- 悬浮窗入口 -->
+        <meta-data
+            android:name="LogcatWindowEntrance"
+            android:value="true" />
+
+        <!-- 通知栏入口 -->
+        <meta-data
+            android:name="LogcatNotifyEntrance"
+            android:value="true" />
+
         <!-- 适配 Android 7.0 文件意图 -->
         <provider
             android:name="androidx.core.content.FileProvider"
@@ -58,5 +68,15 @@
         </activity>
 
     </application>
+
+    <!-- Android 11 软件包可见性适配 -->
+    <queries>
+
+        <!-- 调起其他页面意图：Intent.ACTION_VIEW -->
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+        </intent>
+
+    </queries>
 
 </manifest>

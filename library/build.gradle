@@ -5,14 +5,19 @@ android {
 
     defaultConfig {
         minSdkVersion 14
-        versionCode 1060
-        versionName "10.6"
+        versionCode 1080
+        versionName "10.8"
     }
 
     // 使用 JDK 1.8
     compileOptions {
         targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
+    }
+
+    packagingOptions {
+        // 剔除这个包下的所有文件（不会移除签名信息）
+        exclude 'META-INF/*******'
     }
 
     android.libraryVariants.all { variant ->

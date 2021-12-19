@@ -14,7 +14,6 @@ import com.hjq.http.body.UpdateBody;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.BodyType;
-import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
@@ -26,7 +25,6 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
-import okhttp3.CacheControl;
 import okhttp3.FormBody;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
@@ -92,97 +90,6 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         return (T) this;
     }
 
-    @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        Request.Builder requestBuilder = new Request.Builder();
-        requestBuilder.url(url);
-
-        EasyLog.printKeyValue(this, "RequestUrl", url);
-        EasyLog.printKeyValue(this, "RequestMethod", getRequestMethod());
-
-        if (tag != null) {
-            requestBuilder.tag(tag);
-        }
-
-        // 如果设置了不缓存数据
-        if (getRequestCache().getCacheMode() == CacheMode.NO_CACHE) {
-            requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
-        }
-
-        // 添加请求头
-        if (!headers.isEmpty()) {
-            for (String key : headers.getKeys()) {
-                requestBuilder.addHeader(key, headers.get(key));
-            }
-        }
-
-        RequestBody body = mRequestBody != null ? mRequestBody : createBody(params, type);
-        requestBuilder.method(getRequestMethod(), body);
-
-        // 打印请求头和参数的日志
-        if (EasyConfig.getInstance().isLogEnabled()) {
-
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.printLine(this);
-            }
-
-            for (String key : headers.getKeys()) {
-                EasyLog.printKeyValue(this, key, headers.get(key));
-            }
-
-            if (!headers.isEmpty() && !params.isEmpty()) {
-                EasyLog.printLine(this);
-            }
-
-            if (body instanceof FormBody ||
-                    body instanceof MultipartBody ||
-                    body instanceof ProgressBody) {
-                // 打印表单
-                for (String key : params.getKeys()) {
-                    Object value = params.get(key);
-                    if (value instanceof Map) {
-                        // 如果这是一个 Map 集合
-                        Map<?, ?> map = ((Map<?, ?>) value);
-                        for (Object itemKey : map.keySet()) {
-                            if (itemKey == null) {
-                                continue;
-                            }
-                            Object itemValue = map.get(itemKey);
-                            if (itemValue == null) {
-                                continue;
-                            }
-                            printKeyValue(this, String.valueOf(itemKey), itemValue);
-                        }
-                    } else if (value instanceof List) {
-                        // 如果这是一个 List 集合
-                        List<?> list = (List<?>) value;
-                        for (int i = 0; i < list.size(); i++) {
-                            Object itemValue = list.get(i);
-                            if (itemValue == null) {
-                                continue;
-                            }
-                            printKeyValue(this, key + "[" + i + "]", itemValue);
-                        }
-                    } else {
-                        printKeyValue(this, key, value);
-                    }
-                }
-            } else if (body instanceof JsonBody) {
-                // 打印 Json
-                EasyLog.printJson(this, body.toString());
-            } else {
-                // 打印文本
-                EasyLog.printLog(this, body.toString());
-            }
-
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.printLine(this);
-            }
-        }
-
-        return requestBuilder.build();
-    }
-
     /**
      * 执行异步请求（执行传入上传进度监听器）
      */
@@ -194,10 +101,94 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         super.request(listener);
     }
 
+    @Override
+    protected void addHttpParams(HttpParams params, String key, Object value, BodyType bodyType) {
+        switch (bodyType) {
+            case JSON:
+                // Json 提交
+                params.put(key, EasyUtils.convertObject(value));
+                break;
+            case FORM:
+            default:
+                // 表单提交
+                params.put(key, value);
+                break;
+        }
+    }
+
+    @Override
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {
+        RequestBody body = mRequestBody != null ? mRequestBody : createRequestBody(params, type);
+        requestBuilder.method(getRequestMethod(), body);
+    }
+
+    @Override
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {
+        if (!EasyConfig.getInstance().isLogEnabled()) {
+            return;
+        }
+
+        EasyLog.printKeyValue(this, "RequestUrl", String.valueOf(request.url()));
+        EasyLog.printKeyValue(this, "RequestMethod", getRequestMethod());
+
+        RequestBody body = request.body();
+
+        // 打印请求头和参数的日志
+        if (!headers.isEmpty() || !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
+
+        for (String key : headers.getKeys()) {
+            EasyLog.printKeyValue(this, key, headers.get(key));
+        }
+
+        if (!headers.isEmpty() && !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
+
+        if (body instanceof FormBody ||
+                body instanceof MultipartBody ||
+                body instanceof ProgressBody) {
+            // 打印表单
+            for (String key : params.getKeys()) {
+                Object value = params.get(key);
+                if (value instanceof Map) {
+                    // 如果这是一个 Map 集合
+                    Map<?, ?> map = ((Map<?, ?>) value);
+                    for (Object itemKey : map.keySet()) {
+                        if (itemKey == null) {
+                            continue;
+                        }
+                        printKeyValue(String.valueOf(itemKey), map.get(itemKey));
+                    }
+                } else if (value instanceof List) {
+                    // 如果这是一个 List 集合
+                    List<?> list = (List<?>) value;
+                    for (int i = 0; i < list.size(); i++) {
+                        Object itemValue = list.get(i);
+                        printKeyValue(key + "[" + i + "]", itemValue);
+                    }
+                } else {
+                    printKeyValue(key, value);
+                }
+            }
+        } else if (body instanceof JsonBody) {
+            // 打印 Json
+            EasyLog.printJson(this, body.toString());
+        } else if (body != null) {
+            // 打印文本
+            EasyLog.printLog(this, body.toString());
+        }
+
+        if (!headers.isEmpty() || !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
+    }
+
     /**
      * 组装 RequestBody 对象
      */
-    private RequestBody createBody(HttpParams params, BodyType type) {
+    private RequestBody createRequestBody(HttpParams params, BodyType type) {
         RequestBody requestBody;
 
         if (params.isMultipart() && !params.isEmpty()) {
@@ -249,8 +240,11 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
                     Object value = params.get(key);
                     if (value instanceof List) {
                         List<?> list = (List<?>) value;
-                        for (Object item : list) {
-                            bodyBuilder.add(key, String.valueOf(item));
+                        for (Object itemValue : list) {
+                            if (itemValue == null) {
+                                continue;
+                            }
+                            bodyBuilder.add(key, String.valueOf(itemValue));
                         }
                         continue;
                     }
@@ -326,20 +320,6 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         } else {
             // 如果这是一个普通参数
             bodyBuilder.addFormDataPart(key, String.valueOf(object));
-        }
-    }
-
-    /**
-     * 打印键值对
-     */
-    private void printKeyValue(HttpRequest<?> httpRequest, String key, Object value) {
-        if (value instanceof Enum) {
-            // 如果这是一个枚举类型
-            EasyLog.printKeyValue(httpRequest, key, "\"" + value + "\"");
-        } else if (value instanceof String) {
-            EasyLog.printKeyValue(httpRequest, key, "\"" + value + "\"");
-        } else {
-            EasyLog.printKeyValue(httpRequest, key, String.valueOf(value));
         }
     }
 }

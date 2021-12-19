@@ -9,7 +9,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
-import com.hjq.http.config.RequestApi;
+import com.hjq.http.config.DownloadApi;
 import com.hjq.http.config.RequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
@@ -34,6 +34,8 @@ import okhttp3.Request;
  */
 public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
+    private HttpRequest<?> mRealRequest;
+
     /** 下载请求方式 */
     private HttpMethod mMethod = HttpMethod.GET;
 
@@ -51,6 +53,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
     public DownloadRequest(LifecycleOwner lifecycleOwner) {
         super(lifecycleOwner);
+        mRealRequest = new GetRequest(lifecycleOwner);
     }
 
     /**
@@ -58,6 +61,18 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
      */
     public DownloadRequest method(HttpMethod method) {
         mMethod = method;
+        switch (mMethod) {
+            case GET:
+                // 如果这个下载请求方式是 Get
+                mRealRequest = new GetRequest(getLifecycleOwner());
+                break;
+            case POST:
+                // 如果这个下载请求方式是 Post
+                mRealRequest = new PostRequest(getLifecycleOwner());
+                break;
+            default:
+                throw new IllegalStateException("method nonsupport");
+        }
         return this;
     }
 
@@ -66,7 +81,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
      */
     public DownloadRequest url(String url) {
         server(new RequestServer(url));
-        api(new RequestApi(""));
+        api(new DownloadApi(""));
         return this;
     }
 
@@ -106,20 +121,6 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     public DownloadRequest listener(OnDownloadListener listener) {
         mListener = listener;
         return this;
-    }
-
-    @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        switch (mMethod) {
-            case GET:
-                // 如果这个下载请求方式是 Get
-                return new GetRequest(getLifecycleOwner()).api(getRequestApi()).createRequest(url, tag, params, headers, type);
-            case POST:
-                // 如果这个下载请求方式是 Post
-                return new PostRequest(getLifecycleOwner()).api(getRequestApi()).createRequest(url, tag, params, headers, type);
-            default:
-                throw new IllegalStateException("method nonsupport");
-        }
     }
 
     /**
@@ -186,4 +187,18 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     public String getRequestMethod() {
         return String.valueOf(mMethod);
     }
+
+    @Override
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+        return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, type);
+    }
+
+    @Override
+    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {}
+
+    @Override
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {}
+
+    @Override
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {}
 }

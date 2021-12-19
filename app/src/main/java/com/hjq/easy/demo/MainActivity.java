@@ -16,6 +16,8 @@ import android.widget.ProgressBar;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
+import com.hjq.bar.OnTitleBarListener;
+import com.hjq.bar.TitleBar;
 import com.hjq.easy.demo.http.api.SearchAuthorApi;
 import com.hjq.easy.demo.http.api.SearchBlogsApi;
 import com.hjq.easy.demo.http.api.UpdateImageApi;
@@ -64,6 +66,17 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
         findViewById(R.id.btn_main_exec).setOnClickListener(this);
         findViewById(R.id.btn_main_update).setOnClickListener(this);
         findViewById(R.id.btn_main_download).setOnClickListener(this);
+
+        TitleBar titleBar = findViewById(R.id.tb_main_bar);
+        titleBar.setOnTitleBarListener(new OnTitleBarListener() {
+            @Override
+            public void onTitleClick(TitleBar titleBar) {
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                intent.setData(Uri.parse(titleBar.getTitle().toString()));
+                startActivity(intent);
+            }
+        });
+
         requestPermission();
     }
 

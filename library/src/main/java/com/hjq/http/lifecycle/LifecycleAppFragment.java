@@ -1,8 +1,7 @@
 package com.hjq.http.lifecycle;
 
-import android.app.Service;
-import android.content.Intent;
-import android.os.IBinder;
+import android.app.Fragment;
+import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -13,10 +12,11 @@ import androidx.lifecycle.LifecycleRegistry;
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
- *    time   : 2021/03/08
- *    desc   : Service 生命周期管理基类
+ *    time   : 2021/11/22
+ *    desc   : Fragment 生命周期管理基类
  */
-public abstract class LifecycleService extends Service implements LifecycleOwner {
+@SuppressWarnings("deprecation")
+public class LifecycleAppFragment extends Fragment implements LifecycleOwner {
 
     private final LifecycleRegistry mLifecycle = new LifecycleRegistry(this);
 
@@ -27,36 +27,37 @@ public abstract class LifecycleService extends Service implements LifecycleOwner
     }
 
     @Override
-    public void onCreate() {
+    public void onCreate(@Nullable Bundle savedInstanceState) {
         mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_CREATE);
-        super.onCreate();
+        super.onCreate(savedInstanceState);
     }
 
-    @Nullable
     @Override
-    public IBinder onBind(Intent intent) {
+    public void onStart() {
         mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
-        return null;
+        super.onStart();
     }
 
-    @SuppressWarnings("deprecation")
     @Override
-    public void onStart(Intent intent, int startId) {
-        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_START);
-        super.onStart(intent, startId);
+    public void onResume() {
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_RESUME);
+        super.onResume();
     }
 
-    /**
-     * 为什么不在这个方法里面派发 Lifecycle 回调？因为它最后会调用 {@link #onStart(Intent, int)}
-     */
     @Override
-    public int onStartCommand(Intent intent, int flags, int startId) {
-        return super.onStartCommand(intent, flags, startId);
+    public void onPause() {
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE);
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
+        super.onStop();
     }
 
     @Override
     public void onDestroy() {
-        mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_STOP);
         mLifecycle.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY);
         super.onDestroy();
     }

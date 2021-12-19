@@ -5,11 +5,13 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.model.BodyType;
-import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 
-import okhttp3.CacheControl;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 
@@ -26,63 +28,95 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        Request.Builder requestBuilder = new Request.Builder();
+    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {
+        params.put(key, value);
+    }
 
-        if (tag != null) {
-            requestBuilder.tag(tag);
-        }
-
-        // 如果设置了不缓存数据
-        if (getRequestCache().getCacheMode() == CacheMode.NO_CACHE) {
-            requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
-        }
-
-        // 添加请求头
-        if (!headers.isEmpty()) {
-            for (String key : headers.getKeys()) {
-                requestBuilder.addHeader(key, headers.get(key));
-            }
-        }
-
-        HttpUrl.Builder urlBuilder = HttpUrl.get(url).newBuilder();
+    @Override
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {
+        HttpUrl.Builder urlBuilder = requestBuilder.build().url().newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
             for (String key : params.getKeys()) {
-                urlBuilder.addQueryParameter(key, String.valueOf(params.get(key)));
+                Object value = params.get(key);
+                if (value instanceof List) {
+                    // 如果这是一个 List 集合
+                    List<?> list = ((List<?>) value);
+                    for (Object itemValue : list) {
+                        if (itemValue == null) {
+                            continue;
+                        }
+                        // Get 请求参数重复拼接：https://blog.csdn.net/weixin_38355349/article/details/104499948
+                        urlBuilder.addQueryParameter(key, String.valueOf(itemValue));
+                    }
+                } else if (value instanceof HashMap) {
+                    // 如果这是一个 Map 集合
+                    Map<?, ?> map = ((Map<?, ?>) value);
+                    for (Object itemKey : map.keySet()) {
+                        if (itemKey == null) {
+                            continue;
+                        }
+                        Object itemValue = map.get(itemKey);
+                        if (itemValue == null) {
+                            continue;
+                        }
+                        urlBuilder.addQueryParameter(key, String.valueOf(itemValue));
+                    }
+                } else {
+                    urlBuilder.addQueryParameter(key, String.valueOf(value));
+                }
             }
         }
         HttpUrl link = urlBuilder.build();
         requestBuilder.url(link);
         requestBuilder.method(getRequestMethod(), null);
+    }
 
-        EasyLog.printKeyValue(this, "RequestUrl", String.valueOf(link));
+    @Override
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {
+        if (!EasyConfig.getInstance().isLogEnabled()) {
+            return;
+        }
+
+        EasyLog.printKeyValue(this, "RequestUrl", String.valueOf(request.url()));
         EasyLog.printKeyValue(this, "RequestMethod", getRequestMethod());
 
-        // 打印请求头和参数的日志
-        if (EasyConfig.getInstance().isLogEnabled()) {
+        if (!headers.isEmpty() || !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
 
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.printLine(this);
-            }
+        for (String key : headers.getKeys()) {
+            EasyLog.printKeyValue(this, key, headers.get(key));
+        }
 
-            for (String key : headers.getKeys()) {
-                EasyLog.printKeyValue(this, key, headers.get(key));
-            }
+        if (!headers.isEmpty() && !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
 
-            if (!headers.isEmpty() && !params.isEmpty()) {
-                EasyLog.printLine(this);
-            }
-
-            for (String key : params.getKeys()) {
-                EasyLog.printKeyValue(this, key, String.valueOf(params.get(key)));
-            }
-
-            if (!headers.isEmpty() || !params.isEmpty()) {
-                EasyLog.printLine(this);
+        for (String key : params.getKeys()) {
+            Object value = params.get(key);
+            if (value instanceof List) {
+                // 如果这是一个 List 集合
+                List<?> list = (List<?>) value;
+                for (int i = 0; i < list.size(); i++) {
+                    printKeyValue(key + "[" + i + "]", list.get(i));
+                }
+            } else if (value instanceof HashMap) {
+                // 如果这是一个 Map 集合
+                Map<?, ?> map = ((Map<?, ?>) value);
+                for (Object itemKey : map.keySet()) {
+                    if (itemKey == null) {
+                        continue;
+                    }
+                    printKeyValue(String.valueOf(itemKey), map.get(itemKey));
+                }
+            } else {
+                printKeyValue(key, String.valueOf(params.get(key)));
             }
         }
 
-        return requestBuilder.build();
+        if (!headers.isEmpty() || !params.isEmpty()) {
+            EasyLog.printLine(this);
+        }
     }
 }

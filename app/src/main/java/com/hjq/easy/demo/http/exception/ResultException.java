@@ -1,4 +1,7 @@
-package com.hjq.http.exception;
+package com.hjq.easy.demo.http.exception;
+
+import com.hjq.easy.demo.http.model.HttpData;
+import com.hjq.http.exception.HttpException;
 
 /**
  *    author : Android 轮子哥
@@ -8,19 +11,19 @@ package com.hjq.http.exception;
  */
 public final class ResultException extends HttpException {
 
-    private final Object mData;
+    private final HttpData<?> mData;
 
-    public ResultException(String message, Object data) {
+    public ResultException(String message, HttpData<?> data) {
         super(message);
         mData = data;
     }
 
-    public ResultException(String message, Throwable cause, Object data) {
+    public ResultException(String message, Throwable cause, HttpData<?> data) {
         super(message, cause);
         mData = data;
     }
 
-    public Object getData() {
+    public HttpData<?> getHttpData() {
         return mData;
     }
 }

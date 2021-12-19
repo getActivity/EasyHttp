@@ -8,7 +8,7 @@ import com.hjq.http.annotation.HttpIgnore;
  *    time   : 2019/05/19
  *    desc   : 请求接口简单配置类
  */
-public final class RequestApi implements IRequestApi {
+public class RequestApi implements IRequestApi {
 
     /** 接口地址 */
     @HttpIgnore

@@ -4,7 +4,7 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/10.6/EasyHttp.apk)
+* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/10.8/EasyHttp.apk)
 
 ![](picture/demo_code.png)
 
@@ -26,22 +26,29 @@
 
 #### 集成步骤
 
-* 在项目根目录下的 `build.gradle` 文件中加入
+* 如果你的项目 Gradle 配置是在 `7.0 以下`，需要在 `build.gradle` 文件中加入
 
 ```groovy
-buildscript {
-    repositories {
-        maven { url 'https://jitpack.io' }
-    }
-}
 allprojects {
     repositories {
+        // JitPack 远程仓库：https://jitpack.io
         maven { url 'https://jitpack.io' }
     }
 }
 ```
 
-* 在项目 app 模块下的 `build.gradle` 文件中加入
+* 如果你的 Gradle 配置是 `7.0 及以上`，则需要在 `settings.gradle` 文件中加入
+
+```groovy
+dependencyResolutionManagement {
+    repositories {
+        // JitPack 远程仓库：https://jitpack.io
+        maven { url 'https://jitpack.io' }
+    }
+}
+```
+
+* 配置完远程仓库后，在项目 app 模块下的 `build.gradle` 文件中加入远程依赖
 
 ```groovy
 android {
@@ -54,7 +61,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:10.6'
+    implementation 'com.github.getActivity:EasyHttp:10.8'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -67,9 +74,9 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  10.6 |  2.9.0  |  3.0.4    |
+|    对应版本  |  10.8 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
-|    **aar 包大小**  |  78 KB  | 123 KB  |  131 KB  |
+|    **aar 包大小**  |  80 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
@@ -208,23 +215,35 @@ EasyHttp.post(this)
 
 #### 作者的其他开源项目
 
-* 安卓技术中台：[AndroidProject](https://github.com/getActivity/AndroidProject)
+* 安卓技术中台：[AndroidProject](https://github.com/getActivity/AndroidProject) ![](https://img.shields.io/github/stars/getActivity/AndroidProject.svg) ![](https://img.shields.io/github/forks/getActivity/AndroidProject.svg)
 
-* 权限框架：[XXPermissions](https://github.com/getActivity/XXPermissions)
+* 安卓技术中台 Kt 版：[AndroidProject-Kotlin](https://github.com/getActivity/AndroidProject-Kotlin) ![](https://img.shields.io/github/stars/getActivity/AndroidProject-Kotlin.svg) ![](https://img.shields.io/github/forks/getActivity/AndroidProject-Kotlin.svg)
 
-* 吐司框架：[ToastUtils](https://github.com/getActivity/ToastUtils)
+* 权限框架：[XXPermissions](https://github.com/getActivity/XXPermissions) ![](https://img.shields.io/github/stars/getActivity/XXPermissions.svg) ![](https://img.shields.io/github/forks/getActivity/XXPermissions.svg)
 
-* 标题栏框架：[TitleBar](https://github.com/getActivity/TitleBar)
+* 吐司框架：[ToastUtils](https://github.com/getActivity/ToastUtils) ![](https://img.shields.io/github/stars/getActivity/ToastUtils.svg) ![](https://img.shields.io/github/forks/getActivity/ToastUtils.svg)
 
-* 国际化框架：[MultiLanguages](https://github.com/getActivity/MultiLanguages)
+* 标题栏框架：[TitleBar](https://github.com/getActivity/TitleBar) ![](https://img.shields.io/github/stars/getActivity/TitleBar.svg) ![](https://img.shields.io/github/forks/getActivity/TitleBar.svg)
 
-* 悬浮窗框架：[XToast](https://github.com/getActivity/XToast)
+* 悬浮窗框架：[XToast](https://github.com/getActivity/XToast) ![](https://img.shields.io/github/stars/getActivity/XToast.svg) ![](https://img.shields.io/github/forks/getActivity/XToast.svg)
 
-* Shape 框架：[ShapeView](https://github.com/getActivity/ShapeView)
+* Shape 框架：[ShapeView](https://github.com/getActivity/ShapeView) ![](https://img.shields.io/github/stars/getActivity/ShapeView.svg) ![](https://img.shields.io/github/forks/getActivity/ShapeView.svg)
 
-* Gson 解析容错：[GsonFactory](https://github.com/getActivity/GsonFactory)
+* 语种切换框架：[MultiLanguages](https://github.com/getActivity/MultiLanguages) ![](https://img.shields.io/github/stars/getActivity/MultiLanguages.svg) ![](https://img.shields.io/github/forks/getActivity/MultiLanguages.svg)
 
-* 日志查看框架：[Logcat](https://github.com/getActivity/Logcat)
+* Gson 解析容错：[GsonFactory](https://github.com/getActivity/GsonFactory) ![](https://img.shields.io/github/stars/getActivity/GsonFactory.svg) ![](https://img.shields.io/github/forks/getActivity/GsonFactory.svg)
+
+* 日志查看框架：[Logcat](https://github.com/getActivity/Logcat) ![](https://img.shields.io/github/stars/getActivity/Logcat.svg) ![](https://img.shields.io/github/forks/getActivity/Logcat.svg)
+
+* Android 版本适配：[AndroidVersionAdapter](https://github.com/getActivity/AndroidVersionAdapter) ![](https://img.shields.io/github/stars/getActivity/AndroidVersionAdapter.svg) ![](https://img.shields.io/github/forks/getActivity/AndroidVersionAdapter.svg)
+
+* Android 代码规范：[AndroidCodeStandard](https://github.com/getActivity/AndroidCodeStandard) ![](https://img.shields.io/github/stars/getActivity/AndroidCodeStandard.svg) ![](https://img.shields.io/github/forks/getActivity/AndroidCodeStandard.svg)
+
+* Studio 精品插件：[StudioPlugins](https://github.com/getActivity/StudioPlugins) ![](https://img.shields.io/github/stars/getActivity/StudioPlugins.svg) ![](https://img.shields.io/github/forks/getActivity/StudioPlugins.svg)
+
+* 表情包大集合：[EmojiPackage](https://github.com/getActivity/EmojiPackage) ![](https://img.shields.io/github/stars/getActivity/EmojiPackage.svg) ![](https://img.shields.io/github/forks/getActivity/EmojiPackage.svg)
+
+* 省市区 Json 数据：[ProvinceJson](https://github.com/getActivity/ProvinceJson) ![](https://img.shields.io/github/stars/getActivity/ProvinceJson.svg) ![](https://img.shields.io/github/forks/getActivity/ProvinceJson.svg)
 
 #### 微信公众号：Android轮子哥
 

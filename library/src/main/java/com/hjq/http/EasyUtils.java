@@ -124,20 +124,21 @@ public final class EasyUtils {
                     temp = interfaces[i];
                 }
 
-                // 判断类型是否是 List<File>
-                if (!List.class.equals(temp)) {
-                    continue;
-                }
-
-                Type genericType = getFieldGenericType(field);
-                if (genericType != null && isFileClass(genericType)) {
-                    return true;
+                if (List.class.equals(temp)) {
+                    // 如果实现了 List 接口，则取第一个位置的泛型
+                    if (isMultipartClass(getFieldGenericType(field, 0))) {
+                        return true;
+                    }
+                } else if (Map.class.equals(temp)) {
+                    // 如果实现了 Map 接口，则取第二个位置的泛型
+                    if (isMultipartClass(getFieldGenericType(field, 1))) {
+                        return true;
+                    }
                 }
             }
 
             do {
-                if (isFileClass(clazz) || InputStream.class.equals(clazz)
-                        || RequestBody.class.equals(clazz) || MultipartBody.Part.class.equals(clazz)) {
+                if (isMultipartClass(clazz)) {
                     return true;
                 }
                 // 获取对象的父类类型
@@ -149,8 +150,11 @@ public final class EasyUtils {
 
     /**
      * 获取字段中携带的泛型类型
+     *
+     * @param field             字段对象
+     * @param position          泛型的位置
      */
-    public static Type getFieldGenericType(Field field) {
+    public static Type getFieldGenericType(Field field, int position) {
         Type type = field.getGenericType();
         if (!(type instanceof ParameterizedType)) {
             return null;
@@ -158,12 +162,13 @@ public final class EasyUtils {
 
         // 获取泛型数组
         Type[] actualTypeArguments = ((ParameterizedType) type).getActualTypeArguments();
-        if (actualTypeArguments.length == 0) {
+        // 如果泛型的位置超过数组的长度，证明这个位置的泛型不存在
+        if (position >= actualTypeArguments.length) {
             return null;
         }
 
-        // 获取第一个位置上的泛型
-        Type actualType = actualTypeArguments[0];
+        // 获取指定位置上的泛型
+        Type actualType = actualTypeArguments[position];
         // 如果这是一个通配符类型
         if (actualType instanceof WildcardType) {
             // 获取上界通配符
@@ -177,10 +182,14 @@ public final class EasyUtils {
     }
 
     /**
-     * 判断 Type 是否为文件类型
+     * 判断 Type 是否为流类型
      */
-    public static boolean isFileClass(Type type) {
-        return File.class.equals(type) || FileContentResolver.class.equals(type);
+    public static boolean isMultipartClass(Type type) {
+        if (type == null) {
+            return false;
+        }
+        return File.class.equals(type) || FileContentResolver.class.equals(type) || InputStream.class.equals(type)
+                || RequestBody.class.equals(type) || MultipartBody.Part.class.equals(type);
     }
 
     /**
