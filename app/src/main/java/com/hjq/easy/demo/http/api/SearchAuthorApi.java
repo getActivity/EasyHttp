@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.api;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.config.IRequestApi;
 
 /**
@@ -10,6 +12,7 @@ import com.hjq.http.config.IRequestApi;
  */
 public final class SearchAuthorApi implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "wxarticle/chapters/json";

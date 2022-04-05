@@ -123,7 +123,7 @@ public final class DownloadCallback extends BaseCallback {
                 if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                     return;
                 }
-                mListener.onComplete(mFile);
+                mListener.onComplete(mFile, true);
                 mListener.onEnd(mFile);
                 // 文件已存在，跳过下载
                 EasyLog.printLog(mHttpRequest, mFile.getPath() + " file already exists, skip download");
@@ -168,7 +168,7 @@ public final class DownloadCallback extends BaseCallback {
             if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
                 return;
             }
-            mListener.onComplete(mFile);
+            mListener.onComplete(mFile, false);
             mListener.onEnd(mFile);
         });
     }

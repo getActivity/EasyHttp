@@ -31,6 +31,15 @@ public interface OnDownloadListener {
     void onProgress(File file, int progress);
 
     /**
+     * 请求成功
+     *
+     * @param cache         是否是通过缓存下载成功的
+     */
+    default void onComplete(File file, boolean cache) {
+        onComplete(file);
+    }
+
+    /**
      * 下载完成
      */
     void onComplete(File file);

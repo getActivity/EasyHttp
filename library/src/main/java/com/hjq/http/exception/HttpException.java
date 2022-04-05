@@ -1,5 +1,8 @@
 package com.hjq.http.exception;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -9,6 +12,7 @@ package com.hjq.http.exception;
 public class HttpException extends Exception {
 
     private final String mMessage;
+    private Throwable mThrowable;
 
     public HttpException(String message) {
         super(message);
@@ -18,6 +22,7 @@ public class HttpException extends Exception {
     public HttpException(String message, Throwable cause) {
         super(message, cause);
         mMessage = message;
+        mThrowable = cause;
     }
 
     /**
@@ -26,5 +31,23 @@ public class HttpException extends Exception {
     @Override
     public String getMessage() {
         return mMessage;
+    }
+
+    @NonNull
+    @Override
+    public StackTraceElement[] getStackTrace() {
+        if (mThrowable != null) {
+            return mThrowable.getStackTrace();
+        }
+        return super.getStackTrace();
+    }
+
+    @Nullable
+    @Override
+    public synchronized Throwable getCause() {
+        if (mThrowable != null) {
+            return mThrowable.getCause();
+        }
+        return super.getCause();
     }
 }

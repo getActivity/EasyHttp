@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.api;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestServer;
 
@@ -13,11 +15,13 @@ import java.io.File;
  */
 public final class UpdateImageApi implements IRequestServer, IRequestApi {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://graph.baidu.com/";
     }
 
+    @NonNull
     @Override
     public String getApi() {
         return "upload/";

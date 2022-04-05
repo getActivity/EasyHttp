@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CacheMode;
 
@@ -13,12 +15,14 @@ public interface IRequestServer extends
         IRequestHost, IRequestClient,
         IRequestType, IRequestCache {
 
+    @NonNull
     @Override
     default BodyType getBodyType() {
         // 默认以表单的方式提交
         return BodyType.FORM;
     }
 
+    @NonNull
     @Override
     default CacheMode getCacheMode() {
         // 默认的缓存方式

@@ -2,6 +2,8 @@ package com.hjq.easy.demo;
 
 import android.app.Application;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.easy.demo.http.model.RequestHandler;
 import com.hjq.easy.demo.http.server.ReleaseServer;
 import com.hjq.easy.demo.http.server.TestServer;
@@ -51,7 +53,9 @@ public final class AppApplication extends Application {
                 // 设置请求参数拦截器
                 .setInterceptor(new IRequestInterceptor() {
                     @Override
-                    public void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {
+                    public void interceptArguments(@NonNull HttpRequest<?> httpRequest,
+                                                   @NonNull HttpParams params,
+                                                   @NonNull HttpHeaders headers) {
                         headers.put("timestamp", String.valueOf(System.currentTimeMillis()));
                     }
                 })

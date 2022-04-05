@@ -71,6 +71,7 @@ public class JsonBody extends RequestBody {
     /**
      * 获取 Json 字符串
      */
+    @NonNull
     public String getJson() {
         return mJson;
     }

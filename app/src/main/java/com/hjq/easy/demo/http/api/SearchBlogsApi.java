@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.api;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.config.IRequestApi;
 
@@ -13,6 +15,7 @@ import java.util.List;
  */
 public final class SearchBlogsApi implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "article/query/0/json";

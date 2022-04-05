@@ -23,7 +23,6 @@ import com.hjq.easy.demo.http.api.SearchBlogsApi;
 import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
-import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
@@ -31,7 +30,6 @@ import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.ResponseClass;
-import com.hjq.http.request.PostRequest;
 import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
@@ -150,15 +148,13 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             // 在主线程中不能做耗时操作
             new Thread(() -> {
                 runOnUiThread(this::showDialog);
-                PostRequest postRequest = EasyHttp.post(MainActivity.this);
                 try {
-                    HttpData<SearchBlogsApi.Bean> data = postRequest
+                    HttpData<SearchBlogsApi.Bean> data = EasyHttp.post(MainActivity.this)
                             .api(new SearchBlogsApi()
                                     .setKeyword("搬砖不再有"))
                             .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
                     ToastUtils.show("同步请求成功，请看日志");
                 } catch (Exception e) {
-                    EasyLog.printThrowable(postRequest, e);
                     ToastUtils.show(e.getMessage());
                 }
                 runOnUiThread(this::hideDialog);

@@ -13,8 +13,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 16
         targetSdkVersion 31
-        versionCode 1080
-        versionName '10.8'
+        versionCode 1100
+        versionName '11.0'
     }
 
     // 支持 JDK 1.8
@@ -57,13 +57,12 @@ android {
 
 dependencies {
     // 依赖 libs 目录下所有的 jar 和 aar 包
-    implementation fileTree(include: ['*.jar'], dir: 'libs')
-    implementation fileTree(include: ['*.aar'], dir: 'libs')
+    implementation fileTree(include: ['*.jar', '*.aar'], dir: 'libs')
     
     implementation project(':library')
 
     // AndroidX 库：https://github.com/androidx/androidx
-    implementation 'androidx.appcompat:appcompat:1.3.1'
+    implementation 'androidx.appcompat:appcompat:1.4.0'
 
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
@@ -71,25 +70,25 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
     // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.github.getActivity:ToastUtils:10.0'
+    implementation 'com.github.getActivity:ToastUtils:10.3'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:13.2'
+    implementation 'com.github.getActivity:XXPermissions:13.5'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
     implementation 'com.github.getActivity:TitleBar:9.3'
 
     // Json 解析框架：https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.8.9'
+    implementation 'com.google.code.gson:gson:2.9.0'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation 'com.github.getActivity:GsonFactory:5.2'
-
-    // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:10.0'
+    implementation 'com.github.getActivity:GsonFactory:6.0'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
-    implementation 'com.tencent:mmkv-static:1.2.11'
+    implementation 'com.tencent:mmkv-static:1.2.12'
+
+    // 日志调试框架：https://github.com/getActivity/Logcat
+    debugImplementation 'com.github.getActivity:Logcat:10.3'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.7'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.8.1'
 }

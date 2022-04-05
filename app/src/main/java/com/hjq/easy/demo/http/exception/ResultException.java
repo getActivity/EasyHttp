@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.exception;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.exception.HttpException;
 
@@ -23,6 +25,7 @@ public final class ResultException extends HttpException {
         mData = data;
     }
 
+    @NonNull
     public HttpData<?> getHttpData() {
         return mData;
     }

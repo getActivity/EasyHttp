@@ -26,11 +26,13 @@
 
     * [请求缓存](#请求缓存)
 
+    * [搭配协程使用](#搭配协程使用)
+
     * [分区存储适配](#分区存储适配)
 
 * [疑难解答](#疑难解答)
 
-    * [如何设置 Cookie](如何设置-cookie)
+    * [如何设置 Cookie](#如何设置-cookie)
 
     * [如何添加或者删除全局参数](#如何添加或者删除全局参数)
 
@@ -66,7 +68,7 @@
 
     * [如何取消已发起的请求](#如何取消已发起的请求)
 
-    * [如何延迟发起一个请求](如何延迟发起一个请求)
+    * [如何延迟发起一个请求](#如何延迟发起一个请求)
 
     * [如何对接口路径进行动态化拼接](#如何对接口路径进行动态化拼接)
 
@@ -76,15 +78,17 @@
 
     * [框架只能传入 LifecycleOwner 该怎么办](#框架只能传入-lifecycleowner-该怎么办)
 
-    * [我想取消请求时显示的加载对话框该怎么办](#我想取消请求时显示的加载对话框该怎么办)
+    * [如何在 ViewModel 中使用 EasyHttp 请求网络](#如何在-viewmodel-中使用-easyhttp-请求网络)
 
-    * [如何在 ViewModel 中使用 EasyHttp 请求网络](如何在-viewmodel-中使用-easyhttp-请求网络)
+    * [我想取消请求时显示的加载对话框该怎么办](#我想取消请求时显示的加载对话框该怎么办)
 
     * [我想用 Json 数组作为参数进行上传该怎么办](#我想用-json-数组作为参数进行上传该怎么办)
 
     * [接口参数的 Key 值是动态变化的该怎么办](#接口参数的-key-值是动态变化的该怎么办)
 
-    * [我想自定义一个 RequestBody 进行请求该怎么办](我想自定义一个-requestbody-进行请求该怎么办)
+    * [如何设置自定义的 UA 标识](#如何设置自定义的-ua-标识)
+
+    * [我想自定义一个 RequestBody 进行请求该怎么办](#我想自定义一个-requestbody-进行请求该怎么办)
 
 * [搭配 RxJava](#搭配-rxjava)
 
@@ -135,11 +139,13 @@
 ```java
 public class RequestServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.baidu.com/";
     }
 
+    @NonNull
     @Override
     public BodyType getBodyType() {
         // 参数以 Json 格式提交（默认是表单）
@@ -204,6 +210,7 @@ EasyConfig.getInstance()
 ```java
 public final class LoginApi implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "user/login";
@@ -258,11 +265,13 @@ public final class LoginApi implements IRequestApi {
 ```java
 public final class XxxApi implements IRequestServer, IRequestApi {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.baidu.com/";
     }
 
+    @NonNull
     @Override
     public String getApi() {
         return "user/getInfo";
@@ -295,11 +304,13 @@ EasyHttp.post(this)
 ```java
 public final class UpdateImageApi implements IRequestApi, IRequestType {
 
+    @NonNull
     @Override
     public String getApi() {
         return "upload/";
     }
 
+    @NonNull
     @Override
     public BodyType getBodyType() {
         // 上传文件需要使用表单的形式提交
@@ -411,7 +422,6 @@ try {
             .execute(new ResponseClass<HttpData<SearchBean>>() {});
     ToastUtils.show("请求成功，请看日志");
 } catch (Exception e) {
-    EasyLog.printThrowable(postRequest, e);
     ToastUtils.show(e.getMessage());
 }
 ```
@@ -433,33 +443,69 @@ public final class RequestHandler implements IRequestHandler {
     
     ..................
 
+    @Nullable
     @Override
-    public Object readCache(HttpRequest<?> httpRequest, Type type, long cacheTime) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
-        String cacheValue = mMmkv.getString(cacheKey, null);
+    public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
+        String cacheValue = HttpCacheManager.getMmkv().getString(cacheKey, null);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printLog(httpRequest, "----- readCache cacheKey -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printLog(httpRequest, "----- readCache cacheValue -----");
         EasyLog.printJson(httpRequest, cacheValue);
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
     @Override
-    public boolean writeCache(HttpRequest<?> httpRequest, Response response, Object result) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
+    public boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printLog(httpRequest, "----- writeCache cacheKey -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printLog(httpRequest, "----- writeCache cacheValue -----");
         EasyLog.printJson(httpRequest, cacheValue);
-        return mMmkv.putString(cacheKey, cacheValue).commit();
+        return HttpCacheManager.getMmkv().putString(cacheKey, cacheValue).commit();
     }
+
+    @Override
+    public void clearCache() {
+        HttpCacheManager.getMmkv().clearMemoryCache();
+        HttpCacheManager.getMmkv().clearAll();
+    }
+}
+```
+
+```java
+public class HttpCacheManager {
+
+   private volatile static MMKV sMmkv;
+
+   /**
+    * 获取单例的 MMKV 实例
+    */
+   public static MMKV getMmkv() {
+      if(sMmkv == null) {
+         synchronized (RequestHandler.class) {
+            if (sMmkv == null) {
+               sMmkv = MMKV.mmkvWithID("http_cache_id");
+            }
+         }
+      }
+      return sMmkv;
+   }
+
+   /**
+    * 生成缓存的 key
+    */
+   public static String generateCacheKey(@NonNull HttpRequest<?> httpRequest) {
+      IRequestApi requestApi = httpRequest.getRequestApi();
+      return "用户 id" + "\n" + requestApi.getApi() + "\n" + GsonFactory.getSingletonGson().toJson(requestApi);
+   }
 }
 ```
 
@@ -506,11 +552,13 @@ public enum CacheMode {
 ```java
 public final class XxxApi implements IRequestApi, IRequestCache {
 
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/";
     }
 
+    @NonNull
     @Override
     public CacheMode getCacheMode() {
         // 设置优先使用缓存
@@ -524,11 +572,13 @@ public final class XxxApi implements IRequestApi, IRequestCache {
 ```java
 public class XxxServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
     }
 
+    @NonNull
     @Override
     public CacheMode getCacheMode() {
         // 只在请求失败才去读缓存
@@ -536,6 +586,30 @@ public class XxxServer implements IRequestServer {
     }
 }
 ```
+
+#### 搭配协程使用
+
+* 可以使用同步请求搭配协程做处理，使用代码如下：
+
+```kotlin
+lifecycleScope.launch(Dispatchers.IO) {
+    try {
+        val bean = EasyHttp.post(this@XxxActivity)
+            .api(XxxApi().apply {
+                setXxx(xxx)
+                setXxxx(xxxx)
+            })
+            .execute(object : ResponseClass<HttpData<XxxBean?>>() {})
+        withContext(Dispatchers.Main) {
+            // 在这里进行 UI 刷新
+        }
+    } catch (e: Exception) {
+        ToastUtils.show(e.message)
+    }
+}
+```
+
+* 如果你对协程的使用不太熟悉，推荐你看一下[这篇文章](https://www.jianshu.com/p/2e0746c7d4f3)
 
 #### 分区存储适配
 
@@ -616,7 +690,7 @@ EasyConfig.getInstance().removeHeader("key");
 EasyConfig.getInstance().setInterceptor(new IRequestInterceptor() {
 
     @Override
-    public void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {
+    public void interceptArguments(@NonNull HttpRequest<?> httpRequest, @NonNull HttpParams params, @NonNull HttpHeaders headers) {
         headers.put("key", "value");
         params.put("key", "value");
     }
@@ -627,7 +701,8 @@ EasyConfig.getInstance().setInterceptor(new IRequestInterceptor() {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -653,6 +728,7 @@ String host = server.getHost();
 ```java
 public class XxxServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
@@ -671,6 +747,7 @@ EasyConfig.getInstance().setServer(new XxxServer());
 ```java
 public final class XxxApi extends XxxServer implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -683,11 +760,13 @@ public final class XxxApi extends XxxServer implements IRequestApi {
 ```java
 public final class XxxApi implements IRequestServer, IRequestApi {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
     }
 
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -702,6 +781,7 @@ public final class XxxApi implements IRequestServer, IRequestApi {
 ```java
 public class TestServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.test.xxxxxxx.com/";
@@ -712,6 +792,7 @@ public class TestServer implements IRequestServer {
 ```java
 public class ReleaseServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
@@ -736,6 +817,7 @@ EasyConfig.getInstance().setServer(server);
 ```java
 public class H5Server implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         IRequestServer server = EasyConfig.getInstance().getServer();
@@ -752,6 +834,7 @@ public class H5Server implements IRequestServer {
 ```java
 public final class UserAgreementApi extends H5Server implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "user/agreement";
@@ -766,11 +849,13 @@ public final class UserAgreementApi extends H5Server implements IRequestApi {
 ```java
 public class XxxServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
     }
-    
+
+    @NonNull
     @Override
     public BodyType getBodyType() {
         return BodyType.FORM;
@@ -783,11 +868,13 @@ public class XxxServer implements IRequestServer {
 ```java
 public class XxxServer implements IRequestServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.xxxxxxx.com/";
     }
 
+    @NonNull
     @Override
     public BodyType getBodyType() {
         return BodyType.JSON;
@@ -800,11 +887,13 @@ public class XxxServer implements IRequestServer {
 ```java
 public final class XxxApi implements IRequestApi, IRequestType {
 
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
     }
 
+    @NonNull
     @Override
     public BodyType getBodyType() {
         return BodyType.JSON;
@@ -833,7 +922,7 @@ public interface IRequestInterceptor {
      * @param params        请求参数
      * @param headers       请求头参数
      */
-    default void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {}
+    default void interceptArguments(@NonNull HttpRequest<?> httpRequest, @NonNull HttpParams params, @NonNull HttpHeaders headers) {}
 
     /**
      * 拦截请求头
@@ -842,7 +931,8 @@ public interface IRequestInterceptor {
      * @param request       请求头对象
      * @return              返回新的请求头
      */
-    default Request interceptRequest(HttpRequest<?> httpRequest, Request request) {
+    @NonNull
+    default Request interceptRequest(@NonNull HttpRequest<?> httpRequest, @NonNull Request request) {
         return request;
     }
 
@@ -853,7 +943,8 @@ public interface IRequestInterceptor {
      * @param response      响应头对象
      * @return              返回新的响应头
      */
-    default Response interceptResponse(HttpRequest<?> httpRequest, Response response) {
+    @NonNull
+    default Response interceptResponse(@NonNull HttpRequest<?> httpRequest, @NonNull Response response) {
         return response;
     }
 }
@@ -873,7 +964,8 @@ EasyConfig.with(okHttpClient)
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -888,7 +980,8 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -903,7 +996,8 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -921,6 +1015,7 @@ public final class XxxApi implements IRequestApi {
 ```java
 public final class XxxApi implements IRequestApi {
     
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -935,6 +1030,7 @@ public final class XxxApi implements IRequestApi {
 ```java
 public final class XxxApi implements IRequestApi {
     
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -948,7 +1044,8 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -962,7 +1059,8 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
+    @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
@@ -1000,11 +1098,13 @@ EasyConfig.with(builder.build())
 ```java
 public final class XxxApi implements IRequestApi, IRequestClient {
 
+    @NonNull
     @Override
     public String getApi() {
         return "xxxx/";
     }
 
+    @NonNull
     @Override
     public OkHttpClient getOkHttpClient() {
         OkHttpClient.Builder builder = EasyConfig.getInstance().getOkHttpClient().newBuilder();
@@ -1054,6 +1154,7 @@ EasyHttp.post(MainActivity.this)
 ```java
 public final class XxxApi implements IRequestApi {
 
+    @NonNull
     @Override
     public String getApi() {
         return "article/query/" + pageNumber + "/json";
@@ -1164,51 +1265,6 @@ EasyHttp.post(new ApplicationLifecycle())
 EasyHttp.cancel("abc");
 ```
 
-#### 我想取消请求时显示的加载对话框该怎么办
-
-* 首先这个加载对话框不是框架自带的，是可以修改或者取消的，主要有两种方式可供选择
-
-* 第一种方式：重写 HttpCallback 类方法
-
-```java
-EasyHttp.post(this)
-        .api(new XxxApi())
-        .request(new HttpCallback<Xxx>(this) {
-
-            @Override
-            public void onStart(Call call) {
-                // 重写方法并注释父类调用
-                //super.onStart(call);
-            }
-
-            @Override
-            public void onEnd(Call call) {
-                // 重写方法并注释父类调用
-                //super.onEnd(call);
-            }
-        });
-```
-
-* 第二种方式：直接实现 OnHttpListener 接口
-
-```java
-
-EasyHttp.post(this)
-        .api(new XxxApi())
-        .request(new OnHttpListener<Xxx>() {
-
-            @Override
-            public void onSucceed(Xxx result) {
-                
-            }
-
-            @Override
-            public void onFail(Exception e) {
-
-            }
-        });
-```
-
 #### 如何在 ViewModel 中使用 EasyHttp 请求网络
 
 * 第一步：封装一个 BaseViewModel，并将 LifecycleOwner 特性植入进去
@@ -1259,6 +1315,51 @@ public class XxxViewModel extends BaseViewModel {
                 });
     }
 }
+```
+
+#### 我想取消请求时显示的加载对话框该怎么办
+
+* 首先这个加载对话框不是框架自带的，是可以修改或者取消的，主要有两种方式可供选择
+
+* 第一种方式：重写 HttpCallback 类回调方法
+
+```java
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .request(new HttpCallback<Xxx>(this) {
+
+            @Override
+            public void onStart(Call call) {
+                // 重写方法并注释父类调用
+                //super.onStart(call);
+            }
+
+            @Override
+            public void onEnd(Call call) {
+                // 重写方法并注释父类调用
+                //super.onEnd(call);
+            }
+        });
+```
+
+* 第二种方式：直接实现 OnHttpListener 接口
+
+```java
+
+EasyHttp.post(this)
+        .api(new XxxApi())
+        .request(new OnHttpListener<Xxx>() {
+
+            @Override
+            public void onSucceed(Xxx result) {
+                
+            }
+
+            @Override
+            public void onFail(Exception e) {
+
+            }
+        });
 ```
 
 #### 我想用 Json 数组作为参数进行上传该怎么办
@@ -1317,6 +1418,10 @@ EasyHttp.post(this)
         });
 ```
 
+#### 如何设置自定义的 UA 标识
+
+* 首先 UA 是 User Agent 的简称，当我们没有设置自定义 UA 标识的时候，那么 OkHttp 会在 BridgeInterceptor 拦截器添加一个默认的 UA 标识，那么如何在 EasyHttp 设置自定义 UA 标识呢？其实很简单，UA 标识本质上其实就是一个请求头，在 EasyHttp 中添加一个请求头为 `"User-Agent` 的参数即可，至于怎么添加请求头，前面的文档已经有介绍了，这里不再赘述。
+
 #### 我想自定义一个 RequestBody 进行请求该怎么办
 
 * 在一些极端的情况下，框架无法满足使用的前提下，这个时候需要自定义 `RequestBody` 来实现，那么怎么使用自定义 `RequestBody` 呢？框架其实有开放方法，具体使用示例如下：
@@ -1359,29 +1464,24 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void subscribe(ObservableEmitter<HttpData<SearchBean>> emitter) throws Exception {
-        PostRequest postRequest1 = EasyHttp.post(MainActivity.this);
+    
         HttpData<SearchBean> data1;
         try {
-            data1 = postRequest1
+            data1 = EasyHttp.post(MainActivity.this)
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
         } catch (Exception e) {
-            EasyLog.printThrowable(postRequest1, e);
-            ToastUtils.show(e.getMessage());
             throw e;
         }
 
-        PostRequest postRequest2 = EasyHttp.post(MainActivity.this);
         HttpData<SearchBean> data2;
         try {
-            data2 = postRequest2
+            data2 = EasyHttp.post(MainActivity.this)
                     .api(new SearchBlogsApi()
                             .setKeyword(data1.getMessage()))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
         } catch (Exception e) {
-            EasyLog.printThrowable(postRequest2, e);
-            ToastUtils.show(e.getMessage());
             throw e;
         }
 
@@ -1397,7 +1497,14 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void accept(HttpData<SearchBean> data) throws Exception {
-        Log.d("EasyHttp", "最终结果为：" + data.getMessage());
+        Log.i("EasyHttp", "最终结果为：" + data.getMessage());
+    }
+
+}, new Consumer<Throwable>() {
+    
+    @Override
+    public void accept(Throwable throwable) throws Exception {
+        ToastUtils.show(throwable.getMessage());
     }
 });
 ```
@@ -1473,7 +1580,14 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void accept(String s) throws Exception {
-        Log.d("EasyHttp", ""当前页码位置" + s);
+        Log.i("EasyHttp", ""当前页码位置" + s);
+    }
+    
+}, new Consumer<Throwable>() {
+    
+    @Override
+    public void accept(Throwable throwable) throws Exception {
+        ToastUtils.show(throwable.getMessage());
     }
 });
 ```

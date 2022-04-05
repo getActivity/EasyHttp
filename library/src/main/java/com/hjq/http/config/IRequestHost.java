@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -11,5 +13,6 @@ public interface IRequestHost {
     /**
      * 主机地址
      */
+    @NonNull
     String getHost();
 }

@@ -7,6 +7,9 @@ import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+
 import com.google.gson.JsonSyntaxException;
 import com.hjq.easy.demo.R;
 import com.hjq.easy.demo.http.exception.ResultException;
@@ -18,15 +21,11 @@ import com.hjq.http.exception.CancelException;
 import com.hjq.http.exception.DataException;
 import com.hjq.http.exception.HttpException;
 import com.hjq.http.exception.NetworkException;
+import com.hjq.http.exception.NullBodyException;
 import com.hjq.http.exception.ResponseException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.request.HttpRequest;
-import com.tencent.mmkv.MMKV;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -48,15 +47,15 @@ import okhttp3.ResponseBody;
 public final class RequestHandler implements IRequestHandler {
 
     private final Application mApplication;
-    private final MMKV mMmkv;
 
     public RequestHandler(Application application) {
         mApplication = application;
-        mMmkv = MMKV.mmkvWithID("http_cache_id");
     }
 
+    @NonNull
     @Override
-    public Object requestSucceed(HttpRequest<?> httpRequest, Response response, Type type) throws Exception {
+    public Object requestSucceed(@NonNull HttpRequest<?> httpRequest, @NonNull Response response,
+                                 @NonNull Type type) throws Exception {
         if (Response.class.equals(type)) {
             return response;
         }
@@ -73,7 +72,7 @@ public final class RequestHandler implements IRequestHandler {
 
         ResponseBody body = response.body();
         if (body == null) {
-            return null;
+            throw new NullBodyException(mApplication.getString(R.string.http_response_null_body));
         }
 
         if (ResponseBody.class.equals(type)) {
@@ -111,26 +110,6 @@ public final class RequestHandler implements IRequestHandler {
             return text;
         }
 
-        // 安卓自带的 JSONObject 的 Gson 是不支持解析的
-        if (JSONObject.class.equals(type)) {
-            try {
-                // 如果这是一个 JSONObject 对象
-                return new JSONObject(text);
-            } catch (JSONException e) {
-                throw new DataException(mApplication.getString(R.string.http_data_explain_error), e);
-            }
-        }
-
-        // 安卓自带的 JSONArray 的 Gson 是不支持解析的
-        if (JSONArray.class.equals(type)) {
-            try {
-                // 如果这是一个 JSONArray 对象
-                return new JSONArray(text);
-            } catch (JSONException e) {
-                throw new DataException(mApplication.getString(R.string.http_data_explain_error), e);
-            }
-        }
-
         final Object result;
 
         try {
@@ -159,14 +138,14 @@ public final class RequestHandler implements IRequestHandler {
         return result;
     }
 
+    @NonNull
     @Override
-    public Exception requestFail(HttpRequest<?> httpRequest, Exception e) {
-        // 判断这个异常是不是自己抛的
+    public Exception requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
         if (e instanceof HttpException) {
             if (e instanceof TokenException) {
                 // 登录信息失效，跳转到登录页
-            }
 
+            }
             return e;
         }
 
@@ -192,31 +171,38 @@ public final class RequestHandler implements IRequestHandler {
         return new HttpException(e.getMessage(), e);
     }
 
+    @Nullable
     @Override
-    public Object readCache(HttpRequest<?> httpRequest, Type type, long cacheTime) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
-        String cacheValue = mMmkv.getString(cacheKey, null);
+    public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
+        String cacheValue = HttpCacheManager.getMmkv().getString(cacheKey, null);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printLog(httpRequest, "----- readCache cacheKey -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printLog(httpRequest, "----- readCache cacheValue -----");
         EasyLog.printJson(httpRequest, cacheValue);
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
     @Override
-    public boolean writeCache(HttpRequest<?> httpRequest, Response response, Object result) {
-        String cacheKey = GsonFactory.getSingletonGson().toJson(httpRequest.getRequestApi());
+    public boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.printLog(httpRequest, "---------- cacheKey ----------");
+        EasyLog.printLog(httpRequest, "----- writeCache cacheKey -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "---------- cacheValue ----------");
+        EasyLog.printLog(httpRequest, "----- writeCache cacheValue -----");
         EasyLog.printJson(httpRequest, cacheValue);
-        return mMmkv.putString(cacheKey, cacheValue).commit();
+        return HttpCacheManager.getMmkv().putString(cacheKey, cacheValue).commit();
+    }
+
+    @Override
+    public void clearCache() {
+        HttpCacheManager.getMmkv().clearMemoryCache();
+        HttpCacheManager.getMmkv().clearAll();
     }
 }

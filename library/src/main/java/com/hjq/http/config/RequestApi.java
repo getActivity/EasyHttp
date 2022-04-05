@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.annotation.HttpIgnore;
 
 /**
@@ -18,11 +20,13 @@ public class RequestApi implements IRequestApi {
         mApi = api;
     }
 
+    @NonNull
     @Override
     public String getApi() {
         return mApi;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return mApi;

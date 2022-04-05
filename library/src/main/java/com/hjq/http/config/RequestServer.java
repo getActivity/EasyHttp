@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.annotation.HttpIgnore;
 
 /**
@@ -18,11 +20,13 @@ public final class RequestServer implements IRequestServer {
         mHost = host;
     }
 
+    @NonNull
     @Override
     public String getHost() {
         return mHost;
     }
 
+    @NonNull
     @Override
     public String toString() {
         return mHost;

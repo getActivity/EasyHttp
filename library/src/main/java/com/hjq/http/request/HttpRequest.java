@@ -33,6 +33,7 @@ import com.hjq.http.model.ResponseClass;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -227,6 +228,13 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             // 允许访问私有字段
             field.setAccessible(true);
 
+            int modifiers = field.getModifiers();
+            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
+            // https://github.com/getActivity/EasyHttp/issues/112
+            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+                continue;
+            }
+
             try {
                 // 获取字段的对象
                 Object value = field.get(mRequestApi);
@@ -344,7 +352,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
         EasyLog.printStackTrace(this, new Throwable().getStackTrace());
 
-        Type reflectType = EasyUtils.getGenericType(responseClass);
+        Type reflectType = mRequestHandler.getType(responseClass);
 
         // 必须将 Call 对象创建放到这里来，否则无法显示请求日志
         mCallProxy = new CallProxy(createCall());
@@ -387,6 +395,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             return (Bean) result;
 
         } catch (Exception exception) {
+
+            EasyLog.printThrowable(this, exception);
 
             // 如果设置了只在网络请求失败才去读缓存
             if (exception instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {

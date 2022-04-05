@@ -37,7 +37,7 @@ public final class NormalCallback extends BaseCallback {
 
     public NormalCallback setListener(OnHttpListener listener) {
         mListener = listener;
-        mReflectType = EasyUtils.getGenericType(mListener);
+        mReflectType = mHttpRequest.getRequestHandler().getType(mListener);
         return this;
     }
 

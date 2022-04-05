@@ -3,7 +3,6 @@ package com.hjq.http.config;
 import android.text.TextUtils;
 import android.util.Log;
 
-import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyUtils;
 
 /**
@@ -66,7 +65,7 @@ public final class LogStrategy implements ILogStrategy {
             int lineNumber = element.getLineNumber();
             // 获取类的全路径
             String className = element.getClassName();
-            if (lineNumber <= 0 || className.startsWith(EasyHttp.class.getPackage().getName())) {
+            if (lineNumber <= 0 || className.startsWith("com.hjq.http")) {
                 continue;
             }
 

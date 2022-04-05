@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.model.CacheMode;
 
 /**
@@ -13,6 +15,7 @@ public interface IRequestCache {
     /**
      * 获取缓存的模式
      */
+    @NonNull
     CacheMode getCacheMode();
 
     /**

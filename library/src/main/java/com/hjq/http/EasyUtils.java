@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.lang.reflect.WildcardType;
@@ -110,6 +111,13 @@ public final class EasyUtils {
         for (Field field : fields) {
             // 允许访问私有字段
             field.setAccessible(true);
+
+            int modifiers = field.getModifiers();
+            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
+            // https://github.com/getActivity/EasyHttp/issues/112
+            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+                continue;
+            }
 
             // 获取对象的类型
             Class<?> clazz = field.getType();
@@ -251,6 +259,13 @@ public final class EasyUtils {
             // 允许访问私有字段
             field.setAccessible(true);
 
+            int modifiers = field.getModifiers();
+            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
+            // https://github.com/getActivity/EasyHttp/issues/112
+            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+                continue;
+            }
+
             try {
                 // 获取字段的对象
                 Object value = field.get(object);
@@ -340,6 +355,10 @@ public final class EasyUtils {
      * 获取进度百分比
      */
     public static int getProgressProgress(long totalByte, long currentByte) {
+        if (totalByte <= 0) {
+            // 返回 -1 表示无法获取进度
+            return -1;
+        }
         // 计算百分比，这里踩了两个坑
         // 当文件很大的时候：字节数 * 100 会超过 int 最大值，计算结果会变成负数
         // 还有需要注意的是，long 除以 long 等于 long，这里的字节数除以总字节数应该要 double 类型的
@@ -390,6 +409,7 @@ public final class EasyUtils {
         if (TextUtils.isEmpty(json)) {
             return "";
         }
+        // https://github.com/getActivity/EasyHttp/issues/67
         return json.replace("\\/", "/");
     }
 

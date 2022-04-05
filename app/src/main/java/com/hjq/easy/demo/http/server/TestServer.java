@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.server;
 
+import androidx.annotation.NonNull;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -8,6 +10,7 @@ package com.hjq.easy.demo.http.server;
  */
 public class TestServer extends ReleaseServer {
 
+    @NonNull
     @Override
     public String getHost() {
         return "https://www.wanandroid.com/";

@@ -1,5 +1,7 @@
 package com.hjq.http.config;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
@@ -22,7 +24,7 @@ public interface IRequestInterceptor {
      * @param params        请求参数
      * @param headers       请求头参数
      */
-    default void interceptArguments(HttpRequest<?> httpRequest, HttpParams params, HttpHeaders headers) {}
+    default void interceptArguments(@NonNull HttpRequest<?> httpRequest, @NonNull HttpParams params, @NonNull HttpHeaders headers) {}
 
     /**
      * 拦截请求头
@@ -31,7 +33,8 @@ public interface IRequestInterceptor {
      * @param request       请求头对象
      * @return              返回新的请求头
      */
-    default Request interceptRequest(HttpRequest<?> httpRequest, Request request) {
+    @NonNull
+    default Request interceptRequest(@NonNull HttpRequest<?> httpRequest, @NonNull Request request) {
         return request;
     }
 
@@ -42,6 +45,7 @@ public interface IRequestInterceptor {
      * @param response      响应头对象
      * @return              返回新的响应头
      */
+    @NonNull
     default Response interceptResponse(HttpRequest<?> httpRequest, Response response) {
         return response;
     }

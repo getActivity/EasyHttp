@@ -98,6 +98,9 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         if (listener instanceof OnUpdateListener) {
             mUpdateListener = (OnUpdateListener<?>) listener;
         }
+        if (mRequestBody != null) {
+            mRequestBody = new ProgressBody(this, mRequestBody, getLifecycleOwner(), mUpdateListener);
+        }
         super.request(listener);
     }
 
@@ -272,7 +275,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             if (TextUtils.isEmpty(fileName)) {
                 fileName = file.getName();
             }
-            // // 文件名必须不能带中文，所以这里要编码
+            // 文件名必须不能带中文，所以这里要编码
             String encodeFileName = EasyUtils.encodeString(fileName);
 
             try {
