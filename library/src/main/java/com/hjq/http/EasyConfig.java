@@ -6,6 +6,7 @@ import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.LogStrategy;
 import com.hjq.http.config.RequestServer;
+import com.hjq.http.model.ThreadSchedulers;
 
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -56,6 +57,9 @@ public final class EasyConfig {
     private HashMap<String, Object> mParams;
     /** 通用请求头 */
     private HashMap<String, String> mHeaders;
+
+    /** 线程调度器 */
+    private ThreadSchedulers mThreadSchedulers = ThreadSchedulers.MainThread;
 
     /** 日志开关 */
     private boolean mLogEnabled = true;
@@ -144,6 +148,15 @@ public final class EasyConfig {
         return this;
     }
 
+    public EasyConfig setThreadSchedulers(ThreadSchedulers schedulers) {
+        if (mThreadSchedulers == null) {
+            // 线程调度器不能为空
+            throw new NullPointerException("Thread schedulers cannot be empty");
+        }
+        mThreadSchedulers = schedulers;
+        return this;
+    }
+
     public EasyConfig setLogStrategy(ILogStrategy strategy) {
         mLogStrategy = strategy;
         return this;
@@ -201,6 +214,10 @@ public final class EasyConfig {
         return mHeaders;
     }
 
+    public ThreadSchedulers getThreadSchedulers() {
+        return mThreadSchedulers;
+    }
+
     public ILogStrategy getLogStrategy() {
         return mLogStrategy;
     }
@@ -223,15 +240,15 @@ public final class EasyConfig {
 
     public void into() {
         if (mClient == null) {
-            throw new IllegalArgumentException("The OkHttp client object cannot be empty");
+            throw new IllegalArgumentException("Please set up the OkHttpClient object");
         }
 
         if (mServer == null) {
-            throw new IllegalArgumentException("The host configuration cannot be empty");
+            throw new IllegalArgumentException("Please set up the RequestServer object");
         }
 
         if (mHandler == null) {
-            throw new IllegalArgumentException("The object being processed by the request cannot be empty");
+            throw new IllegalArgumentException("Please set the RequestHandler object");
         }
 
         try {

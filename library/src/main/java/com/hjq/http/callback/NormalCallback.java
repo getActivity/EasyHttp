@@ -1,5 +1,7 @@
 package com.hjq.http.callback;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.config.IRequestInterceptor;
@@ -9,10 +11,12 @@ import com.hjq.http.model.CacheMode;
 import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.Type;
 
 import okhttp3.Call;
 import okhttp3.Response;
+import okhttp3.ResponseBody;
 
 /**
  *    author : Android 轮子哥
@@ -30,7 +34,7 @@ public final class NormalCallback extends BaseCallback {
     /** 解析类型 */
     private Type mReflectType;
 
-    public NormalCallback(HttpRequest request) {
+    public NormalCallback(@NonNull HttpRequest request) {
         super(request);
         mHttpRequest = request;
     }
@@ -62,13 +66,9 @@ public final class NormalCallback extends BaseCallback {
             }
 
             // 读取缓存成功
-            EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                    return;
-                }
-                mListener.onStart(getCall());
-                mListener.onSucceed(result, true);
-                mListener.onEnd(getCall());
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> {
+                onStart(getCall());
+                callOnSucceed(result, true);
             });
 
             // 如果当前模式是先读缓存再写请求
@@ -92,12 +92,7 @@ public final class NormalCallback extends BaseCallback {
 
     @Override
     protected void onStart(Call call) {
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onStart(call);
-        });
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnStart);
     }
 
     @Override
@@ -128,13 +123,7 @@ public final class NormalCallback extends BaseCallback {
             }
         }
 
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onSucceed(result, false);
-            mListener.onEnd(getCall());
-        });
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnSucceed(result, false));
     }
 
     @Override
@@ -148,13 +137,7 @@ public final class NormalCallback extends BaseCallback {
                         mReflectType, mHttpRequest.getRequestCache().getCacheTime());
                 EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
                 if (result != null) {
-                    EasyUtils.post(() -> {
-                        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                            return;
-                        }
-                        mListener.onSucceed(result, true);
-                        mListener.onEnd(getCall());
-                    });
+                    EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnSucceed(result, true));
                     return;
                 }
             } catch (Exception cacheException) {
@@ -168,12 +151,40 @@ public final class NormalCallback extends BaseCallback {
             EasyLog.printThrowable(mHttpRequest, finalException);
         }
 
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onFail(finalException);
-            mListener.onEnd(getCall());
-        });
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnFail(finalException));
+    }
+
+    private void callOnStart() {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onStart(getCall());
+    }
+
+    private void callOnSucceed(Object result, boolean cache) {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onSucceed(result, cache);
+        mListener.onEnd(getCall());
+    }
+
+    private void callOnFail(Exception e) {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onFail(e);
+        mListener.onEnd(getCall());
+    }
+
+    @Override
+    protected void closeResponse(Response response) {
+        if (Response.class.equals(mReflectType) ||
+                ResponseBody.class.equals(mReflectType) ||
+                InputStream.class.equals(mReflectType)) {
+            // 如果反射是这几个类型，则不关闭 Response，否则会导致拉取不到里面的流
+            return;
+        }
+        super.closeResponse(response);
     }
 }

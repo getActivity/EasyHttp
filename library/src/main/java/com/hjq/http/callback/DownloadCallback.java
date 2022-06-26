@@ -2,11 +2,14 @@ package com.hjq.http.callback;
 
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.config.IRequestInterceptor;
-import com.hjq.http.exception.MD5Exception;
+import com.hjq.http.exception.FileMD5Exception;
 import com.hjq.http.exception.NullBodyException;
+import com.hjq.http.exception.ResponseException;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.request.HttpRequest;
@@ -28,6 +31,7 @@ import okhttp3.ResponseBody;
 public final class DownloadCallback extends BaseCallback {
 
     /** 请求配置 */
+    @NonNull
     private final HttpRequest<?> mHttpRequest;
 
     /** 文件 MD5 正则表达式 */
@@ -51,7 +55,7 @@ public final class DownloadCallback extends BaseCallback {
     /** 下载进度 */
     private int mDownloadProgress;
 
-    public DownloadCallback(HttpRequest<?> request) {
+    public DownloadCallback(@NonNull HttpRequest<?> request) {
         super(request);
         mHttpRequest = request;
     }
@@ -73,12 +77,7 @@ public final class DownloadCallback extends BaseCallback {
 
     @Override
     protected void onStart(Call call) {
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onStart(mFile);
-        });
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnStart);
     }
 
     @Override
@@ -92,12 +91,17 @@ public final class DownloadCallback extends BaseCallback {
             response = interceptor.interceptResponse(mHttpRequest, response);
         }
 
+        if (!response.isSuccessful())  {
+            throw new ResponseException("The request failed, responseCode: " +
+                    response.code() + ", message: " + response.message(), response);
+        }
+
         // 如果没有指定文件的 md5 值
         if (mMd5 == null) {
             // 获取响应头中的文件 MD5 值
             String md5 = response.header("Content-MD5");
             // 这个 md5 值必须是文件的 md5 值
-            if (!TextUtils.isEmpty(md5) && md5.matches(FILE_MD5_REGEX)) {
+            if (md5 != null && md5.matches(FILE_MD5_REGEX)) {
                 mMd5 = md5;
             }
         }
@@ -119,15 +123,9 @@ public final class DownloadCallback extends BaseCallback {
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
         if (!TextUtils.isEmpty(mMd5) && mFile.isFile() &&
                 mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile)))) {
-            EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                    return;
-                }
-                mListener.onComplete(mFile, true);
-                mListener.onEnd(mFile);
-                // 文件已存在，跳过下载
-                EasyLog.printLog(mHttpRequest, mFile.getPath() + " file already exists, skip download");
-            });
+            // 文件已存在，跳过下载
+            EasyLog.printLog(mHttpRequest, mFile.getPath() + " file already exists, skip download");
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnComplete(true));
             return;
         }
 
@@ -139,21 +137,7 @@ public final class DownloadCallback extends BaseCallback {
         while ((readLength = inputStream.read(bytes)) != -1) {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
-            EasyUtils.post(() -> {
-                if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                    return;
-                }
-                mListener.onByte(mFile, mTotalByte, mDownloadByte);
-                int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
-                // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-                if (progress != mDownloadProgress) {
-                    mDownloadProgress = progress;
-                    mListener.onProgress(mFile, mDownloadProgress);
-                    EasyLog.printLog(mHttpRequest, mFile.getPath() +
-                            ", downloaded: " + mDownloadByte + " / " + mTotalByte +
-                            ", progress: " + progress + " %");
-                }
-            });
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnProgress);
         }
         EasyUtils.closeStream(inputStream);
         EasyUtils.closeStream(outputStream);
@@ -161,34 +145,62 @@ public final class DownloadCallback extends BaseCallback {
         String md5 = EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile));
         if (!TextUtils.isEmpty(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
             // 文件 MD5 值校验失败
-            throw new MD5Exception("MD5 verify failure", md5);
+            throw new FileMD5Exception("MD5 verify failure", md5);
         }
 
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onComplete(mFile, false);
-            mListener.onEnd(mFile);
-        });
+        EasyLog.printLog(mHttpRequest, mFile.getPath() + " download completed");
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnComplete(false));
     }
 
     @Override
     protected void onFailure(final Exception e) {
         EasyLog.printThrowable(mHttpRequest, e);
         // 打印错误堆栈
-        final Exception finalException = mHttpRequest.getRequestHandler().requestFail(mHttpRequest, e);
+        final Exception finalException = mHttpRequest.getRequestHandler().downloadFail(mHttpRequest, e);
         if (finalException != e) {
             EasyLog.printThrowable(mHttpRequest, finalException);
         }
 
-        EasyUtils.post(() -> {
-            if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-                return;
-            }
-            mListener.onError(mFile, finalException);
-            mListener.onEnd(mFile);
-            EasyLog.printLog(mHttpRequest, mFile.getPath() + " download completed");
-        });
+        EasyLog.printLog(mHttpRequest, mFile.getPath() + " download error");
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnError(finalException));
+    }
+
+    private void callOnStart() {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onStart(mFile);
+    }
+
+    private void callOnProgress() {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onByte(mFile, mTotalByte, mDownloadByte);
+        int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
+        // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
+        if (progress != mDownloadProgress) {
+            mDownloadProgress = progress;
+            mListener.onProgress(mFile, mDownloadProgress);
+            EasyLog.printLog(mHttpRequest, mFile.getPath() +
+                    ", downloaded: " + mDownloadByte + " / " + mTotalByte +
+                    ", progress: " + progress + " %");
+        }
+    }
+
+    private void callOnComplete(boolean cache) {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onComplete(mFile, cache);
+        mListener.onEnd(mFile);
+    }
+
+    private void callOnError(Exception e) {
+        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            return;
+        }
+        mListener.onError(mFile, e);
+        mListener.onEnd(mFile);
     }
 }

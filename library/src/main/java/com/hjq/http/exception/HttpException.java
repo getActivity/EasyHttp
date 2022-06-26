@@ -11,7 +11,7 @@ import androidx.annotation.Nullable;
  */
 public class HttpException extends Exception {
 
-    private final String mMessage;
+    private String mMessage;
     private Throwable mThrowable;
 
     public HttpException(String message) {
@@ -23,6 +23,10 @@ public class HttpException extends Exception {
         super(message, cause);
         mMessage = message;
         mThrowable = cause;
+    }
+
+    public void setMessage(String message) {
+        mMessage = message;
     }
 
     /**

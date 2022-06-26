@@ -275,19 +275,17 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             if (TextUtils.isEmpty(fileName)) {
                 fileName = file.getName();
             }
-            // 文件名必须不能带中文，所以这里要编码
-            String encodeFileName = EasyUtils.encodeString(fileName);
 
             try {
                 MultipartBody.Part part;
                 if (file instanceof FileContentResolver) {
                     FileContentResolver fileContentResolver = (FileContentResolver) file;
                     InputStream inputStream = fileContentResolver.openInputStream();
-                    part = MultipartBody.Part.createFormData(key, encodeFileName, new UpdateBody(
+                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateBody(
                             Okio.source(inputStream), fileContentResolver.getContentType(),
                             fileName, inputStream.available()));
                 } else {
-                    part = MultipartBody.Part.createFormData(key, encodeFileName, new UpdateBody(file));
+                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateBody(file));
                 }
                 bodyBuilder.addPart(part);
             } catch (FileNotFoundException e) {
@@ -312,8 +310,8 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             // 如果这是一个自定义的 RequestBody 对象
             RequestBody requestBody = (RequestBody) object;
             if (requestBody instanceof UpdateBody) {
-                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, EasyUtils.encodeString(
-                        ((UpdateBody) requestBody).getKeyName()), requestBody));
+                bodyBuilder.addPart(MultipartBody.Part.createFormData(key,
+                        ((UpdateBody) requestBody).getKeyName(), requestBody));
             } else {
                 bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, requestBody));
             }

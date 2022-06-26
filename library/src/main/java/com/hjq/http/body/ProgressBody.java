@@ -1,5 +1,6 @@
 package com.hjq.http.body;
 
+import androidx.annotation.NonNull;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
@@ -56,7 +57,7 @@ public class ProgressBody extends RequestBody {
     }
 
     @Override
-    public void writeTo(BufferedSink sink) throws IOException {
+    public void writeTo(@NonNull BufferedSink sink) throws IOException {
         mTotalByte = contentLength();
         sink = Okio.buffer(new WrapperSink(sink));
         mRequestBody.writeTo(sink);
@@ -73,22 +74,25 @@ public class ProgressBody extends RequestBody {
         public void write(Buffer source, long byteCount) throws IOException {
             super.write(source, byteCount);
             mUpdateByte += byteCount;
-            EasyUtils.post(() -> {
-                if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
-                    mListener.onByte(mTotalByte, mUpdateByte);
-                }
-                int progress = EasyUtils.getProgressProgress(mTotalByte, mUpdateByte);
-                // 只有上传进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-                if (progress != mUpdateProgress) {
-                    mUpdateProgress = progress;
-                    if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
-                        mListener.onProgress(progress);
-                    }
-                    EasyLog.printLog(mHttpRequest, "Uploading in progress, uploaded: " +
-                            mUpdateByte + " / " + mTotalByte +
-                            ", progress: " + progress + "%");
-                }
-            });
+
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), ProgressBody.this::callOnProgress);
+        }
+    }
+
+    private void callOnProgress() {
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+            mListener.onByte(mTotalByte, mUpdateByte);
+        }
+        int progress = EasyUtils.getProgressProgress(mTotalByte, mUpdateByte);
+        // 只有上传进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
+        if (progress != mUpdateProgress) {
+            mUpdateProgress = progress;
+            if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+                mListener.onProgress(progress);
+            }
+            EasyLog.printLog(mHttpRequest, "Uploading in progress, uploaded: " +
+                    mUpdateByte + " / " + mTotalByte +
+                    ", progress: " + progress + "%");
         }
     }
 }

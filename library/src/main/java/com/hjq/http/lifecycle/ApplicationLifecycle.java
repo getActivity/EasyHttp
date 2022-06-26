@@ -13,7 +13,15 @@ import androidx.lifecycle.LifecycleRegistry;
  */
 public final class ApplicationLifecycle implements LifecycleOwner {
 
+    private static final ApplicationLifecycle INSTANCE = new ApplicationLifecycle();
+
+    public static ApplicationLifecycle getInstance() {
+        return INSTANCE;
+    }
+
     private final LifecycleRegistry mLifecycle = new LifecycleRegistry(this);
+
+    private ApplicationLifecycle() {}
 
     @NonNull
     @Override

@@ -3,6 +3,7 @@ package com.hjq.http;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
+import android.util.LruCache;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -10,6 +11,7 @@ import androidx.annotation.Nullable;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.model.FileContentResolver;
+import com.hjq.http.model.ThreadSchedulers;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,6 +35,8 @@ import java.net.URLEncoder;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,18 +56,51 @@ public final class EasyUtils {
     /** Handler 对象 */
     private static final Handler HANDLER = new Handler(Looper.getMainLooper());
 
+    /** 反射字段缓存 */
+    private static final LruCache<Class<?>, List<Field>> CLASS_LIST_LRU_CACHE = new LruCache<>(30);
+
     /**
      * 在主线程中执行
      */
-    public static void post(Runnable r) {
-        HANDLER.post(r);
+    public static void runOnMainThread(Runnable runnable) {
+        HANDLER.post(runnable);
+    }
+
+    /**
+     * 在子线程中执行
+     */
+    public static void runOnIOThread(Runnable runnable) {
+        EasyConfig.getInstance().getClient().dispatcher().executorService().execute(runnable);
+    }
+
+    /**
+     * 运行在指定线程
+     */
+    public static void runOnAssignThread(ThreadSchedulers schedulers, Runnable runnable) {
+        switch (schedulers) {
+            case IOThread:
+                if (isMainThread()) {
+                    runOnIOThread(runnable);
+                } else {
+                    runnable.run();
+                }
+                break;
+            case MainThread:
+            default:
+                if (isMainThread()) {
+                    runnable.run();
+                } else {
+                    runOnMainThread(runnable);
+                }
+                break;
+        }
     }
 
     /**
      * 延迟一段时间执行
      */
-    public static void postDelayed(Runnable r, long delayMillis) {
-        HANDLER.postDelayed(r, delayMillis);
+    public static void postDelayed(Runnable runnable, long delayMillis) {
+        HANDLER.postDelayed(runnable, delayMillis);
     }
 
     /**
@@ -112,10 +149,7 @@ public final class EasyUtils {
             // 允许访问私有字段
             field.setAccessible(true);
 
-            int modifiers = field.getModifiers();
-            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
-            // https://github.com/getActivity/EasyHttp/issues/112
-            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+            if (EasyUtils.isConstantField(field)) {
                 continue;
             }
 
@@ -259,10 +293,7 @@ public final class EasyUtils {
             // 允许访问私有字段
             field.setAccessible(true);
 
-            int modifiers = field.getModifiers();
-            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
-            // https://github.com/getActivity/EasyHttp/issues/112
-            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+            if (EasyUtils.isConstantField(field)) {
                 continue;
             }
 
@@ -489,5 +520,38 @@ public final class EasyUtils {
             return ((FileContentResolver) file).openOutputStream();
         }
         return new FileOutputStream(file);
+    }
+
+    /**
+     * 判断一个字段是否是常量字段
+     */
+    public static boolean isConstantField(Field field) {
+        int modifiers = field.getModifiers();
+        // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
+        // https://github.com/getActivity/EasyHttp/issues/112
+        return Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers);
+    }
+
+    /**
+     * 获取类的所有字段
+     */
+    public static List<Field> getAllFields(Class<?> originalClass) {
+        List<Field> fields = CLASS_LIST_LRU_CACHE.get(originalClass);
+        if (fields != null) {
+            return fields;
+        }
+
+        fields = new ArrayList<>();
+        Class<?> clazz = originalClass;
+        do {
+            Field[] declaredFields = clazz.getDeclaredFields();
+            fields.addAll(0, Arrays.asList(declaredFields));
+            // 遍历获取父类的字段
+            clazz = clazz.getSuperclass();
+        } while (clazz != null && !Object.class.equals(clazz));
+
+        CLASS_LIST_LRU_CACHE.put(originalClass, fields);
+
+        return fields;
     }
 }

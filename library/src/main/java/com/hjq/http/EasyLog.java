@@ -86,6 +86,7 @@ public final class EasyLog {
         if (httpRequest == null) {
             return logTag;
         }
-        return logTag + " " + httpRequest.getRequestApi().getClass().getSimpleName();
+        return logTag + " " + httpRequest.getRequestApi().getClass().getSimpleName() +
+                "@" + Integer.toHexString(httpRequest.hashCode());
     }
 }

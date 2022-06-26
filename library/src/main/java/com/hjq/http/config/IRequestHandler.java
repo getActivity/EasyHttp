@@ -42,6 +42,18 @@ public interface IRequestHandler {
     Exception requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e);
 
     /**
+     * 下载失败
+     *
+     * @param httpRequest   请求接口对象
+     * @param e             错误对象
+     * @return              错误对象
+     */
+    @NonNull
+    default Exception downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
+        return requestFail(httpRequest, e);
+    }
+
+    /**
      * 读取缓存
      *
      * @param httpRequest   请求接口对象

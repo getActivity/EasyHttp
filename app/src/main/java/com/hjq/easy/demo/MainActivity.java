@@ -24,6 +24,7 @@ import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.exception.FileMD5Exception;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
@@ -184,7 +185,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 //            }
 
             // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
-            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "EasyHttp.png");
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "我是测试专用的图片.png");
 
             if (!file.exists()) {
                 // 生成图片到本地
@@ -286,7 +287,11 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onError(File file, Exception e) {
-                            ToastUtils.show("下载出错：" + e.getMessage());
+                            ToastUtils.show(e.getMessage());
+                            if (e instanceof FileMD5Exception) {
+                                // 如果是文件 md5 校验失败，则删除文件
+                                file.delete();
+                            }
                         }
 
                         @Override

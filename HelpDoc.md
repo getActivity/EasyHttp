@@ -72,6 +72,8 @@
 
     * [如何对接口路径进行动态化拼接](#如何对接口路径进行动态化拼接)
 
+    * [如何动态化整个请求的 url](#如何动态化整个请求的-url)
+
     * [Https 如何配置信任所有证书](#https-如何配置信任所有证书)
 
     * [我不想一个接口写一个类怎么办](#我不想一个接口写一个类怎么办)
@@ -87,6 +89,8 @@
     * [接口参数的 Key 值是动态变化的该怎么办](#接口参数的-key-值是动态变化的该怎么办)
 
     * [如何设置自定义的 UA 标识](#如何设置自定义的-ua-标识)
+
+    * [我想修改请求回调所在的线程该怎么办](#我想修改请求回调所在的线程该怎么办)
 
     * [我想自定义一个 RequestBody 进行请求该怎么办](#我想自定义一个-requestbody-进行请求该怎么办)
 
@@ -281,7 +285,7 @@ public final class XxxApi implements IRequestServer, IRequestApi {
 
 #### 发起请求
 
-* 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](app/src/main/java/com/hjq/http/demo/BaseActivity.java)
+* 需要配置请求状态及生命周期处理，具体封装可以参考 [BaseActivity](app/src/main/java/com/hjq/easy/demo/BaseActivity.java)
 
 ```java
 EasyHttp.post(this)
@@ -1170,6 +1174,20 @@ public final class XxxApi implements IRequestApi {
 }
 ```
 
+#### 如何动态化整个请求的 url
+
+```java
+EasyHttp.post(this)
+        .api(new RequestUrl("https://xxxx.com/aaaa"))
+        .request(new HttpCallback<Xxx>(this) {
+
+            @Override
+            public void onSucceed(Xxx result) {
+                
+            }
+        });
+```
+
 #### Https 如何配置信任所有证书
 
 * 在初始化 OkHttp 的时候这样设置
@@ -1240,7 +1258,7 @@ EasyHttp.post(new ActivityLifecycle(this))
 * 如果以上条件都不满足，但是你就是想在某个地方请求网络，那么你可以这样写
 
 ```java
-EasyHttp.post(new ApplicationLifecycle())
+EasyHttp.post(ApplicationLifecycle.getInstance())
         .api(new XxxApi())
         .tag("abc")
         .request(new OnHttpListener<HttpData<XxxBean>>() {
@@ -1421,6 +1439,22 @@ EasyHttp.post(this)
 #### 如何设置自定义的 UA 标识
 
 * 首先 UA 是 User Agent 的简称，当我们没有设置自定义 UA 标识的时候，那么 OkHttp 会在 BridgeInterceptor 拦截器添加一个默认的 UA 标识，那么如何在 EasyHttp 设置自定义 UA 标识呢？其实很简单，UA 标识本质上其实就是一个请求头，在 EasyHttp 中添加一个请求头为 `"User-Agent` 的参数即可，至于怎么添加请求头，前面的文档已经有介绍了，这里不再赘述。
+
+#### 我想修改请求回调所在的线程该怎么办
+
+```
+EasyHttp.post(this)
+        .api(new XxxApi())
+        // 表示回调是在子线程中进行
+        .schedulers(ThreadSchedulers.IOThread)
+        .request(new HttpCallback<HttpData<Xxx>>(this) {
+
+            @Override
+            public void onSucceed(HttpData<Xxx> result) {
+
+            }
+        });
+```
 
 #### 我想自定义一个 RequestBody 进行请求该怎么办
 

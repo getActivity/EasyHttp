@@ -1,5 +1,7 @@
 package com.hjq.http.callback;
 
+import androidx.annotation.NonNull;
+
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
@@ -31,7 +33,7 @@ public abstract class BaseCallback implements Callback {
     /** 当前重试次数 */
     private int mRetryCount;
 
-    public BaseCallback(HttpRequest<?> request) {
+    public BaseCallback(@NonNull HttpRequest<?> request) {
         mHttpRequest = request;
         HttpLifecycleManager.bind(mHttpRequest.getLifecycleOwner());
     }
@@ -51,7 +53,7 @@ public abstract class BaseCallback implements Callback {
     }
 
     @Override
-    public void onResponse(Call call, Response response) {
+    public void onResponse(@NonNull Call call, @NonNull Response response) {
         try {
             // 收到响应
             onResponse(response);
@@ -60,12 +62,12 @@ public abstract class BaseCallback implements Callback {
             onFailure(e);
         } finally {
             // 关闭响应
-            EasyUtils.closeStream(response);
+            closeResponse(response);
         }
     }
 
     @Override
-    public void onFailure(Call call, IOException e) {
+    public void onFailure(@NonNull Call call, @NonNull IOException e) {
         // 服务器请求超时重试
         if (e instanceof SocketTimeoutException && mRetryCount < EasyConfig.getInstance().getRetryCount()) {
             // 设置延迟 N 秒后重试该请求
@@ -107,4 +109,11 @@ public abstract class BaseCallback implements Callback {
      * 请求失败
      */
     protected abstract void onFailure(Exception e);
+
+    /**
+     * 关闭响应
+     */
+    protected void closeResponse(Response response) {
+        EasyUtils.closeStream(response);
+    }
 }

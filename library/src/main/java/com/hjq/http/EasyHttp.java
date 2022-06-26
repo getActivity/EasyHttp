@@ -2,6 +2,7 @@ package com.hjq.http;
 
 import androidx.lifecycle.LifecycleOwner;
 
+import com.hjq.http.request.DeleteBodyRequest;
 import com.hjq.http.request.DeleteRequest;
 import com.hjq.http.request.DownloadRequest;
 import com.hjq.http.request.GetRequest;
@@ -70,6 +71,18 @@ public final class EasyHttp {
      */
     public static DeleteRequest delete(LifecycleOwner lifecycleOwner) {
         return new DeleteRequest(lifecycleOwner);
+    }
+
+    /**
+     * Delete 请求（参数使用 Body 传递）
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static DeleteBodyRequest deleteBody(LifecycleOwner lifecycleOwner) {
+        return new DeleteBodyRequest(lifecycleOwner);
     }
 
     /**

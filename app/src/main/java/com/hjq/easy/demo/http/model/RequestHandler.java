@@ -19,6 +19,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.exception.CancelException;
 import com.hjq.http.exception.DataException;
+import com.hjq.http.exception.FileMD5Exception;
 import com.hjq.http.exception.HttpException;
 import com.hjq.http.exception.NetworkException;
 import com.hjq.http.exception.NullBodyException;
@@ -61,9 +62,8 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         if (!response.isSuccessful()) {
-            // 返回响应异常
-            throw new ResponseException(mApplication.getString(R.string.http_response_error) + ", responseCode: " +
-                    response.code() + ", message: " + response.message(), response);
+            throw new ResponseException(String.format(mApplication.getString(R.string.http_response_error),
+                    response.code(), response.message()), response);
         }
 
         if (Headers.class.equals(type)) {
@@ -169,6 +169,27 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         return new HttpException(e.getMessage(), e);
+    }
+
+    @NonNull
+    @Override
+    public Exception downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
+        if (e instanceof ResponseException) {
+            ResponseException responseException = ((ResponseException) e);
+            Response response = responseException.getResponse();
+            responseException.setMessage(String.format(mApplication.getString(R.string.http_response_error),
+                    response.code(), response.message()));
+            return responseException;
+        } else if (e instanceof NullBodyException) {
+            NullBodyException nullBodyException = ((NullBodyException) e);
+            nullBodyException.setMessage(mApplication.getString(R.string.http_response_null_body));
+            return nullBodyException;
+        } else if (e instanceof FileMD5Exception) {
+            FileMD5Exception fileMd5Exception = ((FileMD5Exception) e);
+            fileMd5Exception.setMessage(mApplication.getString(R.string.http_response_md5_error));
+            return fileMd5Exception;
+        }
+        return requestFail(httpRequest, e);
     }
 
     @Nullable

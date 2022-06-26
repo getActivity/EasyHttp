@@ -30,13 +30,11 @@ import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.model.ResponseClass;
+import com.hjq.http.model.ThreadSchedulers;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +70,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
     /** 请求拦截策略 */
     private IRequestInterceptor mRequestInterceptor = EasyConfig.getInstance().getInterceptor();
+    /** 线程调度器 */
+    private ThreadSchedulers mThreadSchedulers = EasyConfig.getInstance().getThreadSchedulers();
 
     /** 请求执行代理类 */
     private CallProxy mCallProxy;
@@ -195,6 +195,14 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     /**
+     * 设置线程调度器
+     */
+    public T schedulers(@NonNull ThreadSchedulers schedulers) {
+        mThreadSchedulers = schedulers;
+        return (T) this;
+    }
+
+    /**
      * 创建连接对象
      */
     @NonNull
@@ -205,15 +213,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         HttpParams params = new HttpParams();
         HttpHeaders headers = new HttpHeaders();
 
-        List<Field> fields = new ArrayList<>();
-
-        Class<?> clazz = mRequestApi.getClass();
-        do {
-            Field[] declaredFields = clazz.getDeclaredFields();
-            fields.addAll(0, Arrays.asList(declaredFields));
-            // 遍历获取父类的字段
-            clazz = clazz.getSuperclass();
-        } while (clazz != null && !Object.class.equals(clazz));
+        // 反射获取类的所有字段
+        List<Field> fields = EasyUtils.getAllFields(mRequestApi.getClass());
 
         // 当前请求是否存在流参数
         params.setMultipart(EasyUtils.isMultipartParameter(fields));
@@ -228,10 +229,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             // 允许访问私有字段
             field.setAccessible(true);
 
-            int modifiers = field.getModifiers();
-            // 如果这是一个常量字段，则直接忽略掉，例如 Parcelable 接口中的 CREATOR 字段
-            // https://github.com/getActivity/EasyHttp/issues/112
-            if (Modifier.isStatic(modifiers) && Modifier.isFinal(modifiers)) {
+            if (EasyUtils.isConstantField(field)) {
                 continue;
             }
 
@@ -246,8 +244,10 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                     key = annotation.value();
                 } else {
                     key = field.getName();
-                    // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归，这里要忽略掉，如果使用静态内部类则不会出现这个问题
-                    // 和规避 Kotlin 自动生成的伴生对象：https://github.com/getActivity/EasyHttp/issues/15
+                    // 如果是内部类则会出现一个字段名为 this$0 的外部类对象，会导致无限递归
+                    // 这里要忽略掉，如果使用静态内部类则不会出现这个问题
+                    // 另外还要规避 Kotlin 自动生成的伴生对象：
+                    // https://github.com/getActivity/EasyHttp/issues/15
                     if (key.matches("this\\$\\d+") || "Companion".equals(key)) {
                         continue;
                     }
@@ -506,6 +506,14 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     @Nullable
     public IRequestInterceptor getRequestInterceptor() {
         return mRequestInterceptor;
+    }
+
+    /**
+     * 获取当前线程的调度器
+     */
+    @NonNull
+    public ThreadSchedulers getThreadSchedulers() {
+        return mThreadSchedulers;
     }
 
     /**
