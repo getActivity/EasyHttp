@@ -78,7 +78,7 @@ public final class NormalCallback extends BaseCallback {
                         return;
                     }
                     // 将回调置为空，避免出现两次回调
-                    mListener = null;
+//                    mListener = null;
                     super.start();
                 }, 1);
             }
