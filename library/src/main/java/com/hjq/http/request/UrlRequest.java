@@ -1,5 +1,6 @@
 package com.hjq.http.request;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
@@ -33,7 +34,7 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {
         HttpUrl.Builder urlBuilder = requestBuilder.build().url().newBuilder();
         // 添加参数
         if (!params.isEmpty()) {

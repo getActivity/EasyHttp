@@ -6,6 +6,7 @@ import androidx.annotation.Nullable;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.request.HttpRequest;
 
+import java.io.File;
 import java.lang.reflect.Type;
 
 import okhttp3.Response;
@@ -29,7 +30,7 @@ public interface IRequestHandler {
      * @throws Exception    如果抛出则回调失败
      */
     @NonNull
-    Object requestSucceed(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Type type) throws Exception;
+    Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Type type) throws Exception;
 
     /**
      * 请求失败
@@ -40,6 +41,23 @@ public interface IRequestHandler {
      */
     @NonNull
     Exception requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e);
+
+    /**
+     * 下载开始
+     *
+     * @param httpRequest   请求接口对象
+     * @param file          下载的文件对象
+     */
+    default void downloadStart(@NonNull HttpRequest<?> httpRequest, @NonNull File file) {}
+
+    /**
+     * 下载成功
+     *
+     * @param httpRequest   请求接口对象
+     * @param response      响应对象
+     * @param file          下载的文件对象
+     */
+    default void downloadSucceed(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull File file) throws Exception {}
 
     /**
      * 下载失败

@@ -107,7 +107,7 @@ public final class NormalCallback extends BaseCallback {
         }
 
         // 解析 Bean 类对象
-        final Object result = mHttpRequest.getRequestHandler().requestSucceed(
+        final Object result = mHttpRequest.getRequestHandler().requestSuccess(
                 mHttpRequest, response, mReflectType);
 
         CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();

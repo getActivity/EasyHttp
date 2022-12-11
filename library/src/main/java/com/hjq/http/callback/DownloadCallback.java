@@ -77,6 +77,7 @@ public final class DownloadCallback extends BaseCallback {
 
     @Override
     protected void onStart(Call call) {
+        mHttpRequest.getRequestHandler().downloadStart(mHttpRequest, mFile);
         EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnStart);
     }
 
@@ -147,6 +148,9 @@ public final class DownloadCallback extends BaseCallback {
             // 文件 MD5 值校验失败
             throw new FileMD5Exception("MD5 verify failure", md5);
         }
+
+        // 下载成功
+        mHttpRequest.getRequestHandler().downloadSucceed(mHttpRequest, response, mFile);
 
         EasyLog.printLog(mHttpRequest, mFile.getPath() + " download completed");
         EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnComplete(false));

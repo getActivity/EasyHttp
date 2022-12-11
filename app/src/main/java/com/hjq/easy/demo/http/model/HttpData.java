@@ -1,5 +1,7 @@
 package com.hjq.easy.demo.http.model;
 
+import okhttp3.Headers;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -8,12 +10,23 @@ package com.hjq.easy.demo.http.model;
  */
 public class HttpData<T> {
 
+    /** 请求头 */
+    private Headers headers;
+
     /** 返回码 */
     private int errorCode;
     /** 提示语 */
     private String errorMsg;
     /** 数据 */
     private T data;
+
+    public void setHeaders(Headers headers) {
+        this.headers = headers;
+    }
+
+    public Headers getHeaders() {
+        return headers;
+    }
 
     public int getCode() {
         return errorCode;
@@ -30,7 +43,7 @@ public class HttpData<T> {
     /**
      * 是否请求成功
      */
-    public boolean isRequestSucceed() {
+    public boolean isRequestSuccess() {
         return errorCode == 0;
     }
 

@@ -308,36 +308,34 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
      */
     private void installApk(final Context context, final File file) {
         XXPermissions.with(MainActivity.this)
-                // 安装包权限
                 .permission(Permission.REQUEST_INSTALL_PACKAGES)
                 .request(new OnPermissionCallback() {
                     @Override
                     public void onGranted(List<String> permissions, boolean all) {
-                        if (all) {
-                            Intent intent = new Intent();
-                            intent.setAction(Intent.ACTION_VIEW);
-                            Uri uri;
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                if (file instanceof FileContentResolver) {
-                                    uri = ((FileContentResolver) file).getContentUri();
-                                } else {
-                                    uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
-                                }
-                                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                            } else {
-                                uri = Uri.fromFile(file);
-                            }
-
-                            intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                            context.startActivity(intent);
+                        if (!all) {
+                            return;
                         }
+                        Intent intent = new Intent();
+                        intent.setAction(Intent.ACTION_VIEW);
+                        Uri uri;
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                            if (file instanceof FileContentResolver) {
+                                uri = ((FileContentResolver) file).getContentUri();
+                            } else {
+                                uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                            }
+                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                        } else {
+                            uri = Uri.fromFile(file);
+                        }
+
+                        intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        context.startActivity(intent);
                     }
 
                     @Override
-                    public void onDenied(List<String> permissions, boolean never) {
-
-                    }
+                    public void onDenied(List<String> permissions, boolean never) {}
                 });
     }
 }

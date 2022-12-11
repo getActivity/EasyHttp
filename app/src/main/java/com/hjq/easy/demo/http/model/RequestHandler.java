@@ -55,7 +55,7 @@ public final class RequestHandler implements IRequestHandler {
 
     @NonNull
     @Override
-    public Object requestSucceed(@NonNull HttpRequest<?> httpRequest, @NonNull Response response,
+    public Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response,
                                  @NonNull Type type) throws Exception {
         if (Response.class.equals(type)) {
             return response;
@@ -121,8 +121,9 @@ public final class RequestHandler implements IRequestHandler {
 
         if (result instanceof HttpData) {
             HttpData<?> model = (HttpData<?>) result;
+            model.setHeaders(response.headers());
 
-            if (model.isRequestSucceed()) {
+            if (model.isRequestSuccess()) {
                 // 代表执行成功
                 return result;
             }

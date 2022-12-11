@@ -2,11 +2,13 @@ package com.hjq.http.request;
 
 import android.text.TextUtils;
 
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.body.CustomTypeBody;
 import com.hjq.http.body.JsonBody;
 import com.hjq.http.body.ProgressBody;
 import com.hjq.http.body.TextBody;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 import okhttp3.FormBody;
+import okhttp3.MediaType;
 import okhttp3.MultipartBody;
 import okhttp3.Request;
 import okhttp3.RequestBody;
@@ -94,7 +97,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
      * 执行异步请求（执行传入上传进度监听器）
      */
     @Override
-    public void request(OnHttpListener<?> listener) {
+    public void request(@Nullable OnHttpListener<?> listener) {
         if (listener instanceof OnUpdateListener) {
             mUpdateListener = (OnUpdateListener<?>) listener;
         }
@@ -120,8 +123,8 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {
-        RequestBody body = mRequestBody != null ? mRequestBody : createRequestBody(params, type);
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {
+        RequestBody body = mRequestBody != null ? mRequestBody : createRequestBody(params, contentType, type);
         requestBuilder.method(getRequestMethod(), body);
     }
 
@@ -149,12 +152,14 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             EasyLog.printLine(this);
         }
 
+        body = EasyUtils.findRealRequestBody(body);
+
         if (body instanceof FormBody ||
-                body instanceof MultipartBody ||
-                body instanceof ProgressBody) {
+                body instanceof MultipartBody) {
             // 打印表单
             for (String key : params.getKeys()) {
                 Object value = params.get(key);
+
                 if (value instanceof Map) {
                     // 如果这是一个 Map 集合
                     Map<?, ?> map = ((Map<?, ?>) value);
@@ -164,23 +169,29 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
                         }
                         printKeyValue(String.valueOf(itemKey), map.get(itemKey));
                     }
-                } else if (value instanceof List) {
+                    continue;
+                }
+
+                if (value instanceof List) {
                     // 如果这是一个 List 集合
                     List<?> list = (List<?>) value;
                     for (int i = 0; i < list.size(); i++) {
                         Object itemValue = list.get(i);
                         printKeyValue(key + "[" + i + "]", itemValue);
                     }
-                } else {
-                    printKeyValue(key, value);
+                    continue;
                 }
+
+                printKeyValue(key, value);
             }
         } else if (body instanceof JsonBody) {
             // 打印 Json
-            EasyLog.printJson(this, body.toString());
-        } else if (body != null) {
+            EasyLog.printJson(this, String.valueOf(body));
+        } else if (body instanceof TextBody) {
             // 打印文本
-            EasyLog.printLog(this, body.toString());
+            EasyLog.printLog(this, String.valueOf(body));
+        } else if (body != null) {
+            EasyLog.printLog(this, String.valueOf(body));
         }
 
         if (!headers.isEmpty() || !params.isEmpty()) {
@@ -191,74 +202,101 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
     /**
      * 组装 RequestBody 对象
      */
-    private RequestBody createRequestBody(HttpParams params, BodyType type) {
+    private RequestBody createRequestBody(HttpParams params, @Nullable String contentType, BodyType type) {
         RequestBody requestBody;
 
         if (params.isMultipart() && !params.isEmpty()) {
-            MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
-            bodyBuilder.setType(MultipartBody.FORM);
+            requestBody = createMultipartBody(params);
+        } else if (type == BodyType.JSON) {
+            requestBody = createJsonBody(params);
+        } else {
+            requestBody = createFormBody(params);
+        }
+
+        // 如果外层需要自定义 Content-Type 这个字段，那么就使用装饰设计模式，对原有的 RequestBody 对象进行扩展
+        if (contentType != null && !"".equals(contentType)) {
+            MediaType mediaType = MediaType.parse(contentType);
+            if (mediaType != null) {
+                CustomTypeBody customTypeBody = new CustomTypeBody(requestBody);
+                customTypeBody.setContentType(mediaType);
+                requestBody = customTypeBody;
+            }
+        }
+
+        // 如果当前设置了上传监听，那么久使用装饰设计模式，对原有的 RequestBody 对象进行扩展
+        if (mUpdateListener != null) {
+            requestBody = new ProgressBody(this, requestBody, getLifecycleOwner(), mUpdateListener);
+        }
+
+        return requestBody;
+    }
+
+    private RequestBody createMultipartBody(HttpParams params) {
+        MultipartBody.Builder bodyBuilder = new MultipartBody.Builder();
+        bodyBuilder.setType(MultipartBody.FORM);
+        for (String key : params.getKeys()) {
+            Object value = params.get(key);
+
+            if (value instanceof Map) {
+                // 如果这是一个 Map 集合
+                Map<?, ?> map = ((Map<?, ?>) value);
+                for (Object itemKey : map.keySet()) {
+                    if (itemKey == null) {
+                        continue;
+                    }
+                    Object itemValue = map.get(itemKey);
+                    if (itemValue == null) {
+                        continue;
+                    }
+                    addFormData(bodyBuilder, String.valueOf(itemKey), itemValue);
+                }
+            } else if (value instanceof List) {
+                // 如果这是一个 List 集合
+                List<?> list = (List<?>) value;
+                for (Object itemValue : list) {
+                    if (itemValue == null) {
+                        continue;
+                    }
+                    addFormData(bodyBuilder, key, itemValue);
+                }
+            } else {
+                addFormData(bodyBuilder, key, value);
+            }
+        }
+
+        try {
+            return bodyBuilder.build();
+        } catch (IllegalStateException ignored) {
+            // 如果参数为空则会抛出异常：Multipart body must have at least one part.
+            return new FormBody.Builder().build();
+        }
+    }
+
+    private RequestBody createJsonBody(HttpParams params) {
+        return new JsonBody(params.getParams());
+    }
+
+    private RequestBody createFormBody(HttpParams params) {
+        FormBody.Builder bodyBuilder = new FormBody.Builder();
+        if (!params.isEmpty()) {
             for (String key : params.getKeys()) {
                 Object value = params.get(key);
 
-                if (value instanceof Map) {
-                    // 如果这是一个 Map 集合
-                    Map<?, ?> map = ((Map<?, ?>) value);
-                    for (Object itemKey : map.keySet()) {
-                        if (itemKey == null) {
-                           continue;
-                        }
-                        Object itemValue = map.get(itemKey);
-                        if (itemValue == null) {
-                            continue;
-                        }
-                        addFormData(bodyBuilder, String.valueOf(itemKey), itemValue);
-                    }
-                } else if (value instanceof List) {
-                    // 如果这是一个 List 集合
-                    List<?> list = (List<?>) value;
-                    for (Object itemValue : list) {
-                        if (itemValue == null) {
-                            continue;
-                        }
-                        addFormData(bodyBuilder, key, itemValue);
-                    }
-                } else {
-                    addFormData(bodyBuilder, key, value);
+                if (!(value instanceof List)) {
+                    bodyBuilder.add(key, String.valueOf(value));
+                    continue;
                 }
-            }
 
-            try {
-                requestBody = bodyBuilder.build();
-            } catch (IllegalStateException ignored) {
-                // 如果参数为空则会抛出异常：Multipart body must have at least one part.
-                requestBody = new FormBody.Builder().build();
-            }
-
-        } else if (type == BodyType.JSON) {
-            requestBody = new JsonBody(params.getParams());
-        } else {
-            FormBody.Builder bodyBuilder = new FormBody.Builder();
-            if (!params.isEmpty()) {
-                for (String key : params.getKeys()) {
-                    Object value = params.get(key);
-                    if (value instanceof List) {
-                        List<?> list = (List<?>) value;
-                        for (Object itemValue : list) {
-                            if (itemValue == null) {
-                                continue;
-                            }
-                            bodyBuilder.add(key, String.valueOf(itemValue));
-                        }
+                List<?> list = (List<?>) value;
+                for (Object itemValue : list) {
+                    if (itemValue == null) {
                         continue;
                     }
-
-                    bodyBuilder.add(key, String.valueOf(value));
+                    bodyBuilder.add(key, String.valueOf(itemValue));
                 }
             }
-            requestBody = bodyBuilder.build();
         }
-
-        return mUpdateListener == null ? requestBody : new ProgressBody(this, requestBody, getLifecycleOwner(), mUpdateListener);
+        return bodyBuilder.build();
     }
 
     /**
@@ -298,7 +336,10 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
                 EasyLog.printLog(this, "File stream reading failed and will be ignored upload: " +
                         key + " = " + file.getPath());
             }
-        } else if (object instanceof InputStream) {
+            return;
+        }
+
+        if (object instanceof InputStream) {
             // 如果这是一个 InputStream 对象
             InputStream inputStream = (InputStream) object;
             try {
@@ -306,7 +347,10 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             } catch (IOException e) {
                 EasyLog.printThrowable(this, e);
             }
-        } else if (object instanceof RequestBody) {
+            return;
+        }
+
+        if (object instanceof RequestBody) {
             // 如果这是一个自定义的 RequestBody 对象
             RequestBody requestBody = (RequestBody) object;
             if (requestBody instanceof UpdateBody) {
@@ -315,12 +359,16 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             } else {
                 bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, requestBody));
             }
-        } else if (object instanceof MultipartBody.Part) {
+            return;
+        }
+
+        if (object instanceof MultipartBody.Part) {
             // 如果这是一个自定义的 MultipartBody.Part 对象
             bodyBuilder.addPart((MultipartBody.Part) object);
-        } else {
-            // 如果这是一个普通参数
-            bodyBuilder.addFormDataPart(key, String.valueOf(object));
+            return;
         }
+
+        // 如果这是一个普通参数
+        bodyBuilder.addFormDataPart(key, String.valueOf(object));
     }
 }

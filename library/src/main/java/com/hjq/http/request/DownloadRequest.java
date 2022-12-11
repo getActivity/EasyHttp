@@ -4,6 +4,7 @@ import android.content.ContentResolver;
 import android.net.Uri;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.EasyLog;
@@ -165,7 +166,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    public void request(OnHttpListener<?> listener) {
+    public void request(@Nullable OnHttpListener<?> listener) {
         // 请调用 start 方法
         throw new IllegalStateException("Call the start method");
     }
@@ -189,15 +190,15 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
-        return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, type);
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType bodyType) {
+        return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, bodyType);
     }
 
     @Override
     protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {}
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type) {}
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {}
 
     @Override
     protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {}

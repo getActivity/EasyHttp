@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
+import com.hjq.http.body.WrapperBody;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.ThreadSchedulers;
 
@@ -482,7 +483,7 @@ public final class EasyUtils {
             digestInputStream = new DigestInputStream(inputStream, messageDigest);
             byte[] buffer = new byte[1024 * 256];
             while (true) {
-                if (!(digestInputStream.read(buffer) > 0)) {
+                if (digestInputStream.read(buffer) <= 0) {
                     break;
                 }
             }
@@ -553,5 +554,18 @@ public final class EasyUtils {
         CLASS_LIST_LRU_CACHE.put(originalClass, fields);
 
         return fields;
+    }
+
+    /**
+     * 寻找真实的 RequestBody
+     */
+    public static RequestBody findRealRequestBody(RequestBody body) {
+        while (true) {
+            if (body instanceof WrapperBody) {
+                body = ((WrapperBody) body).getRequestBody();
+            } else {
+                return body;
+            }
+        }
     }
 }

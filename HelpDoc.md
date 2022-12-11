@@ -22,13 +22,13 @@
 
     * [下载文件](#下载文件)
 
-    * [同步请求](#同步请求)
+    * [分区存储适配](#分区存储适配)
 
-    * [请求缓存](#请求缓存)
+    * [发起同步请求](#发起同步请求)
+
+    * [设置请求缓存](#设置请求缓存)
 
     * [搭配协程使用](#搭配协程使用)
-
-    * [分区存储适配](#分区存储适配)
 
 * [疑难解答](#疑难解答)
 
@@ -93,6 +93,10 @@
     * [我想修改请求回调所在的线程该怎么办](#我想修改请求回调所在的线程该怎么办)
 
     * [我想自定义一个 RequestBody 进行请求该怎么办](#我想自定义一个-requestbody-进行请求该怎么办)
+
+    * [我想自定义请求头中的 ContentType 该怎么做](#我想自定义请求头中的-contenttype-该怎么做)
+
+    * [我想自定义 Get 请求参数中的 key 和 value 该怎么做](#我想自定义-get-请求参数中的-key-和-value-该怎么做)
 
 * [搭配 RxJava](#搭配-rxjava)
 
@@ -169,9 +173,9 @@ OkHttpClient okHttpClient = new OkHttpClient.Builder()
 EasyConfig.with(okHttpClient)
         // 是否打印日志
         .setLogEnabled(BuildConfig.DEBUG)
-        // 设置服务器配置
+        // 设置服务器配置（必须设置）
         .setServer(server)
-        // 设置请求处理策略
+        // 设置请求处理策略（必须设置）
         .setHandler(new RequestHandler())
         // 设置请求重试次数
         .setRetryCount(3)
@@ -413,7 +417,38 @@ EasyHttp.download(this)
         }).start();
 ```
 
-#### 同步请求
+#### 分区存储适配
+
+* 在 Android 10 之前，我们在读写外部存储的时候，可以直接使用 File 对象来上传或者下载文件，但是在 Android 10 之后，如果你的项目需要 Android 10 分区存储的特性，那么在读写外部存储文件的时候，就不能直接使用 File 对象，因为 `ContentResolver.insert` 返回是一个 `Uri` 对象，这个时候就需要使用到框架提供的 `FileContentResolver` 对象了（这个对象是 File 的子类），具体使用案例如下：
+
+```java
+File outputFile;
+if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+    ContentValues values = new ContentValues();
+    .........
+    // 生成一个新的 uri 路径
+    Uri outputUri = getContentResolver().insert(MediaStore.Xxx.Media.EXTERNAL_CONTENT_URI, values);
+    // 适配 Android 10 分区存储特性
+    outputFile = new FileContentResolver(context, outputUri);
+} else {
+    outputFile = new File(xxxx);
+}
+
+EasyHttp.post(this)
+        .api(new XxxApi()
+                .setImage(outputFile))
+        .request(new HttpCallback<Xxx <Xxx>>(this) {
+
+            @Override
+            public void onSucceed(Xxx<Xxx> data) {
+                
+            }
+        });
+```
+
+* 这是上传的案例，下载也同理，这里不再赘述。
+
+#### 发起同步请求
 
 * 需要注意的是：同步请求是耗时操作，不能在主线程中执行，请务必保证此操作在子线程中执行
 
@@ -430,7 +465,7 @@ try {
 }
 ```
 
-#### 请求缓存
+#### 设置请求缓存
 
 * 需要先实现读取和写入缓存的接口，如果已配置则可以跳过，这里以 MMKV 为例
 
@@ -614,37 +649,6 @@ lifecycleScope.launch(Dispatchers.IO) {
 ```
 
 * 如果你对协程的使用不太熟悉，推荐你看一下[这篇文章](https://www.jianshu.com/p/2e0746c7d4f3)
-
-#### 分区存储适配
-
-* 在 Android 10 之前，我们在读写外部存储的时候，可以直接使用 File 对象来上传或者下载文件，但是在 Android 10 之后，如果你的项目需要 Android 10 分区存储的特性，那么在读写外部存储文件的时候，就不能直接使用 File 对象，因为 `ContentResolver.insert` 返回是一个 `Uri` 对象，这个时候就需要使用到框架提供的 `FileContentResolver` 对象了（这个对象是 File 的子类），具体使用案例如下：
-
-```java
-File outputFile;
-if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-    ContentValues values = new ContentValues();
-    .........
-    // 生成一个新的 uri 路径
-    Uri outputUri = getContentResolver().insert(MediaStore.Xxx.Media.EXTERNAL_CONTENT_URI, values);
-    // 适配 Android 10 分区存储特性
-    outputFile = new FileContentResolver(context, outputUri);
-} else {
-    outputFile = new File(xxxx);
-}
-
-EasyHttp.post(this)
-        .api(new XxxApi()
-                .setImage(outputFile))
-        .request(new HttpCallback<Xxx <Xxx>>(this) {
-
-            @Override
-            public void onSucceed(Xxx<Xxx> data) {
-                
-            }
-        });
-```
-
-* 这是上传的案例，下载也同理，这里不再赘述。
 
 # 疑难解答
 
@@ -1423,10 +1427,11 @@ parameter.put("key1", value1);
 parameter.put("key2", value2);
 
 String json = gson.toJson(parameter);
+JsonBody jsonBody = new JsonBody(json)
 
 EasyHttp.post(this)
         .api(new XxxApi())
-        .body(new JsonBody(json))
+        .body(jsonBody)
         .request(new HttpCallback<HttpData<Xxx>>(this) {
 
             @Override
@@ -1438,7 +1443,7 @@ EasyHttp.post(this)
 
 #### 如何设置自定义的 UA 标识
 
-* 首先 UA 是 User Agent 的简称，当我们没有设置自定义 UA 标识的时候，那么 OkHttp 会在 BridgeInterceptor 拦截器添加一个默认的 UA 标识，那么如何在 EasyHttp 设置自定义 UA 标识呢？其实很简单，UA 标识本质上其实就是一个请求头，在 EasyHttp 中添加一个请求头为 `"User-Agent` 的参数即可，至于怎么添加请求头，前面的文档已经有介绍了，这里不再赘述。
+* 首先 UA 是 User Agent 的简称，当我们没有设置自定义 UA 标识的时候，那么 OkHttp 会在 BridgeInterceptor 拦截器添加一个默认的 UA 标识，那么如何在 EasyHttp 设置自定义 UA 标识呢？其实很简单，UA 标识本质上其实就是一个请求头，在 EasyHttp 中添加一个请求头为 `User-Agent` 的参数即可，至于怎么添加请求头，前面的文档已经有介绍了，这里不再赘述。
 
 #### 我想修改请求回调所在的线程该怎么办
 
@@ -1474,6 +1479,103 @@ EasyHttp.post(this)
 ```
 
 * 需要注意的是：由于 Post 请求是将参数放置到 `RequestBody` 上面，而一个请求只能设置一个 `RequestBody`，如果你设置了自定义 `body(RequestBody body)`，那么框架将不会去将 `XxxApi` 类中的字段解析成参数。另外除了 Post 请求，Put 请求和 Patch 请求也可以使用这种方式进行设置，这里不再赘述。
+
+#### 我想自定义请求头中的 ContentType 该怎么做
+
+* 具体的写法示例如下：
+
+```java
+public final class SearchBlogsApi implements IRequestApi {
+
+    @NonNull
+    @Override
+    public String getApi() {
+        return "xxx/xxx";
+    }
+
+    @HttpHeader
+    @HttpRename("Content-Type")
+    private String contentType = "application/x-www-form-urlencoded;charset=utf-8";
+}
+```
+
+* 需要注意的是：此功能仅是在框架 **11.5** 版本的时候加上的，之前的版本没有这一功能
+
+#### 我想自定义 Get 请求参数中的 key 和 value 该怎么做
+
+* 先自定义一个 Api 类，然后通过 `getApi` 方法将参数动态拼接上去
+
+```java
+public final class CustomParameterApi implements IRequestApi {
+
+   @HttpIgnore
+   @NonNull
+   private final Map<String, String> parameters;
+
+   public CustomParameterApi() {
+      this(new HashMap<>());
+   }
+
+   public CustomParameterApi(@NonNull Map<String, String> parameters) {
+      this.parameters = parameters;
+   }
+
+   @NonNull
+   @Override
+   public String getApi() {
+      Set<String> keys = parameters.keySet();
+
+      StringBuilder builder = new StringBuilder();
+      int index = 0;
+      for (String key : keys) {
+         String value = parameters.get(key);
+
+         if (index == 0) {
+            builder.append("?");
+         }
+         builder.append(key)
+                 .append("=")
+                 .append(value);
+         if (index < keys.size() - 1) {
+            builder.append("&");
+         }
+         index++;
+      }
+
+      return "xxx/xxx" + builder;
+   }
+
+   public CustomParameterApi putParameter(String key, String value) {
+      parameters.put(key, value);
+      return this;
+   }
+
+   public CustomParameterApi removeParameter(String key) {
+      parameters.remove(key);
+      return this;
+   }
+}
+```
+
+* 外层可以通过以下方式进行调用
+
+```java
+CustomParameterApi api = new CustomParameterApi();
+api.putParameter("key1", "value1");
+api.putParameter("key2", "value2");
+
+EasyHttp.get(this)
+        .api(api)
+        .request(new HttpCallback<Xxx>(this) {
+
+            @Override
+            public void onSucceed(Xxx result) {
+                
+            }
+        });
+```
+
+* 需要注意的是：这种实现方式仅适用于在框架设计无法满足需求的情况下，其他情况下作者并不提倡用这种方式，因为这样不方便管理请求参数的 key，还是推荐大家使用在类上面定义字段的方式来实现。
 
 # 搭配 RxJava
 

@@ -25,10 +25,9 @@ import okio.Sink;
  *    time   : 2020/08/15
  *    desc   : RequestBody 包装类（用于获取上传进度）
  */
-public class ProgressBody extends RequestBody {
+public class ProgressBody extends WrapperBody {
 
     private final HttpRequest<?> mHttpRequest;
-    private final RequestBody mRequestBody;
     private final OnUpdateListener<?> mListener;
     private final LifecycleOwner mLifecycleOwner;
 
@@ -40,27 +39,17 @@ public class ProgressBody extends RequestBody {
     private int mUpdateProgress;
 
     public ProgressBody(HttpRequest<?> httpRequest, RequestBody body, LifecycleOwner lifecycleOwner, OnUpdateListener<?> listener) {
+        super(body);
         mHttpRequest = httpRequest;
-        mRequestBody = body;
         mLifecycleOwner = lifecycleOwner;
         mListener = listener;
-    }
-
-    @Override
-    public MediaType contentType() {
-        return mRequestBody.contentType();
-    }
-
-    @Override
-    public long contentLength() throws IOException {
-        return mRequestBody.contentLength();
     }
 
     @Override
     public void writeTo(@NonNull BufferedSink sink) throws IOException {
         mTotalByte = contentLength();
         sink = Okio.buffer(new WrapperSink(sink));
-        mRequestBody.writeTo(sink);
+        getRequestBody().writeTo(sink);
         sink.flush();
     }
 

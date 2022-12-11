@@ -27,6 +27,7 @@ import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.CallProxy;
+import com.hjq.http.model.ContentType;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.model.ResponseClass;
@@ -301,29 +302,33 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 执行异步请求
      */
-    public void request(OnHttpListener<?> listener) {
+    public void request(@Nullable OnHttpListener<?> listener) {
         if (mDelayMillis > 0) {
             // 打印请求延迟时间
             EasyLog.printKeyValue(this, "RequestDelay", String.valueOf(mDelayMillis));
         }
 
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
-        EasyUtils.postDelayed(() -> {
-
+        Runnable runnable = () -> {
             if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
                 // 宿主已被销毁，请求无法进行
-                EasyLog.printLog(this, "LifecycleOwner has been destroyed and the request cannot be made");
+                EasyLog.printLog(HttpRequest.this,
+                        "LifecycleOwner has been destroyed and the request cannot be made");
                 return;
             }
-            EasyLog.printStackTrace(this, stackTrace);
+            EasyLog.printStackTrace(HttpRequest.this, stackTrace);
 
             mCallProxy = new CallProxy(createCall());
-            new NormalCallback(this)
+            new NormalCallback(HttpRequest.this)
                     .setListener(listener)
                     .setCall(mCallProxy)
                     .start();
-
-        }, mDelayMillis);
+        };
+        if (mDelayMillis > 0) {
+            EasyUtils.postDelayed(runnable, mDelayMillis);
+        } else {
+            runnable.run();
+        }
     }
 
     /**
@@ -380,7 +385,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
         try {
             Response response = mCallProxy.execute();
-            Object result = mRequestHandler.requestSucceed(this, response, reflectType);
+            Object result = mRequestHandler.requestSuccess(this, response, reflectType);
 
             if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
@@ -561,13 +566,15 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 创建请求的对象
      */
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType type) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType bodyType) {
         Request.Builder requestBuilder = createRequestBuilder(url, tag);
         addRequestHeader(requestBuilder, headers);
-        addRequestParams(requestBuilder, params, type);
+
+        String contentType = headers.get(ContentType.HTTP_HEAD_KEY);
+        addRequestParams(requestBuilder, params, contentType, bodyType);
 
         Request request = requestBuilder.build();
-        printRequestLog(request, params, headers, type);
+        printRequestLog(request, params, headers, bodyType);
         return request;
     }
 
@@ -612,7 +619,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 添加请求参数
      */
-    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, BodyType type);
+    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type);
 
     /**
      * 打印请求日志

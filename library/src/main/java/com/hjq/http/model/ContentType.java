@@ -15,6 +15,9 @@ import okhttp3.MediaType;
  */
 public final class ContentType {
 
+    /** Http 请求 key */
+    public static final String HTTP_HEAD_KEY = "Content-Type";
+
     /** 字节流 */
     public static final MediaType STREAM = MediaType.parse("application/octet-stream");
 

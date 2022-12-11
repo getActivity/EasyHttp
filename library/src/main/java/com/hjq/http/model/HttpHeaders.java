@@ -39,7 +39,7 @@ public final class HttpHeaders {
     }
 
     public boolean isEmpty() {
-        return mHeaders == null || mHeaders.isEmpty();
+        return mHeaders.isEmpty();
     }
 
     public Set<String> getKeys() {

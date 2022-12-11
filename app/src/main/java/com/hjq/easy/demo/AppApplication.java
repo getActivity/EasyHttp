@@ -46,9 +46,9 @@ public final class AppApplication extends Application {
         EasyConfig.with(okHttpClient)
                 // 是否打印日志
                 //.setLogEnabled(BuildConfig.DEBUG)
-                // 设置服务器配置
+                // 设置服务器配置（必须设置）
                 .setServer(server)
-                // 设置请求处理策略
+                // 设置请求处理策略（必须设置）
                 .setHandler(new RequestHandler(this))
                 // 设置请求参数拦截器
                 .setInterceptor(new IRequestInterceptor() {

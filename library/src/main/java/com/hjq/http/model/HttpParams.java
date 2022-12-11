@@ -42,7 +42,7 @@ public final class HttpParams {
     }
 
     public boolean isEmpty() {
-        return mParams == null || mParams.isEmpty();
+        return mParams.isEmpty();
     }
 
     public Set<String> getKeys() {

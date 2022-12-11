@@ -68,17 +68,17 @@ public class JsonBody extends RequestBody {
         sink.write(mBytes, 0, mBytes.length);
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return mJson;
+    }
+
     /**
      * 获取 Json 字符串
      */
     @NonNull
     public String getJson() {
-        return mJson;
-    }
-
-    @NonNull
-    @Override
-    public String toString() {
         return mJson;
     }
 }

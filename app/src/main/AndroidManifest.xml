@@ -42,6 +42,11 @@
             android:name="LogcatNotifyEntrance"
             android:value="true" />
 
+        <!-- 默认搜索关键字 -->
+        <meta-data
+            android:name="LogcatDefaultSearchKey"
+            android:value="EasyHttp" />
+
         <!-- 适配 Android 7.0 文件意图 -->
         <provider
             android:name="androidx.core.content.FileProvider"
