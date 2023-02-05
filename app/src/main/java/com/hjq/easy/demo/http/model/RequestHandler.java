@@ -166,6 +166,9 @@ public final class RequestHandler implements IRequestHandler {
         }
 
         if (e instanceof IOException) {
+            // 出现该异常的两种情况
+            // 1. 调用 EasyHttp.cancel
+            // 2. 网络请求被中断
             return new CancelException(mApplication.getString(R.string.http_request_cancel), e);
         }
 

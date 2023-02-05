@@ -6,7 +6,7 @@ package com.hjq.http.config;
  *    time   : 2020/04/24
  *    desc   : 日志打印策略
  */
-public interface ILogStrategy {
+public interface IHttpLogStrategy {
 
     /**
      * 打印分割线

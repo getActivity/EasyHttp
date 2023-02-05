@@ -14,9 +14,9 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:4.1.2'
-        // OkHttp 抓包框架：https://github.com/lygttpod/AndroidMonitor
-        classpath 'io.github.lygttpod:monitor-plugin:0.0.1'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:1.5.31"
+        // OkHttp 抓包框架：https://github.com/lygttpod/AndroidMonitor
+        // classpath 'io.github.lygttpod:monitor-plugin:0.0.1'
     }
 }
 

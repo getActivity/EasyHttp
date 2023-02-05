@@ -1,7 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
-apply plugin: 'monitor-plugin'
+//apply plugin: 'monitor-plugin'
 
 android {
     compileSdkVersion 31
@@ -14,8 +14,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1150
-        versionName '11.5'
+        versionCode 1160
+        versionName '11.6'
     }
 
     // 支持 JDK 1.8
@@ -76,24 +76,24 @@ dependencies {
     implementation 'com.github.getActivity:ToastUtils:11.2'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:16.5'
+    implementation 'com.github.getActivity:XXPermissions:16.6'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
-    implementation 'com.github.getActivity:TitleBar:9.6'
+    implementation 'com.github.getActivity:TitleBar:10.0'
 
     // Json 解析框架：https://github.com/google/gson
-    implementation 'com.google.code.gson:gson:2.9.1'
+    implementation 'com.google.code.gson:gson:2.10.1'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation 'com.github.getActivity:GsonFactory:6.3'
+    implementation 'com.github.getActivity:GsonFactory:6.5'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
     implementation 'com.tencent:mmkv-static:1.2.14'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:11.0'
+    debugImplementation 'com.github.getActivity:Logcat:11.2'
 
     // OkHttp 抓包框架：https://github.com/lygttpod/AndroidMonitor
-    debugImplementation 'io.github.lygttpod:monitor:0.0.7'
+    // debugImplementation 'io.github.lygttpod:monitor:0.0.7'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'

@@ -1,10 +1,10 @@
 package com.hjq.http;
 
-import com.hjq.http.config.ILogStrategy;
+import com.hjq.http.config.DefaultHttpLogStrategy;
+import com.hjq.http.config.IHttpLogStrategy;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
-import com.hjq.http.config.LogStrategy;
 import com.hjq.http.config.RequestServer;
 import com.hjq.http.model.ThreadSchedulers;
 
@@ -48,7 +48,7 @@ public final class EasyConfig {
     /** 请求拦截器 */
     private IRequestInterceptor mInterceptor;
     /** 日志打印策略 */
-    private ILogStrategy mLogStrategy;
+    private IHttpLogStrategy mLogStrategy;
 
     /** OkHttp 客户端 */
     private OkHttpClient mClient;
@@ -157,7 +157,7 @@ public final class EasyConfig {
         return this;
     }
 
-    public EasyConfig setLogStrategy(ILogStrategy strategy) {
+    public EasyConfig setLogStrategy(IHttpLogStrategy strategy) {
         mLogStrategy = strategy;
         return this;
     }
@@ -218,7 +218,7 @@ public final class EasyConfig {
         return mThreadSchedulers;
     }
 
-    public ILogStrategy getLogStrategy() {
+    public IHttpLogStrategy getLogStrategy() {
         return mLogStrategy;
     }
 
@@ -260,7 +260,7 @@ public final class EasyConfig {
         }
 
         if (mLogStrategy == null) {
-            mLogStrategy = new LogStrategy();
+            mLogStrategy = new DefaultHttpLogStrategy();
         }
         EasyConfig.setInstance(this);
     }

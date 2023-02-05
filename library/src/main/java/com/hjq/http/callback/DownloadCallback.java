@@ -183,13 +183,14 @@ public final class DownloadCallback extends BaseCallback {
         mListener.onByte(mFile, mTotalByte, mDownloadByte);
         int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
         // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-        if (progress != mDownloadProgress) {
-            mDownloadProgress = progress;
-            mListener.onProgress(mFile, mDownloadProgress);
-            EasyLog.printLog(mHttpRequest, mFile.getPath() +
-                    ", downloaded: " + mDownloadByte + " / " + mTotalByte +
-                    ", progress: " + progress + " %");
+        if (progress == mDownloadProgress) {
+            return;
         }
+        mDownloadProgress = progress;
+        mListener.onProgress(mFile, mDownloadProgress);
+        EasyLog.printLog(mHttpRequest, mFile.getPath() +
+                ", downloaded: " + mDownloadByte + " / " + mTotalByte +
+                ", progress: " + progress + " %");
     }
 
     private void callOnComplete(boolean cache) {

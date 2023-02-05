@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.ProgressBar;
 
+import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
 
@@ -39,6 +40,7 @@ import com.hjq.toast.ToastUtils;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.List;
 
 import okhttp3.Call;
@@ -90,13 +92,11 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
      */
 
     @Override
-    public void onGranted(List<String> permissions, boolean all) {
-
-    }
+    public void onGranted(@NonNull List<String> permissions, boolean allGranted) {}
 
     @Override
-    public void onDenied(List<String> permissions, boolean never) {
-        if (never) {
+    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
+        if (doNotAskAgain) {
             ToastUtils.show("授权失败，请手动授予存储权限");
             XXPermissions.startPermissionActivity(this, permissions);
         } else {
@@ -109,7 +109,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
     protected void onRestart() {
         super.onRestart();
         if (XXPermissions.isGranted(this, Permission.Group.STORAGE)) {
-            onGranted(null, true);
+            onGranted(new ArrayList<>(), true);
         } else {
             requestPermission();
         }
@@ -133,10 +133,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
         } else if (viewId == R.id.btn_main_post) {
 
-            EasyHttp.post(this)
+            EasyHttp.post(MainActivity.this)
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
-                    .request(new HttpCallback<HttpData<SearchBlogsApi.Bean>>(this) {
+                    .request(new HttpCallback<HttpData<SearchBlogsApi.Bean>>(MainActivity.this) {
 
                         @Override
                         public void onSucceed(HttpData<SearchBlogsApi.Bean> result) {
@@ -311,12 +311,11 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 .permission(Permission.REQUEST_INSTALL_PACKAGES)
                 .request(new OnPermissionCallback() {
                     @Override
-                    public void onGranted(List<String> permissions, boolean all) {
-                        if (!all) {
+                    public void onGranted(@NonNull List<String> permissions, boolean allGranted) {
+                        if (!allGranted) {
                             return;
                         }
-                        Intent intent = new Intent();
-                        intent.setAction(Intent.ACTION_VIEW);
+                        Intent intent = new Intent(Intent.ACTION_VIEW);
                         Uri uri;
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
                             if (file instanceof FileContentResolver) {
@@ -324,18 +323,19 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                             } else {
                                 uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
                             }
-                            intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                         } else {
                             uri = Uri.fromFile(file);
                         }
 
                         intent.setDataAndType(uri, "application/vnd.android.package-archive");
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                        // 对目标应用临时授权该 Uri 读写权限
+                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                         context.startActivity(intent);
                     }
 
                     @Override
-                    public void onDenied(List<String> permissions, boolean never) {}
+                    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {}
                 });
     }
 }

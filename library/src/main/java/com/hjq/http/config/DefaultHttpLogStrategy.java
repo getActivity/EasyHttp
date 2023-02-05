@@ -11,7 +11,7 @@ import com.hjq.http.EasyUtils;
  *    time   : 2020/04/24
  *    desc   : 网络请求日志打印默认实现
  */
-public final class LogStrategy implements ILogStrategy {
+public final class DefaultHttpLogStrategy implements IHttpLogStrategy {
 
     @Override
     public void printLog(String tag, String log) {

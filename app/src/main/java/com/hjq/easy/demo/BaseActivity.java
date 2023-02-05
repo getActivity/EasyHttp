@@ -36,7 +36,7 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     public void showDialog() {
         if (mDialog == null) {
             mDialog = new ProgressDialog(this);
-            mDialog.setMessage(getResources().getString(R.string.http_loading));
+            mDialog.setMessage(getResources().getString(R.string.dialog_loading_hint));
             mDialog.setCancelable(false);
             mDialog.setCanceledOnTouchOutside(false);
         }

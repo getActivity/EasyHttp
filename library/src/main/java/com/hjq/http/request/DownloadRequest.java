@@ -191,15 +191,22 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
     @Override
     protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType bodyType) {
+        // 这里设置 api 的目的是为了打日志的时候不崩溃，因为现在打日志需要 api 对象
         return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, bodyType);
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {}
+    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {
+        mRealRequest.addHttpParams(params, key, value, type);
+    }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {}
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {
+        mRealRequest.addRequestParams(requestBuilder, params, contentType, type);
+    }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {}
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {
+        mRealRequest.printRequestLog(request, params, headers, type);
+    }
 }

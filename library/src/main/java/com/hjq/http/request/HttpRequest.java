@@ -128,9 +128,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         return (T) this;
     }
 
-    public T server(Class<? extends IRequestServer> api) {
+    public T server(Class<? extends IRequestServer> server) {
         try {
-            return server(api.newInstance());
+            return server(server.newInstance());
         } catch (InstantiationException e) {
             throw new RuntimeException(e);
         } catch (IllegalAccessException e) {
@@ -625,4 +625,15 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 打印请求日志
      */
     protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type);
+
+    /**
+     * 生成日志的 TAG
+     */
+    public String generateLogTag() {
+        if (mRequestApi == null) {
+            return "";
+        }
+        return mRequestApi.getClass().getSimpleName() +
+                "@" + Integer.toHexString(mRequestApi.hashCode());
+    }
 }

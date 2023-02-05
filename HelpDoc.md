@@ -65,6 +65,8 @@
     * [如何设置请求超时时间](#如何设置请求超时时间)
 
     * [如何设置不打印日志](#如何设置不打印日志)
+  
+    * [如何修改日志打印策略](#如何修改日志打印策略)
 
     * [如何取消已发起的请求](#如何取消已发起的请求)
 
@@ -1129,6 +1131,24 @@ public final class XxxApi implements IRequestApi, IRequestClient {
 ```java
 EasyConfig.getInstance().setLogEnabled(false);
 ```
+
+#### 如何修改日志打印策略
+
+* 可以先定义一个类实现 [IHttpLogStrategy](library/src/main/java/com/hjq/http/config/IHttpLogStrategy.java) 接口，然后在框架初始化的时候传入即可
+
+```java
+EasyConfig.with(okHttpClient)
+        .......
+        // 设置自定义的日志打印策略
+        .setLogStrategy(new XxxStrategy())
+        .into();
+```
+
+* 需要修改日志打印策略的场景
+
+    * 需要将请求的日志写入到本地
+  
+    * 需要修改打印的请求日志格式
 
 #### 如何取消已发起的请求
 
