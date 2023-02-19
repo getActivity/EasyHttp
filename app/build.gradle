@@ -72,8 +72,8 @@ dependencies {
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
-    // 吐司框架：https://github.com/getActivity/ToastUtils
-    implementation 'com.github.getActivity:ToastUtils:11.2'
+    // 吐司框架：https://github.com/getActivity/Toaster
+    implementation 'com.github.getActivity:Toaster:12.0'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.github.getActivity:XXPermissions:16.6'

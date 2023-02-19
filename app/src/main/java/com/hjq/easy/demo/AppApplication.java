@@ -13,7 +13,7 @@ import com.hjq.http.config.IRequestServer;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
-import com.hjq.toast.ToastUtils;
+import com.hjq.toast.Toaster;
 import com.tencent.mmkv.MMKV;
 
 import okhttp3.OkHttpClient;
@@ -29,7 +29,7 @@ public final class AppApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        ToastUtils.init(this);
+        Toaster.init(this);
         MMKV.initialize(this);
 
         // 网络请求框架初始化

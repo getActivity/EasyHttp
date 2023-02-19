@@ -302,7 +302,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(HttpData<LoginBean> data) {
-                ToastUtils.show("登录成功");
+                toast("登录成功");
             }
         });
 ```
@@ -358,12 +358,12 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(Void result) {
-                ToastUtils.show("上传成功");
+                toast("上传成功");
             }
 
             @Override
             public void onFail(Exception e) {
-                ToastUtils.show("上传失败");
+                toast("上传失败");
             }
 
             @Override
@@ -402,13 +402,13 @@ EasyHttp.download(this)
 
             @Override
             public void onComplete(File file) {
-                ToastUtils.show("下载完成：" + file.getPath());
-                installApk(MainActivity.this, file);
+                toast("下载完成：" + file.getPath());
+                installApk(XxxActivity.this, file);
             }
 
             @Override
             public void onError(File file, Exception e) {
-                ToastUtils.show("下载出错：" + e.getMessage());
+                toast("下载出错：" + e.getMessage());
             }
 
             @Override
@@ -461,9 +461,9 @@ try {
             .api(new SearchBlogsApi()
                     .setKeyword("搬砖不再有"))
             .execute(new ResponseClass<HttpData<SearchBean>>() {});
-    ToastUtils.show("请求成功，请看日志");
+    toast("请求成功，请看日志");
 } catch (Exception e) {
-    ToastUtils.show(e.getMessage());
+    toast(e.getMessage());
 }
 ```
 
@@ -645,7 +645,7 @@ lifecycleScope.launch(Dispatchers.IO) {
             // 在这里进行 UI 刷新
         }
     } catch (e: Exception) {
-        ToastUtils.show(e.message)
+        toast(e.message)
     }
 }
 ```
@@ -1660,7 +1660,7 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
     
     @Override
     public void accept(Throwable throwable) throws Exception {
-        ToastUtils.show(throwable.getMessage());
+        toast(throwable.getMessage());
     }
 });
 ```
@@ -1743,7 +1743,7 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
     
     @Override
     public void accept(Throwable throwable) throws Exception {
-        ToastUtils.show(throwable.getMessage());
+        toast(throwable.getMessage());
     }
 });
 ```

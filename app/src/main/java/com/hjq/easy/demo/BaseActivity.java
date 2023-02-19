@@ -6,7 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.listener.OnHttpListener;
-import com.hjq.toast.ToastUtils;
+import com.hjq.toast.Toaster;
 
 import okhttp3.Call;
 
@@ -68,13 +68,13 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     @Override
     public void onSucceed(Object result) {
         if (result instanceof HttpData) {
-            ToastUtils.show(((HttpData<?>) result).getMessage());
+            Toaster.show(((HttpData<?>) result).getMessage());
         }
     }
 
     @Override
     public void onFail(Exception e) {
-        ToastUtils.show(e.getMessage());
+        Toaster.show(e.getMessage());
     }
 
     @Override

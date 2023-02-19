@@ -35,7 +35,7 @@ import com.hjq.http.model.ResponseClass;
 import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
-import com.hjq.toast.ToastUtils;
+import com.hjq.toast.Toaster;
 
 import java.io.File;
 import java.io.IOException;
@@ -97,10 +97,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
     @Override
     public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
         if (doNotAskAgain) {
-            ToastUtils.show("授权失败，请手动授予存储权限");
+            Toaster.show("授权失败，请手动授予存储权限");
             XXPermissions.startPermissionActivity(this, permissions);
         } else {
-            ToastUtils.show("请先授予存储权限");
+            Toaster.show("请先授予存储权限");
             requestPermission();
         }
     }
@@ -127,7 +127,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onSucceed(HttpData<List<SearchAuthorApi.Bean>> result) {
-                            ToastUtils.show("Get 请求成功，请看日志");
+                            Toaster.show("Get 请求成功，请看日志");
                         }
                     });
 
@@ -140,7 +140,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onSucceed(HttpData<SearchBlogsApi.Bean> result) {
-                            ToastUtils.show("Post 请求成功，请看日志");
+                            Toaster.show("Post 请求成功，请看日志");
                         }
                     });
 
@@ -154,9 +154,9 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                             .api(new SearchBlogsApi()
                                     .setKeyword("搬砖不再有"))
                             .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
-                    ToastUtils.show("同步请求成功，请看日志");
+                    Toaster.show("同步请求成功，请看日志");
                 } catch (Exception e) {
-                    ToastUtils.show(e.getMessage());
+                    Toaster.show(e.getMessage());
                 }
                 runOnUiThread(this::hideDialog);
             }).start();
@@ -164,7 +164,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
         } else if (viewId == R.id.btn_main_update) {
 
             if (mProgressBar.getVisibility() == View.VISIBLE) {
-                ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
+                Toaster.show("当前正在上传或者下载，请等待完成之后再进行操作");
                 return;
             }
 
@@ -219,12 +219,12 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onSucceed(Void result) {
-                            ToastUtils.show("上传成功");
+                            Toaster.show("上传成功");
                         }
 
                         @Override
                         public void onFail(Exception e) {
-                            ToastUtils.show("上传失败");
+                            Toaster.show("上传失败");
                         }
 
                         @Override
@@ -236,7 +236,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
         } else if (viewId == R.id.btn_main_download) {
 
             if (mProgressBar.getVisibility() == View.VISIBLE) {
-                ToastUtils.show("当前正在上传或者下载，请等待完成之后再进行操作");
+                Toaster.show("当前正在上传或者下载，请等待完成之后再进行操作");
                 return;
             }
 
@@ -281,13 +281,13 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onComplete(File file) {
-                            ToastUtils.show("下载完成：" + file.getPath());
+                            Toaster.show("下载完成：" + file.getPath());
                             installApk(MainActivity.this, file);
                         }
 
                         @Override
                         public void onError(File file, Exception e) {
-                            ToastUtils.show(e.getMessage());
+                            Toaster.show(e.getMessage());
                             if (e instanceof FileMD5Exception) {
                                 // 如果是文件 md5 校验失败，则删除文件
                                 file.delete();
