@@ -4,7 +4,6 @@ import android.app.ProgressDialog;
 
 import androidx.appcompat.app.AppCompatActivity;
 
-import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.toast.Toaster;
 
@@ -66,11 +65,7 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     }
 
     @Override
-    public void onSucceed(Object result) {
-        if (result instanceof HttpData) {
-            Toaster.show(((HttpData<?>) result).getMessage());
-        }
-    }
+    public void onSucceed(Object result) {}
 
     @Override
     public void onFail(Exception e) {

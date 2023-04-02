@@ -25,18 +25,20 @@ public final class ActivityLifecycle implements
 
     private Activity mActivity;
 
-    public ActivityLifecycle(Activity activity) {
+    public ActivityLifecycle(@NonNull Activity activity) {
         mActivity = activity;
 
         if (mActivity instanceof LifecycleOwner) {
             ((LifecycleOwner) mActivity).getLifecycle().addObserver(this);
-        } else {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                mActivity.registerActivityLifecycleCallbacks(this);
-            } else {
-                mActivity.getApplication().registerActivityLifecycleCallbacks(this);
-            }
+            return;
         }
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            mActivity.registerActivityLifecycleCallbacks(this);
+            return;
+        }
+
+        mActivity.getApplication().registerActivityLifecycleCallbacks(this);
     }
 
     /**

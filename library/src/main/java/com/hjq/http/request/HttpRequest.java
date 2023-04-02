@@ -325,7 +325,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                     .start();
         };
         if (mDelayMillis > 0) {
-            EasyUtils.postDelayed(runnable, mDelayMillis);
+            // issue 地址：https://github.com/getActivity/EasyHttp/issues/159
+            int what = mTag == null ? Integer.MAX_VALUE : mTag.hashCode();
+            EasyUtils.postDelayedRunnable(runnable, what, mDelayMillis);
         } else {
             runnable.run();
         }
@@ -357,7 +359,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
         EasyLog.printStackTrace(this, new Throwable().getStackTrace());
 
-        Type reflectType = mRequestHandler.getType(responseClass);
+        Type reflectType = mRequestHandler.getGenericType(responseClass);
 
         // 必须将 Call 对象创建放到这里来，否则无法显示请求日志
         mCallProxy = new CallProxy(createCall());

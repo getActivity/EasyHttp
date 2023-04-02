@@ -65,7 +65,7 @@
     * [如何设置请求超时时间](#如何设置请求超时时间)
 
     * [如何设置不打印日志](#如何设置不打印日志)
-  
+
     * [如何修改日志打印策略](#如何修改日志打印策略)
 
     * [如何取消已发起的请求](#如何取消已发起的请求)
@@ -443,7 +443,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(Xxx<Xxx> data) {
-                
+
             }
         });
 ```
@@ -481,7 +481,7 @@ public final class RequestHandler implements IRequestHandler {
         mApplication = application;
         mMmkv = MMKV.mmkvWithID("http_cache_id");
     }
-    
+
     ..................
 
     @Nullable
@@ -717,7 +717,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     @HttpIgnore
     private String token;
 }
@@ -980,7 +980,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     @HttpIgnore
     private String address;
 }
@@ -996,7 +996,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     @HttpHeader
     private String time;
 }
@@ -1012,7 +1012,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     @HttpRename("k")
     private String keyword;
 }
@@ -1024,13 +1024,13 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
     @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     private File file;
 }
 ```
@@ -1039,13 +1039,13 @@ public final class XxxApi implements IRequestApi {
 
 ```java
 public final class XxxApi implements IRequestApi {
-    
+
     @NonNull
     @Override
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     private InputStream inputStream;
 }
 ```
@@ -1060,7 +1060,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     private RequestBody requestBody;
 }
 ```
@@ -1075,7 +1075,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxxx";
     }
-    
+
     private List<File> files;
 }
 ```
@@ -1147,7 +1147,7 @@ EasyConfig.with(okHttpClient)
 * 需要修改日志打印策略的场景
 
     * 需要将请求的日志写入到本地
-  
+
     * 需要修改打印的请求日志格式
 
 #### 如何取消已发起的请求
@@ -1172,7 +1172,7 @@ EasyHttp.post(MainActivity.this)
 
             @Override
             public void onSucceed(HttpData<XxxBean> result) {
-                
+
             }
         });
 ```
@@ -1207,7 +1207,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(Xxx result) {
-                
+
             }
         });
 ```
@@ -1394,7 +1394,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(Xxx result) {
-                
+
             }
 
             @Override
@@ -1493,7 +1493,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(HttpData<Xxx> result) {
-                
+
             }
         });
 ```
@@ -1590,7 +1590,7 @@ EasyHttp.get(this)
 
             @Override
             public void onSucceed(Xxx result) {
-                
+
             }
         });
 ```
@@ -1620,7 +1620,7 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void subscribe(ObservableEmitter<HttpData<SearchBean>> emitter) throws Exception {
-    
+
         HttpData<SearchBean> data1;
         try {
             data1 = EasyHttp.post(MainActivity.this)
@@ -1657,7 +1657,7 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
     }
 
 }, new Consumer<Throwable>() {
-    
+
     @Override
     public void accept(Throwable throwable) throws Exception {
         toast(throwable.getMessage());
@@ -1738,9 +1738,9 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
     public void accept(String s) throws Exception {
         Log.i("EasyHttp", ""当前页码位置" + s);
     }
-    
+
 }, new Consumer<Throwable>() {
-    
+
     @Override
     public void accept(Throwable throwable) throws Exception {
         toast(throwable.getMessage());

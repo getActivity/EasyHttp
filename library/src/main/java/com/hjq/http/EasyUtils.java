@@ -2,6 +2,7 @@ package com.hjq.http;
 
 import android.os.Handler;
 import android.os.Looper;
+import android.os.Message;
 import android.text.TextUtils;
 import android.util.LruCache;
 
@@ -27,6 +28,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -98,10 +100,33 @@ public final class EasyUtils {
     }
 
     /**
-     * 延迟一段时间执行
+     * 延迟一段时间执行任务
      */
-    public static void postDelayed(Runnable runnable, long delayMillis) {
+    public static void postDelayedRunnable(Runnable runnable, long delayMillis) {
         HANDLER.postDelayed(runnable, delayMillis);
+    }
+
+    /**
+     * 延迟一段时间执行任务（带一定的标识，方便后续移除）
+     */
+    public static void postDelayedRunnable(Runnable runnable, int what, long delayMillis) {
+        Message msg = Message.obtain(HANDLER, runnable);
+        msg.what = what;
+        HANDLER.sendMessageDelayed(msg, delayMillis);
+    }
+
+    /**
+     * 移除指定的消息
+     */
+    public static void removeDelayedRunnable(int what) {
+        HANDLER.removeMessages(what);
+    }
+
+    /**
+     * 移除所有消息
+     */
+    public static void removeAllRunnable() {
+        HANDLER.removeCallbacksAndMessages(null);
     }
 
     /**
@@ -126,6 +151,13 @@ public final class EasyUtils {
     }
 
     /**
+     * 判断对象是否为数组类型
+     */
+    public static boolean isArrayType(Object object) {
+        return object.getClass().isArray();
+    }
+
+    /**
      * 判断对象是否为 Bean 类
      */
     public static boolean isBeanType(Object object) {
@@ -133,6 +165,9 @@ public final class EasyUtils {
             return false;
         }
         if (object instanceof Enum) {
+            return false;
+        }
+        if (isArrayType(object)) {
             return false;
         }
         // Number：Long、Integer、Short、Double、Float、Byte
@@ -237,6 +272,8 @@ public final class EasyUtils {
 
     /**
      * 将 List 集合转 JsonArray 对象
+     *
+     * Github issue 地址：https://github.com/getActivity/EasyHttp/issues/164
      */
     public static JSONArray listToJsonArray(List<?> list) {
         JSONArray jsonArray = new JSONArray();
@@ -275,6 +312,19 @@ public final class EasyUtils {
             }
         }
         return jsonObject;
+    }
+
+    /**
+     * 将数组转换成 List 集合
+     */
+    public static List<Object> arrayToList(Object array) {
+        List<Object> list = new ArrayList<>();
+        int length = Array.getLength(array);
+        for (int i = 0; i < length; i++) {
+            Object element = Array.get(array, i);
+            list.add(element);
+        }
+        return list;
     }
 
     /**
@@ -345,6 +395,9 @@ public final class EasyUtils {
         } else if (object instanceof Enum) {
             // 如果这是一个枚举的参数
             return String.valueOf(object);
+        } else if (isArrayType(object)) {
+            // 如果这是一个数组参数，需要放在判断 Bean 类前面
+            return listToJsonArray(arrayToList(object));
         } else if (isBeanType(object)) {
             // 如果这是一个 Bean 参数
             return mapToJsonObject(beanToHashMap(object));

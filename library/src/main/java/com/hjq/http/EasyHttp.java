@@ -1,5 +1,7 @@
 package com.hjq.http;
 
+import android.text.TextUtils;
+
 import androidx.lifecycle.LifecycleOwner;
 
 import com.hjq.http.request.DeleteBodyRequest;
@@ -161,17 +163,30 @@ public final class EasyHttp {
 
         // 清除排队等候的任务
         for (Call call : client.dispatcher().queuedCalls()) {
-            if (tag.equals(call.request().tag())) {
-                call.cancel();
+            Object requestTag = call.request().tag();
+            if (requestTag == null) {
+                continue;
             }
+            if (!TextUtils.equals(tag, String.valueOf(requestTag))) {
+                continue;
+            }
+            call.cancel();
         }
 
         // 清除正在执行的任务
         for (Call call : client.dispatcher().runningCalls()) {
-            if (tag.equals(call.request().tag())) {
-                call.cancel();
+            Object requestTag = call.request().tag();
+            if (requestTag == null) {
+                continue;
             }
+            if (!TextUtils.equals(tag, String.valueOf(requestTag))) {
+                continue;
+            }
+            call.cancel();
         }
+
+        // 移除延迟发起的网络请求
+        EasyUtils.removeDelayedRunnable(tag.hashCode());
     }
 
     /**
@@ -189,5 +204,8 @@ public final class EasyHttp {
         for (Call call : client.dispatcher().runningCalls()) {
             call.cancel();
         }
+
+        // 移除延迟发起的网络请求
+        EasyUtils.removeAllRunnable();
     }
 }

@@ -136,7 +136,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
 
-        EasyUtils.postDelayed(() -> {
+        EasyUtils.postDelayedRunnable(() -> {
             if (!HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
                 // 宿主已被销毁，请求无法进行
                 EasyLog.printLog(this, "LifecycleOwner has been destroyed and the request cannot be made");

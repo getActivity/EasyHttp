@@ -18,7 +18,7 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
     /**
      * 绑定组件的生命周期
      */
-    public static void bind(LifecycleOwner lifecycleOwner) {
+    public static void register(LifecycleOwner lifecycleOwner) {
         lifecycleOwner.getLifecycle().addObserver(new HttpLifecycleManager());
     }
 

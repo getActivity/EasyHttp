@@ -25,7 +25,7 @@ import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.exception.FileMD5Exception;
+import com.hjq.http.exception.FileMd5Exception;
 import com.hjq.http.listener.HttpCallback;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
@@ -288,7 +288,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         @Override
                         public void onError(File file, Exception e) {
                             Toaster.show(e.getMessage());
-                            if (e instanceof FileMD5Exception) {
+                            if (e instanceof FileMd5Exception) {
                                 // 如果是文件 md5 校验失败，则删除文件
                                 file.delete();
                             }

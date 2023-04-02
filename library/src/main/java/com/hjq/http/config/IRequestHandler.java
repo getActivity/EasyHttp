@@ -102,7 +102,7 @@ public interface IRequestHandler {
     /**
      * 解析泛型
      */
-    default Type getType(Object object) {
+    default Type getGenericType(Object object) {
         return EasyUtils.getGenericType(object);
     }
 }

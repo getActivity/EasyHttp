@@ -7,7 +7,7 @@ import androidx.annotation.NonNull;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.config.IRequestInterceptor;
-import com.hjq.http.exception.FileMD5Exception;
+import com.hjq.http.exception.FileMd5Exception;
 import com.hjq.http.exception.NullBodyException;
 import com.hjq.http.exception.ResponseException;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
@@ -78,7 +78,7 @@ public final class DownloadCallback extends BaseCallback {
     @Override
     protected void onStart(Call call) {
         mHttpRequest.getRequestHandler().downloadStart(mHttpRequest, mFile);
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnStart);
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::dispatchDownloadStartCallback);
     }
 
     @Override
@@ -126,7 +126,7 @@ public final class DownloadCallback extends BaseCallback {
                 mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile)))) {
             // 文件已存在，跳过下载
             EasyLog.printLog(mHttpRequest, mFile.getPath() + " file already exists, skip download");
-            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnComplete(true));
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchDownloadCompleteCallback(true));
             return;
         }
 
@@ -138,7 +138,7 @@ public final class DownloadCallback extends BaseCallback {
         while ((readLength = inputStream.read(bytes)) != -1) {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
-            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::callOnProgress);
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::dispatchDownloadProgressCallback);
         }
         EasyUtils.closeStream(inputStream);
         EasyUtils.closeStream(outputStream);
@@ -146,14 +146,14 @@ public final class DownloadCallback extends BaseCallback {
         String md5 = EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile));
         if (!TextUtils.isEmpty(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
             // 文件 MD5 值校验失败
-            throw new FileMD5Exception("MD5 verify failure", md5);
+            throw new FileMd5Exception("MD5 verify failure", md5);
         }
 
         // 下载成功
         mHttpRequest.getRequestHandler().downloadSucceed(mHttpRequest, response, mFile);
 
         EasyLog.printLog(mHttpRequest, mFile.getPath() + " download completed");
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnComplete(false));
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchDownloadCompleteCallback(false));
     }
 
     @Override
@@ -166,17 +166,17 @@ public final class DownloadCallback extends BaseCallback {
         }
 
         EasyLog.printLog(mHttpRequest, mFile.getPath() + " download error");
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callOnError(finalException));
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> callDownloadError(finalException));
     }
 
-    private void callOnStart() {
+    private void dispatchDownloadStartCallback() {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
         mListener.onStart(mFile);
     }
 
-    private void callOnProgress() {
+    private void dispatchDownloadProgressCallback() {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
@@ -193,7 +193,7 @@ public final class DownloadCallback extends BaseCallback {
                 ", progress: " + progress + " %");
     }
 
-    private void callOnComplete(boolean cache) {
+    private void dispatchDownloadCompleteCallback(boolean cache) {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
@@ -201,7 +201,7 @@ public final class DownloadCallback extends BaseCallback {
         mListener.onEnd(mFile);
     }
 
-    private void callOnError(Exception e) {
+    private void callDownloadError(Exception e) {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }

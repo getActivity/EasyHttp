@@ -250,7 +250,10 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
                     }
                     addFormData(bodyBuilder, String.valueOf(itemKey), itemValue);
                 }
-            } else if (value instanceof List) {
+                continue;
+            }
+
+            if (value instanceof List) {
                 // 如果这是一个 List 集合
                 List<?> list = (List<?>) value;
                 for (Object itemValue : list) {
@@ -259,9 +262,10 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
                     }
                     addFormData(bodyBuilder, key, itemValue);
                 }
-            } else {
-                addFormData(bodyBuilder, key, value);
+                continue;
             }
+
+            addFormData(bodyBuilder, key, value);
         }
 
         try {
@@ -278,22 +282,24 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
 
     private RequestBody createFormBody(HttpParams params) {
         FormBody.Builder bodyBuilder = new FormBody.Builder();
-        if (!params.isEmpty()) {
-            for (String key : params.getKeys()) {
-                Object value = params.get(key);
+        if (params.isEmpty()) {
+            return bodyBuilder.build();
+        }
 
-                if (!(value instanceof List)) {
-                    bodyBuilder.add(key, String.valueOf(value));
+        for (String key : params.getKeys()) {
+            Object value = params.get(key);
+
+            if (!(value instanceof List)) {
+                bodyBuilder.add(key, String.valueOf(value));
+                continue;
+            }
+
+            List<?> list = (List<?>) value;
+            for (Object itemValue : list) {
+                if (itemValue == null) {
                     continue;
                 }
-
-                List<?> list = (List<?>) value;
-                for (Object itemValue : list) {
-                    if (itemValue == null) {
-                        continue;
-                    }
-                    bodyBuilder.add(key, String.valueOf(itemValue));
-                }
+                bodyBuilder.add(key, String.valueOf(itemValue));
             }
         }
         return bodyBuilder.build();

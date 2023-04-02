@@ -6,16 +6,16 @@ package com.hjq.http.exception;
  *    time   : 2019/11/16
  *    desc   : MD5 校验异常
  */
-public final class FileMD5Exception extends HttpException {
+public final class FileMd5Exception extends HttpException {
 
-    private final String mMD5;
+    private final String mMd5;
 
-    public FileMD5Exception(String message, String md5) {
+    public FileMd5Exception(String message, String md5) {
         super(message);
-        mMD5 = md5;
+        mMd5 = md5;
     }
 
-    public String getMD5() {
-        return mMD5;
+    public String getMd5() {
+        return mMd5;
     }
 }

@@ -7,6 +7,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
+import com.hjq.http.model.ThreadSchedulers;
 import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
@@ -35,7 +36,9 @@ public abstract class BaseCallback implements Callback {
 
     public BaseCallback(@NonNull HttpRequest<?> request) {
         mHttpRequest = request;
-        HttpLifecycleManager.bind(mHttpRequest.getLifecycleOwner());
+        // Lifecycle addObserver 需要在主线程中执行，所以这里要做一下线程转换
+        EasyUtils.runOnAssignThread(ThreadSchedulers.MainThread,
+                () -> HttpLifecycleManager.register(mHttpRequest.getLifecycleOwner()));
     }
 
     public BaseCallback setCall(CallProxy call) {
@@ -71,7 +74,7 @@ public abstract class BaseCallback implements Callback {
         // 服务器请求超时重试
         if (e instanceof SocketTimeoutException && mRetryCount < EasyConfig.getInstance().getRetryCount()) {
             // 设置延迟 N 秒后重试该请求
-            EasyUtils.postDelayed(() -> {
+            EasyUtils.postDelayedRunnable(() -> {
 
                 // 前提是宿主还没有被销毁
                 if (!HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {

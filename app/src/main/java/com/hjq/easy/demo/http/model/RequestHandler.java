@@ -19,7 +19,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.exception.CancelException;
 import com.hjq.http.exception.DataException;
-import com.hjq.http.exception.FileMD5Exception;
+import com.hjq.http.exception.FileMd5Exception;
 import com.hjq.http.exception.HttpException;
 import com.hjq.http.exception.NetworkException;
 import com.hjq.http.exception.NullBodyException;
@@ -188,8 +188,8 @@ public final class RequestHandler implements IRequestHandler {
             NullBodyException nullBodyException = ((NullBodyException) e);
             nullBodyException.setMessage(mApplication.getString(R.string.http_response_null_body));
             return nullBodyException;
-        } else if (e instanceof FileMD5Exception) {
-            FileMD5Exception fileMd5Exception = ((FileMD5Exception) e);
+        } else if (e instanceof FileMd5Exception) {
+            FileMd5Exception fileMd5Exception = ((FileMd5Exception) e);
             fileMd5Exception.setMessage(mApplication.getString(R.string.http_response_md5_error));
             return fileMd5Exception;
         }

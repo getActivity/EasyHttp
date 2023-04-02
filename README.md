@@ -4,7 +4,7 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/11.6/EasyHttp.apk)
+* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/11.8/EasyHttp.apk)
 
 ![](picture/demo_code.png)
 
@@ -61,7 +61,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:11.6'
+    implementation 'com.github.getActivity:EasyHttp:11.8'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -69,16 +69,16 @@ dependencies {
 ```
 
 * 需要注意的是：由于使用了 Lifecycle 特性，目前框架只支持 AndroidX 的项目集成
-            
+
 ## [框架的具体用法请点击这里查看](HelpDoc.md)
 
 ### 不同网络请求框架之间的对比
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  11.6 |  2.9.0  |  3.0.4    |
+|    对应版本  |  11.8 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
-|    **aar 包大小**  |  89 KB  | 123 KB  |  131 KB  |
+|    **aar 包大小**  |  90 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
@@ -109,9 +109,9 @@ dependencies {
 * OkGo 其实也存在一些弊端，例如会把参数的 key 引用放到外层去，这样会引发一些问题：
 
     1. Key 管理问题：这个 key 可能会在外层被使用很多次，这样参数的 key 管理就会变得不可控，后续接口改动可能会出现漏改的风险，尽管这种情况比较少见，但是也不容忽视，而 EasyHttp 没有这个问题，因为 EasyHttp 不会将参数 key 值放置到外层中去。
-    
+
     2. 接口参数注释的问题：站在代码的规范角度上讲，我们应该在代码中注明参数的含义及作用，如果一旦将 key 放到外层，那么每一处调用的地方都需要写一遍注释，而 EasyHttp 是将参数字段化，只需要写一次注释到字段上即可。
-    
+
     3. 接口信息完整信息展示：使用 OkGo 请求网络，只能在调用的地方看到传递的接口参数，而一些被其他地方引用的参数，我们无法很直观的看到，只能通过追踪代码或者查看文档来得知，而 EasyHttp 将一个接口的信息全部通过一个类来管理的，这个类其实就相当于一个接口文档。
 
     4. 接口的动态化配置：除了接口的参数之外，一个接口还有可能单独配置 OkHttpClient 对象、参数的提交方式、接口响应处理方式等，这些用 OkGo 是可以实现，但是每个地方都要写一次，而 EasyHttp 可以直接在 API 类中配置，真正做到一劳永逸。
@@ -127,7 +127,7 @@ public final class XxxApi implements IRequestApi {
     public String getApi() {
         return "xxx/xxx";
     }
-    
+
     private int xxx;
 
     public XxxApi setXxx(int xxx) {
@@ -166,7 +166,7 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
     /**
      * 绑定组件的生命周期
      */
-    public static void bind(LifecycleOwner lifecycleOwner) {
+    public static void register(LifecycleOwner lifecycleOwner) {
         lifecycleOwner.getLifecycle().addObserver(new HttpLifecycleManager());
     }
 
@@ -208,7 +208,7 @@ EasyHttp.post(this)
 
             @Override
             public void onSucceed(HttpData<XxxBean> result) {
-                
+
             }
         });
 ```
@@ -248,6 +248,8 @@ EasyHttp.post(this)
 * Studio 精品插件：[StudioPlugins](https://github.com/getActivity/StudioPlugins) ![](https://img.shields.io/github/stars/getActivity/StudioPlugins.svg) ![](https://img.shields.io/github/forks/getActivity/StudioPlugins.svg)
 
 * 表情包大集合：[EmojiPackage](https://github.com/getActivity/EmojiPackage) ![](https://img.shields.io/github/stars/getActivity/EmojiPackage.svg) ![](https://img.shields.io/github/forks/getActivity/EmojiPackage.svg)
+
+* AI 资源大汇总：[AiIndex](https://github.com/getActivity/AiIndex) ![](https://img.shields.io/github/stars/getActivity/AiIndex.svg) ![](https://img.shields.io/github/forks/getActivity/AiIndex.svg)
 
 * 省市区 Json 数据：[ProvinceJson](https://github.com/getActivity/ProvinceJson) ![](https://img.shields.io/github/stars/getActivity/ProvinceJson.svg) ![](https://img.shields.io/github/forks/getActivity/ProvinceJson.svg)
 
