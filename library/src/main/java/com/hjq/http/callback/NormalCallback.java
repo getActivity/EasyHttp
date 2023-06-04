@@ -68,7 +68,7 @@ public final class NormalCallback extends BaseCallback {
             // 读取缓存成功
             EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> {
                 onStart(getCall());
-                dispatchHttpSucceedCallback(result, true);
+                dispatchHttpSuccessCallback(result, true);
             });
 
             // 如果当前模式是先读缓存再写请求
@@ -115,15 +115,15 @@ public final class NormalCallback extends BaseCallback {
                 cacheMode == CacheMode.USE_CACHE_FIRST ||
                 cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
-                boolean writeSucceed = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
-                EasyLog.printLog(mHttpRequest, "WriteCache result：" + writeSucceed);
+                boolean writeSuccess = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
+                EasyLog.printLog(mHttpRequest, "WriteCache result：" + writeSuccess);
             } catch (Exception cacheException) {
                 EasyLog.printLog(mHttpRequest, "WriteCache error");
                 EasyLog.printThrowable(mHttpRequest, cacheException);
             }
         }
 
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSucceedCallback(result, false));
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSuccessCallback(result, false));
     }
 
     @Override
@@ -137,7 +137,7 @@ public final class NormalCallback extends BaseCallback {
                         mReflectType, mHttpRequest.getRequestCache().getCacheTime());
                 EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
                 if (result != null) {
-                    EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSucceedCallback(result, true));
+                    EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSuccessCallback(result, true));
                     return;
                 }
             } catch (Exception cacheException) {
@@ -158,23 +158,23 @@ public final class NormalCallback extends BaseCallback {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
-        mListener.onStart(getCall());
+        mListener.onHttpStart(getCall());
     }
 
-    private void dispatchHttpSucceedCallback(Object result, boolean cache) {
+    private void dispatchHttpSuccessCallback(Object result, boolean cache) {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
-        mListener.onSucceed(result, cache);
-        mListener.onEnd(getCall());
+        mListener.onHttpSuccess(result, cache);
+        mListener.onHttpEnd(getCall());
     }
 
     private void dispatchHttpFailCallback(Exception e) {
         if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             return;
         }
-        mListener.onFail(e);
-        mListener.onEnd(getCall());
+        mListener.onHttpFail(e);
+        mListener.onHttpEnd(getCall());
     }
 
     @Override

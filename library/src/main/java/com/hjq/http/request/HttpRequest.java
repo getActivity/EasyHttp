@@ -391,8 +391,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
             if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    boolean writeSucceed = mRequestHandler.writeCache(this, response, result);
-                    EasyLog.printLog(this, "WriteCache result：" + writeSucceed);
+                    boolean writeSuccess = mRequestHandler.writeCache(this, response, result);
+                    EasyLog.printLog(this, "WriteCache result：" + writeSuccess);
                 } catch (Exception cacheException) {
                     EasyLog.printLog(this, "WriteCache error");
                     EasyLog.printThrowable(this, cacheException);

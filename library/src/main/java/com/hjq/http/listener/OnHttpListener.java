@@ -13,29 +13,29 @@ public interface OnHttpListener<T> {
     /**
      * 请求开始
      */
-    default void onStart(Call call) {}
+    default void onHttpStart(Call call) {}
 
     /**
      * 请求成功
      *
      * @param cache         是否是通过缓存请求成功的
      */
-    default void onSucceed(T result, boolean cache) {
-        onSucceed(result);
+    default void onHttpSuccess(T result, boolean cache) {
+        onHttpSuccess(result);
     }
 
     /**
      * 请求成功
      */
-    void onSucceed(T result);
+    void onHttpSuccess(T result);
 
     /**
      * 请求出错
      */
-    void onFail(Exception e);
+    void onHttpFail(Exception e);
 
     /**
      * 请求结束
      */
-    default void onEnd(Call call) {}
+    default void onHttpEnd(Call call) {}
 }

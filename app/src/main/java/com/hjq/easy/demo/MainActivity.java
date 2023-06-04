@@ -26,7 +26,7 @@ import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.exception.FileMd5Exception;
-import com.hjq.http.listener.HttpCallback;
+import com.hjq.http.listener.HttpCallbackProxy;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.FileContentResolver;
@@ -123,10 +123,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             EasyHttp.get(this)
                     .api(new SearchAuthorApi()
                             .setId(190000))
-                    .request(new HttpCallback<HttpData<List<SearchAuthorApi.Bean>>>(this) {
+                    .request(new HttpCallbackProxy<HttpData<List<SearchAuthorApi.Bean>>>(this) {
 
                         @Override
-                        public void onSucceed(HttpData<List<SearchAuthorApi.Bean>> result) {
+                        public void onHttpSuccess(HttpData<List<SearchAuthorApi.Bean>> result) {
                             Toaster.show("Get 请求成功，请看日志");
                         }
                     });
@@ -136,10 +136,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             EasyHttp.post(MainActivity.this)
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
-                    .request(new HttpCallback<HttpData<SearchBlogsApi.Bean>>(MainActivity.this) {
+                    .request(new HttpCallbackProxy<HttpData<SearchBlogsApi.Bean>>(MainActivity.this) {
 
                         @Override
-                        public void onSucceed(HttpData<SearchBlogsApi.Bean> result) {
+                        public void onHttpSuccess(HttpData<SearchBlogsApi.Bean> result) {
                             Toaster.show("Post 请求成功，请看日志");
                         }
                     });
@@ -207,28 +207,28 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                     .request(new OnUpdateListener<Void>() {
 
                         @Override
-                        public void onStart(Call call) {
+                        public void onUpdateStart(Call call) {
                             mProgressBar.setProgress(0);
                             mProgressBar.setVisibility(View.VISIBLE);
                         }
 
                         @Override
-                        public void onProgress(int progress) {
+                        public void onUpdateProgressChange(int progress) {
                             mProgressBar.setProgress(progress);
                         }
 
                         @Override
-                        public void onSucceed(Void result) {
+                        public void onUpdateSuccess(Void result) {
                             Toaster.show("上传成功");
                         }
 
                         @Override
-                        public void onFail(Exception e) {
+                        public void onUpdateFail(Exception e) {
                             Toaster.show("上传失败");
                         }
 
                         @Override
-                        public void onEnd(Call call) {
+                        public void onUpdateEnd(Call call) {
                             mProgressBar.setVisibility(View.GONE);
                         }
                     });
@@ -269,25 +269,25 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                     .listener(new OnDownloadListener() {
 
                         @Override
-                        public void onStart(File file) {
+                        public void onDownloadStart(File file) {
                             mProgressBar.setProgress(0);
                             mProgressBar.setVisibility(View.VISIBLE);
                         }
 
                         @Override
-                        public void onProgress(File file, int progress) {
+                        public void onDownloadProgressChange(File file, int progress) {
                             mProgressBar.setProgress(progress);
                         }
 
                         @Override
-                        public void onComplete(File file) {
-                            Toaster.show("下载完成：" + file.getPath());
+                        public void onDownloadSuccess(File file) {
+                            Toaster.show("下载成功：" + file.getPath());
                             installApk(MainActivity.this, file);
                         }
 
                         @Override
-                        public void onError(File file, Exception e) {
-                            Toaster.show(e.getMessage());
+                        public void onDownloadFail(File file, Exception e) {
+                            Toaster.show("下载失败：" + e.getMessage());
                             if (e instanceof FileMd5Exception) {
                                 // 如果是文件 md5 校验失败，则删除文件
                                 file.delete();
@@ -295,7 +295,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         }
 
                         @Override
-                        public void onEnd(File file) {
+                        public void onDownloadEnd(File file) {
                             mProgressBar.setVisibility(View.GONE);
                         }
                     })
@@ -335,7 +335,9 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                     }
 
                     @Override
-                    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {}
+                    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
+                        Toaster.show("安装 apk 失败，请正确授予安装权限");
+                    }
                 });
     }
 }

@@ -13,7 +13,7 @@ public interface OnDownloadListener {
     /**
      * 下载开始
      */
-    void onStart(File file);
+    default void onDownloadStart(File file) {}
 
     /**
      * 下载字节改变
@@ -21,36 +21,36 @@ public interface OnDownloadListener {
      * @param totalByte             总字节数
      * @param downloadByte          已下载字节数
      */
-    default void onByte(File file, long totalByte, long downloadByte) {}
+    default void onDownloadByteChange(File file, long totalByte, long downloadByte) {}
 
     /**
      * 下载进度改变
      *
      * @param progress              下载进度值（0-100）
      */
-    void onProgress(File file, int progress);
+    void onDownloadProgressChange(File file, int progress);
 
     /**
-     * 请求成功
+     * 下载成功
      *
      * @param cache         是否是通过缓存下载成功的
      */
-    default void onComplete(File file, boolean cache) {
-        onComplete(file);
+    default void onDownloadSuccess(File file, boolean cache) {
+        onDownloadSuccess(file);
     }
 
     /**
-     * 下载完成
+     * 下载成功
      */
-    void onComplete(File file);
+    void onDownloadSuccess(File file);
 
     /**
-     * 下载出错
+     * 下载失败
      */
-    void onError(File file, Exception e);
+    void onDownloadFail(File file, Exception e);
 
     /**
      * 下载结束
      */
-    void onEnd(File file);
+    default void onDownloadEnd(File file) {}
 }

@@ -1,5 +1,7 @@
 package com.hjq.http.listener;
 
+import okhttp3.Call;
+
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -9,17 +11,71 @@ package com.hjq.http.listener;
 public interface OnUpdateListener<T> extends OnHttpListener<T> {
 
     /**
+     * 请求开始
+     */
+    @Override
+    default void onHttpStart(Call call) {
+        onUpdateStart(call);
+    }
+
+    /**
+     * 请求成功
+     */
+    @Override
+    default void onHttpSuccess(T result) {
+        onUpdateSuccess(result);
+    }
+
+    /**
+     * 请求出错
+     */
+    @Override
+    default void onHttpFail(Exception e) {
+        onUpdateFail(e);
+    }
+
+    /**
+     * 请求结束
+     */
+    @Override
+    default void onHttpEnd(Call call) {
+        onUpdateEnd(call);
+    }
+
+    /* --------------------------------------------------------------- */
+
+    /**
+     * 上传开始
+     */
+    default void onUpdateStart(Call call) {}
+
+    /**
      * 上传字节改变
      *
      * @param totalByte             总字节数
      * @param updateByte            已上传字节数
      */
-    default void onByte(long totalByte, long updateByte) {}
+    default void onUpdateByteChange(long totalByte, long updateByte) {}
 
     /**
      * 上传进度改变
      *
      * @param progress          上传进度值（0-100）
      */
-    void onProgress(int progress);
+    void onUpdateProgressChange(int progress);
+
+    /**
+     * 上传成功
+     */
+    void onUpdateSuccess(T result);
+
+    /**
+     * 上传出错
+     */
+    void onUpdateFail(Exception e);
+
+    /**
+     * 上传结束
+     */
+    default void onUpdateEnd(Call call) {}
 }

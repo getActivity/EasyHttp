@@ -11,7 +11,6 @@ import com.hjq.http.request.HttpRequest;
 
 import java.io.IOException;
 
-import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.Buffer;
 import okio.BufferedSink;
@@ -70,14 +69,14 @@ public class ProgressBody extends WrapperBody {
 
     private void callOnProgress() {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
-            mListener.onByte(mTotalByte, mUpdateByte);
+            mListener.onUpdateByteChange(mTotalByte, mUpdateByte);
         }
         int progress = EasyUtils.getProgressProgress(mTotalByte, mUpdateByte);
         // 只有上传进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
         if (progress != mUpdateProgress) {
             mUpdateProgress = progress;
             if (mListener != null && HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
-                mListener.onProgress(progress);
+                mListener.onUpdateProgressChange(progress);
             }
             EasyLog.printLog(mHttpRequest, "Uploading in progress, uploaded: " +
                     mUpdateByte + " / " + mTotalByte +

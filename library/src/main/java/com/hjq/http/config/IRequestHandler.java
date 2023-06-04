@@ -57,7 +57,7 @@ public interface IRequestHandler {
      * @param response      响应对象
      * @param file          下载的文件对象
      */
-    default void downloadSucceed(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull File file) throws Exception {}
+    default void downloadSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull File file) throws Exception {}
 
     /**
      * 下载失败

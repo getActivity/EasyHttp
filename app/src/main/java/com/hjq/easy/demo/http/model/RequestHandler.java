@@ -121,14 +121,14 @@ public final class RequestHandler implements IRequestHandler {
 
         if (result instanceof HttpData) {
             HttpData<?> model = (HttpData<?>) result;
-            model.setHeaders(response.headers());
+            model.setResponseHeaders(response.headers());
 
             if (model.isRequestSuccess()) {
                 // 代表执行成功
                 return result;
             }
 
-            if (model.isTokenFailure()) {
+            if (model.isTokenInvalidation()) {
                 // 代表登录失效，需要重新登录
                 throw new TokenException(mApplication.getString(R.string.http_token_error));
             }

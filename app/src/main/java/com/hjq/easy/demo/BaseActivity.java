@@ -60,20 +60,20 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     }
 
     @Override
-    public void onStart(Call call) {
+    public void onHttpStart(Call call) {
         showDialog();
     }
 
     @Override
-    public void onSucceed(Object result) {}
+    public void onHttpSuccess(Object result) {}
 
     @Override
-    public void onFail(Exception e) {
+    public void onHttpFail(Exception e) {
         Toaster.show(e.getMessage());
     }
 
     @Override
-    public void onEnd(Call call) {
+    public void onHttpEnd(Call call) {
         hideDialog();
     }
 }

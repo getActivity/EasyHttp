@@ -4,7 +4,7 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/11.8/EasyHttp.apk)
+* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/12.0/EasyHttp.apk)
 
 ![](picture/demo_code.png)
 
@@ -61,7 +61,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:11.8'
+    implementation 'com.github.getActivity:EasyHttp:12.0'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -76,7 +76,7 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  11.8 |  2.9.0  |  3.0.4    |
+|    对应版本  |  12.0 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
 |    **aar 包大小**  |  90 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
@@ -204,10 +204,10 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
 EasyHttp.post(this)
         .api(new XxxApi())
         .delay(3000)
-        .request(new HttpCallback<HttpData<XxxBean>>(this) {
+        .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onSucceed(HttpData<XxxBean> result) {
+            public void onHttpSuccess(HttpData<XxxBean> result) {
 
             }
         });
@@ -227,7 +227,7 @@ EasyHttp.post(this)
 
 * 标题栏框架：[TitleBar](https://github.com/getActivity/TitleBar) ![](https://img.shields.io/github/stars/getActivity/TitleBar.svg) ![](https://img.shields.io/github/forks/getActivity/TitleBar.svg)
 
-* 悬浮窗框架：[XToast](https://github.com/getActivity/XToast) ![](https://img.shields.io/github/stars/getActivity/XToast.svg) ![](https://img.shields.io/github/forks/getActivity/XToast.svg)
+* 悬浮窗框架：[EasyWindow](https://github.com/getActivity/EasyWindow) ![](https://img.shields.io/github/stars/getActivity/EasyWindow.svg) ![](https://img.shields.io/github/forks/getActivity/EasyWindow.svg)
 
 * Shape 框架：[ShapeView](https://github.com/getActivity/ShapeView) ![](https://img.shields.io/github/stars/getActivity/ShapeView.svg) ![](https://img.shields.io/github/forks/getActivity/ShapeView.svg)
 
@@ -261,17 +261,27 @@ EasyHttp.post(this)
 
 #### Android 技术 Q 群：10047167
 
-#### 如果您觉得我的开源库帮你节省了大量的开发时间，请扫描下方的二维码随意打赏，要是能打赏个 10.24 :monkey_face:就太:thumbsup:了。您的支持将鼓励我继续创作:octocat:
+#### 如果您觉得我的开源库帮你节省了大量的开发时间，请扫描下方的二维码随意打赏，要是能打赏个 10.24 :monkey_face:就太:thumbsup:了。您的支持将鼓励我继续创作:octocat:（[点击查看捐赠列表](https://github.com/getActivity/Donate)）
 
 ![](https://raw.githubusercontent.com/getActivity/Donate/master/picture/pay_ali.png) ![](https://raw.githubusercontent.com/getActivity/Donate/master/picture/pay_wechat.png)
-
-#### [点击查看捐赠列表](https://github.com/getActivity/Donate)
 
 #### 特别感谢
 
 * [张鸿洋](https://github.com/hongyangAndroid)
 
 * [WanAndroid](https://www.wanandroid.com/)
+
+#### 广告区
+
+* 我现在任腾讯云服务器推广大使，大家如果有购买服务器的需求，可以通过下面的链接购买
+
+[![](https://upload-dianshi-1255598498.file.myqcloud.com/upload/nodir/345X200-9ae456f58874df499adf7c331c02cb0fed12b81d.jpg)](https://curl.qcloud.com/A6cYskvv)
+
+[【腾讯云】云服务器、云数据库、COS、CDN、短信等云产品特惠热卖中](https://curl.qcloud.com/A6cYskvv)
+
+[![](https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg)](https://curl.qcloud.com/up4fQsdn)
+
+[【腾讯云】中小企业福利专场，多款刚需产品，满足企业通用场景需求](https://curl.qcloud.com/up4fQsdn)
 
 ## License
 

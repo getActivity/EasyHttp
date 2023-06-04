@@ -100,6 +100,8 @@
 
     * [我想自定义 Get 请求参数中的 key 和 value 该怎么做](#我想自定义-get-请求参数中的-key-和-value-该怎么做)
 
+    * [我想在 Post 请求中定义类似 Get 请求参数该怎么做](#我想在-post-请求中定义类似-get-请求参数该怎么做)
+
 * [搭配 RxJava](#搭配-rxjava)
 
     * [准备工作](#准备工作)
@@ -298,10 +300,10 @@ EasyHttp.post(this)
         .api(new LoginApi()
                 .setUserName("Android 轮子哥")
                 .setPassword("123456"))
-        .request(new HttpCallback<HttpData<LoginBean>>(activity) {
+        .request(new HttpCallbackProxy<HttpData<LoginBean>>(activity) {
 
             @Override
-            public void onSucceed(HttpData<LoginBean> data) {
+            public void onHttpSuccess(HttpData<LoginBean> data) {
                 toast("登录成功");
             }
         });
@@ -347,27 +349,27 @@ EasyHttp.post(this)
         .request(new OnUpdateListener<Void>() {
 
             @Override
-            public void onStart(Call call) {
+            public void onUpdateStart(Call call) {
                 mProgressBar.setVisibility(View.VISIBLE);
             }
 
             @Override
-            public void onProgress(int progress) {
+            public void onUpdateProgressChange(int progress) {
                 mProgressBar.setProgress(progress);
             }
 
             @Override
-            public void onSucceed(Void result) {
+            public void onUpdateSuccess(Void result) {
                 toast("上传成功");
             }
 
             @Override
-            public void onFail(Exception e) {
+            public void onUpdateFail(Exception e) {
                 toast("上传失败");
             }
 
             @Override
-            public void onEnd(Call call) {
+            public void onUpdateEnd(Call call) {
                 mProgressBar.setVisibility(View.GONE);
             }
         });
@@ -391,28 +393,28 @@ EasyHttp.download(this)
         .listener(new OnDownloadListener() {
 
             @Override
-            public void onStart(File file) {
+            public void onDownloadStart(File file) {
                 mProgressBar.setVisibility(View.VISIBLE);
             }
 
             @Override
-            public void onProgress(File file, int progress) {
+            public void onDownloadProgressChange(File file, int progress) {
                 mProgressBar.setProgress(progress);
             }
 
             @Override
-            public void onComplete(File file) {
+            public void onDownloadSuccess(File file) {
                 toast("下载完成：" + file.getPath());
                 installApk(XxxActivity.this, file);
             }
 
             @Override
-            public void onError(File file, Exception e) {
+            public void onDownloadFail(File file, Exception e) {
                 toast("下载出错：" + e.getMessage());
             }
 
             @Override
-            public void onEnd(File file) {
+            public void onDownloadEnd(File file) {
                 mProgressBar.setVisibility(View.GONE);
             }
 
@@ -439,10 +441,10 @@ if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
 EasyHttp.post(this)
         .api(new XxxApi()
                 .setImage(outputFile))
-        .request(new HttpCallback<Xxx <Xxx>>(this) {
+        .request(new HttpCallbackProxy<Xxx <Xxx>>(this) {
 
             @Override
-            public void onSucceed(Xxx<Xxx> data) {
+            public void onHttpSuccess(Xxx<Xxx> data) {
 
             }
         });
@@ -1168,10 +1170,10 @@ EasyHttp.post(MainActivity.this)
         .api(new XxxApi())
         // 延迟 5 秒后请求
         .delay(5000)
-        .request(new HttpCallback<HttpData<XxxBean>>(MainActivity.this) {
+        .request(new HttpCallbackProxy<HttpData<XxxBean>>(MainActivity.this) {
 
             @Override
-            public void onSucceed(HttpData<XxxBean> result) {
+            public void onHttpSuccess(HttpData<XxxBean> result) {
 
             }
         });
@@ -1203,10 +1205,10 @@ public final class XxxApi implements IRequestApi {
 ```java
 EasyHttp.post(this)
         .api(new RequestUrl("https://xxxx.com/aaaa"))
-        .request(new HttpCallback<Xxx>(this) {
+        .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onSucceed(Xxx result) {
+            public void onHttpSuccess(Xxx result) {
 
             }
         });
@@ -1244,10 +1246,10 @@ public final class HttpUrls {
 ```java
 EasyHttp.post(this)
         .api(HttpUrls.GET_USER_INFO)
-        .request(new HttpCallback<HttpData<XxxBean>>(this) {
+        .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onSucceed(HttpData<XxxBean> result) {
+            public void onHttpSuccess(HttpData<XxxBean> result) {
 
             }
         });
@@ -1266,10 +1268,10 @@ EasyHttp.post(this)
 ```java
 EasyHttp.post(new ActivityLifecycle(this))
         .api(new XxxApi())
-        .request(new HttpCallback<HttpData<XxxBean>>(this) {
+        .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onSucceed(HttpData<XxxBean> result) {
+            public void onHttpSuccess(HttpData<XxxBean> result) {
 
             }
         });
@@ -1288,12 +1290,12 @@ EasyHttp.post(ApplicationLifecycle.getInstance())
         .request(new OnHttpListener<HttpData<XxxBean>>() {
 
             @Override
-            public void onSucceed(HttpData<XxxBean> result) {
+            public void onHttpSuccess(HttpData<XxxBean> result) {
 
             }
 
             @Override
-            public void onFail(Exception e) {
+            public void onHttpFail(Exception e) {
 
             }
         });
@@ -1346,12 +1348,12 @@ public class XxxViewModel extends BaseViewModel {
                 .request(new OnHttpListener<HttpData<Xxx>>() {
 
                     @Override
-                    public void onSucceed(HttpData<Xxx> result) {
+                    public void onHttpSuccess(HttpData<Xxx> result) {
 
                     }
 
                     @Override
-                    public void onFail(Exception e) {
+                    public void onHttpFail(Exception e) {
 
                     }
                 });
@@ -1363,23 +1365,23 @@ public class XxxViewModel extends BaseViewModel {
 
 * 首先这个加载对话框不是框架自带的，是可以修改或者取消的，主要有两种方式可供选择
 
-* 第一种方式：重写 HttpCallback 类回调方法
+* 第一种方式：重写 HttpCallbackProxy 类回调方法
 
 ```java
 EasyHttp.post(this)
         .api(new XxxApi())
-        .request(new HttpCallback<Xxx>(this) {
+        .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onStart(Call call) {
+            public void onHttpStart(Call call) {
                 // 重写方法并注释父类调用
-                //super.onStart(call);
+                //super.onHttpStart(call);
             }
 
             @Override
-            public void onEnd(Call call) {
+            public void onHttpEnd(Call call) {
                 // 重写方法并注释父类调用
-                //super.onEnd(call);
+                //super.onHttpEnd(call);
             }
         });
 ```
@@ -1393,12 +1395,12 @@ EasyHttp.post(this)
         .request(new OnHttpListener<Xxx>() {
 
             @Override
-            public void onSucceed(Xxx result) {
+            public void onHttpSuccess(Xxx result) {
 
             }
 
             @Override
-            public void onFail(Exception e) {
+            public void onHttpFail(Exception e) {
 
             }
         });
@@ -1417,10 +1419,10 @@ String json = gson.toJson(parameter);
 EasyHttp.post(this)
         .api(new XxxApi())
         .body(new JsonBody(json))
-        .request(new HttpCallback<HttpData<Xxx>>(this) {
+        .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onSucceed(HttpData<Xxx> result) {
+            public void onHttpSuccess(HttpData<Xxx> result) {
 
             }
         });
@@ -1452,10 +1454,10 @@ JsonBody jsonBody = new JsonBody(json)
 EasyHttp.post(this)
         .api(new XxxApi())
         .body(jsonBody)
-        .request(new HttpCallback<HttpData<Xxx>>(this) {
+        .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onSucceed(HttpData<Xxx> result) {
+            public void onHttpSuccess(HttpData<Xxx> result) {
 
             }
         });
@@ -1467,15 +1469,15 @@ EasyHttp.post(this)
 
 #### 我想修改请求回调所在的线程该怎么办
 
-```
+```java
 EasyHttp.post(this)
         .api(new XxxApi())
         // 表示回调是在子线程中进行
         .schedulers(ThreadSchedulers.IOThread)
-        .request(new HttpCallback<HttpData<Xxx>>(this) {
+        .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onSucceed(HttpData<Xxx> result) {
+            public void onHttpSuccess(HttpData<Xxx> result) {
 
             }
         });
@@ -1489,10 +1491,10 @@ EasyHttp.post(this)
 EasyHttp.post(this)
         .api(new XxxApi())
         .body(RequestBody body)
-        .request(new HttpCallback<HttpData<Xxx>>(this) {
+        .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onSucceed(HttpData<Xxx> result) {
+            public void onHttpSuccess(HttpData<Xxx> result) {
 
             }
         });
@@ -1505,7 +1507,7 @@ EasyHttp.post(this)
 * 具体的写法示例如下：
 
 ```java
-public final class SearchBlogsApi implements IRequestApi {
+public final class XxxApi implements IRequestApi {
 
     @NonNull
     @Override
@@ -1586,16 +1588,41 @@ api.putParameter("key2", "value2");
 
 EasyHttp.get(this)
         .api(api)
-        .request(new HttpCallback<Xxx>(this) {
+        .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onSucceed(Xxx result) {
+            public void onHttpSuccess(Xxx result) {
 
             }
         });
 ```
 
 * 需要注意的是：这种实现方式仅适用于在框架设计无法满足需求的情况下，其他情况下作者并不提倡用这种方式，因为这样不方便管理请求参数的 key，还是推荐大家使用在类上面定义字段的方式来实现。
+
+#### 我想在 Post 请求中定义类似 Get 请求参数该怎么做
+
+* 直接拼接请求的参数到 url 上面，并且忽略某个字段的值（避免被解析成 Post 参数）
+
+```java
+public final class XxxApi implements IRequestApi {
+
+    @NonNull
+    @Override
+    public String getApi() {
+        return "article/query?pageNumber=" + pageNumber;
+    }
+
+    @HttpIgnore
+    private int pageNumber;
+
+    public XxxApi setPageNumber(int pageNumber) {
+        this.pageNumber = pageNumber;
+        return this;
+    }
+}
+```
+
+* Ps：一般情况下我是不建议这样写的，这样的请求看起来不伦不类，即长得像一个 Get 请求，但是实际上却是一个 Post 请求。
 
 # 搭配 RxJava
 
@@ -1682,10 +1709,10 @@ Observable.intervalRange(1, 3, 5000, 1000, TimeUnit.MILLISECONDS)
                 EasyHttp.post(MainActivity.this)
                         .api(new SearchBlogsApi()
                                 .setKeyword("搬砖不再有"))
-                        .request(new HttpCallback<HttpData<SearchBean>>(MainActivity.this) {
+                        .request(new HttpCallbackProxy<HttpData<SearchBean>>(MainActivity.this) {
 
                             @Override
-                            public void onSucceed(HttpData<SearchBean> result) {
+                            public void onHttpSuccess(HttpData<SearchBean> result) {
 
                             }
                         });
@@ -1703,17 +1730,17 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
         EasyHttp.post(MainActivity.this)
                 .api(new SearchBlogsApi()
                         .setKeyword("搬砖不再有"))
-                .request(new HttpCallback<HttpData<SearchBean>>(MainActivity.this) {
+                .request(new HttpCallbackProxy<HttpData<SearchBean>>(MainActivity.this) {
 
                     @Override
-                    public void onSucceed(HttpData<SearchBean> result) {
+                    public void onHttpSuccess(HttpData<SearchBean> result) {
                         emitter.onNext(result);
                         emitter.onComplete();
                     }
 
                     @Override
-                    public void onFail(Exception e) {
-                        super.onFail(e);
+                    public void onHttpFail(Exception e) {
+                        super.onHttpFail(e);
                         emitter.onError(e);
                     }
                 });

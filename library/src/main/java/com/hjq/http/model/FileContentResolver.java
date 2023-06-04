@@ -2,6 +2,7 @@ package com.hjq.http.model;
 
 import android.content.ContentResolver;
 import android.content.Context;
+import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
 
@@ -146,18 +147,14 @@ public class FileContentResolver extends File {
 
     @Override
     public boolean exists() {
+        Cursor cursor = null;
         try {
-            // 通过输入流来验证文件是否存在
-            InputStream inputStream = openInputStream();
-            if (inputStream != null) {
-                // 关闭输入流
-                EasyUtils.closeStream(inputStream);
-                return true;
-            }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
+            // 通过 Cursor 来验证文件 Uri 是否存在
+            cursor = mContentResolver.query(mContentUri, null, null, null, null);
+            return cursor != null && cursor.getCount() != 0;
+        } finally {
+            EasyUtils.closeStream(cursor);
         }
-        return false;
     }
 
     @Override
