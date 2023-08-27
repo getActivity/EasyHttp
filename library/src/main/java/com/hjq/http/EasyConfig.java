@@ -1,17 +1,15 @@
 package com.hjq.http;
 
-import com.hjq.http.config.DefaultHttpLogStrategy;
-import com.hjq.http.config.IHttpLogStrategy;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestInterceptor;
+import com.hjq.http.config.IRequestLogStrategy;
 import com.hjq.http.config.IRequestServer;
-import com.hjq.http.config.RequestServer;
+import com.hjq.http.config.impl.EasyHttpLogStrategy;
+import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.model.ThreadSchedulers;
-
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
-
 import okhttp3.OkHttpClient;
 
 /**
@@ -48,7 +46,7 @@ public final class EasyConfig {
     /** 请求拦截器 */
     private IRequestInterceptor mInterceptor;
     /** 日志打印策略 */
-    private IHttpLogStrategy mLogStrategy;
+    private IRequestLogStrategy mLogStrategy;
 
     /** OkHttp 客户端 */
     private OkHttpClient mClient;
@@ -78,7 +76,7 @@ public final class EasyConfig {
     }
 
     public EasyConfig setServer(String host) {
-        return setServer(new RequestServer(host));
+        return setServer(new EasyRequestServer(host));
     }
 
     public EasyConfig setServer(IRequestServer server) {
@@ -157,7 +155,7 @@ public final class EasyConfig {
         return this;
     }
 
-    public EasyConfig setLogStrategy(IHttpLogStrategy strategy) {
+    public EasyConfig setLogStrategy(IRequestLogStrategy strategy) {
         mLogStrategy = strategy;
         return this;
     }
@@ -218,7 +216,7 @@ public final class EasyConfig {
         return mThreadSchedulers;
     }
 
-    public IHttpLogStrategy getLogStrategy() {
+    public IRequestLogStrategy getLogStrategy() {
         return mLogStrategy;
     }
 
@@ -260,7 +258,7 @@ public final class EasyConfig {
         }
 
         if (mLogStrategy == null) {
-            mLogStrategy = new DefaultHttpLogStrategy();
+            mLogStrategy = new EasyHttpLogStrategy();
         }
         EasyConfig.setInstance(this);
     }

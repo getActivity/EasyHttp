@@ -200,14 +200,21 @@ public final class RequestHandler implements IRequestHandler {
     @Override
     public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
         String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
-        String cacheValue = HttpCacheManager.getMmkv().getString(cacheKey, null);
+        String cacheValue = HttpCacheManager.readHttpCache(cacheKey);
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.printLog(httpRequest, "----- readCache cacheKey -----");
+        EasyLog.printLog(httpRequest, "----- read cache key -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- readCache cacheValue -----");
+        EasyLog.printLog(httpRequest, "----- read cache value -----");
         EasyLog.printJson(httpRequest, cacheValue);
+        EasyLog.printLog(httpRequest, "cacheTime = " + cacheTime);
+        boolean cacheInvalidate = HttpCacheManager.isCacheInvalidate(cacheKey, cacheTime);
+        EasyLog.printLog(httpRequest, "cacheInvalidate = " + cacheInvalidate);
+        if (cacheInvalidate) {
+            // 表示缓存已经过期了，直接返回 null 给外层，表示缓存不可用
+            return null;
+        }
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
@@ -218,16 +225,19 @@ public final class RequestHandler implements IRequestHandler {
         if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.printLog(httpRequest, "----- writeCache cacheKey -----");
+        EasyLog.printLog(httpRequest, "----- write cache key -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- writeCache cacheValue -----");
+        EasyLog.printLog(httpRequest, "----- write cache value -----");
         EasyLog.printJson(httpRequest, cacheValue);
-        return HttpCacheManager.getMmkv().putString(cacheKey, cacheValue).commit();
+        boolean writeHttpCacheResult = HttpCacheManager.writeHttpCache(cacheKey, cacheValue);
+        EasyLog.printLog(httpRequest, "writeHttpCacheResult = " + writeHttpCacheResult);
+        boolean refreshHttpCacheTimeResult = HttpCacheManager.setHttpCacheTime(cacheKey, System.currentTimeMillis());
+        EasyLog.printLog(httpRequest, "refreshHttpCacheTimeResult = " + refreshHttpCacheTimeResult);
+        return writeHttpCacheResult && refreshHttpCacheTimeResult;
     }
 
     @Override
     public void clearCache() {
-        HttpCacheManager.getMmkv().clearMemoryCache();
-        HttpCacheManager.getMmkv().clearAll();
+        HttpCacheManager.clearCache();
     }
 }

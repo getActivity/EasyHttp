@@ -1,9 +1,11 @@
-package com.hjq.http.config;
+package com.hjq.http.config.impl;
 
 import android.text.TextUtils;
 import android.util.Log;
-
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.hjq.http.EasyUtils;
+import com.hjq.http.config.IRequestLogStrategy;
 
 /**
  *    author : Android 轮子哥
@@ -11,16 +13,16 @@ import com.hjq.http.EasyUtils;
  *    time   : 2020/04/24
  *    desc   : 网络请求日志打印默认实现
  */
-public final class DefaultHttpLogStrategy implements IHttpLogStrategy {
+public final class EasyHttpLogStrategy implements IRequestLogStrategy {
 
     @Override
-    public void printLog(String tag, String log) {
+    public void printLog(@NonNull String tag, @Nullable String message) {
         // 这里解释一下，为什么不用 Log.d，而用 Log.i，因为 Log.d 在魅族 16th 手机上面无法输出日志
-        Log.i(tag, log != null ? log : "null");
+        Log.i(tag, message != null ? message : "null");
     }
 
     @Override
-    public void printJson(String tag, String json) {
+    public void printJson(@NonNull String tag, @Nullable String json) {
         String text = EasyUtils.formatJson(json);
         if (TextUtils.isEmpty(text)) {
             return;
@@ -29,7 +31,9 @@ public final class DefaultHttpLogStrategy implements IHttpLogStrategy {
         // 打印 Json 数据最好换一行再打印会好看一点
         text = " \n" + text;
 
-        int segmentSize = 3 * 1024;
+        // 测试了一些设备，日志限制的长度大概在 3700 ~ 3800
+        // 为了保险起见，这里最大长度设置成 3600
+        int segmentSize = 3600;
         long length = text.length();
         if (length <= segmentSize) {
             // 长度小于等于限制直接打印
@@ -49,17 +53,24 @@ public final class DefaultHttpLogStrategy implements IHttpLogStrategy {
     }
 
     @Override
-    public void printKeyValue(String tag, String key, String value) {
+    public void printKeyValue(@NonNull String tag, @Nullable String key, @Nullable String value) {
         printLog(tag, key + " = " + value);
     }
 
     @Override
-    public void printThrowable(String tag, Throwable throwable) {
+    public void printThrowable(@NonNull String tag, @Nullable Throwable throwable) {
+        if (throwable == null) {
+            Log.e(tag, "An empty throwable object appears");
+            return;
+        }
         Log.e(tag, throwable.getMessage(), throwable);
     }
 
     @Override
-    public void printStackTrace(String tag, StackTraceElement[] stackTrace) {
+    public void printStackTrace(@NonNull String tag, @Nullable StackTraceElement[] stackTrace) {
+        if (stackTrace == null) {
+            return;
+        }
         for (StackTraceElement element : stackTrace) {
             // 获取代码行数
             int lineNumber = element.getLineNumber();

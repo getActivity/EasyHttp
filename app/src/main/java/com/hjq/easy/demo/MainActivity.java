@@ -12,11 +12,9 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
 import android.widget.ProgressBar;
-
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
 import androidx.core.content.FileProvider;
-
 import com.hjq.bar.OnTitleBarListener;
 import com.hjq.bar.TitleBar;
 import com.hjq.easy.demo.http.api.SearchAuthorApi;
@@ -36,13 +34,11 @@ import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.toast.Toaster;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
-
 import okhttp3.Call;
 
 /**
@@ -133,7 +129,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
         } else if (viewId == R.id.btn_main_post) {
 
-            EasyHttp.post(MainActivity.this)
+            EasyHttp.post(this)
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
                     .request(new HttpCallbackProxy<HttpData<SearchBlogsApi.Bean>>(MainActivity.this) {

@@ -20,8 +20,8 @@ import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
-import com.hjq.http.config.RequestApi;
-import com.hjq.http.config.RequestServer;
+import com.hjq.http.config.impl.EasyRequestApi;
+import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.BodyType;
@@ -99,7 +99,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     public T api(String api) {
-        return api(new RequestApi(api));
+        return api(new EasyRequestApi(api));
     }
 
     /**
@@ -139,7 +139,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     public T server(String host) {
-        return server(new RequestServer(host));
+        return server(new EasyRequestServer(host));
     }
 
     /**
@@ -368,16 +368,16 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (cacheMode == CacheMode.USE_CACHE_ONLY ||
                 cacheMode == CacheMode.USE_CACHE_FIRST) {
             try {
-                Object result = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
-                EasyLog.printLog(this, "ReadCache result：" + result);
+                Object cacheResult = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
+                EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                 if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                     // 使用异步请求来刷新缓存
                     new NormalCallback(this)
                             .setCall(mCallProxy)
                             .start();
                 }
-                if (result != null) {
-                    return (Bean) result;
+                if (cacheResult != null) {
+                    return (Bean) cacheResult;
                 }
             } catch (Exception cacheException) {
                 EasyLog.printLog(this, "ReadCache error");
@@ -391,8 +391,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
             if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    boolean writeSuccess = mRequestHandler.writeCache(this, response, result);
-                    EasyLog.printLog(this, "WriteCache result：" + writeSuccess);
+                    boolean writeCacheResult = mRequestHandler.writeCache(this, response, result);
+                    EasyLog.printLog(this, "WriteCache result：" + writeCacheResult);
                 } catch (Exception cacheException) {
                     EasyLog.printLog(this, "WriteCache error");
                     EasyLog.printThrowable(this, cacheException);
@@ -408,10 +408,10 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             // 如果设置了只在网络请求失败才去读缓存
             if (exception instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    Object result = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
-                    EasyLog.printLog(this, "ReadCache result：" + result);
-                    if (result != null) {
-                        return (Bean) result;
+                    Object cacheResult = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
+                    EasyLog.printLog(this, "ReadCache result：" + cacheResult);
+                    if (cacheResult != null) {
+                        return (Bean) cacheResult;
                     }
                 } catch (Exception cacheException) {
                     EasyLog.printLog(this, "ReadCache error");

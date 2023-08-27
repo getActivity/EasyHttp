@@ -5,20 +5,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.text.TextUtils;
 import android.util.LruCache;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.body.WrapperBody;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.ThreadSchedulers;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.io.Closeable;
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,9 +37,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import okhttp3.MultipartBody;
 import okhttp3.RequestBody;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  *    author : Android 轮子哥
@@ -415,10 +410,17 @@ public final class EasyUtils {
             return Void.class;
         }
         // 获取接口上面的泛型
-        Type[] types = object.getClass().getGenericInterfaces();
-        if (types.length > 0) {
-            // 如果这个对象是直接实现了接口，并且携带了泛型
-            return ((ParameterizedType) types[0]).getActualTypeArguments()[0];
+        Type[] genericInterfaces = object.getClass().getGenericInterfaces();
+        if (genericInterfaces.length > 0) {
+            for (Type genericInterface : genericInterfaces) {
+                // java.lang.ClassCastException: java.lang.Class cannot be cast to java.lang.reflect.ParameterizedType
+                if (!(genericInterface instanceof ParameterizedType)) {
+                    continue;
+                }
+                // 如果这个对象是直接实现了接口，并且携带了泛型
+                ParameterizedType parameterizedType = (ParameterizedType) genericInterface;
+                return parameterizedType.getActualTypeArguments()[0];
+            }
         }
 
         // 获取父类上面的泛型
@@ -469,9 +471,10 @@ public final class EasyUtils {
      * 格式化 Json 字符串
      */
     @SuppressWarnings("AlibabaUndefineMagicConstant")
-    public static String formatJson(String json) {
+    @Nullable
+    public static String formatJson(@Nullable String json) {
         if (json == null) {
-            return "";
+            return null;
         }
 
         try {

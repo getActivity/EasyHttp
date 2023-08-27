@@ -115,10 +115,10 @@ public final class NormalCallback extends BaseCallback {
                 cacheMode == CacheMode.USE_CACHE_FIRST ||
                 cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
-                boolean writeSuccess = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
-                EasyLog.printLog(mHttpRequest, "WriteCache result：" + writeSuccess);
+                boolean writeCacheResult = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
+                EasyLog.printLog(mHttpRequest, "write cache result：" + writeCacheResult);
             } catch (Exception cacheException) {
-                EasyLog.printLog(mHttpRequest, "WriteCache error");
+                EasyLog.printLog(mHttpRequest, "write cache error");
                 EasyLog.printThrowable(mHttpRequest, cacheException);
             }
         }

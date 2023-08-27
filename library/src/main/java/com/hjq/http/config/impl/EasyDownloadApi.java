@@ -1,4 +1,4 @@
-package com.hjq.http.config;
+package com.hjq.http.config.impl;
 
 /**
  *    author : Android 轮子哥
@@ -6,9 +6,9 @@ package com.hjq.http.config;
  *    time   : 2021/12/09
  *    desc   : 下载请求接口简单配置类
  */
-public final class DownloadApi extends RequestApi {
+public final class EasyDownloadApi extends EasyRequestApi {
 
-    public DownloadApi(String api) {
+    public EasyDownloadApi(String api) {
         super(api);
     }
 }

@@ -2,16 +2,14 @@ package com.hjq.http.request;
 
 import android.content.ContentResolver;
 import android.net.Uri;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
-import com.hjq.http.config.DownloadApi;
-import com.hjq.http.config.RequestServer;
+import com.hjq.http.config.impl.EasyDownloadApi;
+import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
@@ -22,9 +20,7 @@ import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.model.ResponseClass;
-
 import java.io.File;
-
 import okhttp3.Request;
 
 /**
@@ -81,8 +77,8 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
      * 设置下载地址
      */
     public DownloadRequest url(String url) {
-        server(new RequestServer(url));
-        api(new DownloadApi(""));
+        server(new EasyRequestServer(url));
+        api(new EasyDownloadApi(""));
         return this;
     }
 

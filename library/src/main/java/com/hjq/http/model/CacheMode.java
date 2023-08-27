@@ -9,7 +9,7 @@ package com.hjq.http.model;
 public enum CacheMode {
 
     /**
-     * 默认（按照 Http 协议来缓存）
+     * 默认（按照 Http 协议来缓存，目前 OkHttp 只支持 Get 请求缓存，不支持 Post 请求缓存）
      */
     DEFAULT,
 
@@ -29,7 +29,7 @@ public enum CacheMode {
     /**
      * 优先使用缓存
      *
-     * 已有缓存的情况下：先读缓存 —> 回调成功 —> 请求网络 —> 刷新缓存
+     * 已有缓存的情况下：读取缓存 —> 回调成功 —> 请求网络 —> 刷新缓存
      * 没有缓存的情况下：请求网络 -> 写入缓存 -> 回调成功
      */
     USE_CACHE_FIRST,

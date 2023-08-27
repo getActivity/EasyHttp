@@ -1,8 +1,9 @@
-package com.hjq.http.config;
+package com.hjq.http.config.impl;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.http.annotation.HttpIgnore;
+import com.hjq.http.config.IRequestApi;
+import com.hjq.http.config.IRequestServer;
 
 /**
  *    author : Android 轮子哥
@@ -10,7 +11,7 @@ import com.hjq.http.annotation.HttpIgnore;
  *    time   : 2022/03/03
  *    desc   : 请求 url 简单配置类
  */
-public final class RequestUrl implements IRequestServer, IRequestApi {
+public final class EasyRequestUrl implements IRequestServer, IRequestApi {
 
    /** 主机地址 */
    @HttpIgnore
@@ -20,11 +21,11 @@ public final class RequestUrl implements IRequestServer, IRequestApi {
    @HttpIgnore
    private final String mApi;
 
-   public RequestUrl(String url) {
+   public EasyRequestUrl(String url) {
       this(url, "");
    }
 
-   public RequestUrl(String host, String api) {
+   public EasyRequestUrl(String host, String api) {
       mHost = host;
       mApi = api;
    }

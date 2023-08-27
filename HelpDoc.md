@@ -128,7 +128,8 @@
 #### Http 明文请求
 
 * **Android 9.0** 限制了明文流量的网络请求，非加密的流量请求都会被系统禁止掉。
-如果当前应用的请求是 http 请求，而非 https ,这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
+
+* 如果当前应用的请求是 http 请求，而非 https，这样就会导系统禁止当前应用进行该请求，如果 WebView 的 url 用 http 协议，同样会出现加载失败，https 不受影响
 
 * 在 res 下新建一个 xml 目录，然后创建一个名为：`network_security_config.xml` 文件 ，该文件内容如下
 
@@ -139,7 +140,7 @@
 </network-security-config>
 ```
 
-* 然后在 AndroidManifest.xml application 标签内应用上面的xml配置
+* 然后在 AndroidManifest.xml application 标签内应用上面的 xml 配置
 
 ```xml
 <application
@@ -1136,7 +1137,7 @@ EasyConfig.getInstance().setLogEnabled(false);
 
 #### 如何修改日志打印策略
 
-* 可以先定义一个类实现 [IHttpLogStrategy](library/src/main/java/com/hjq/http/config/IHttpLogStrategy.java) 接口，然后在框架初始化的时候传入即可
+* 可以先定义一个类实现 [IRequestLogStrategy](library/src/main/java/com/hjq/http/config/IRequestLogStrategy.java) 接口，然后在框架初始化的时候传入即可
 
 ```java
 EasyConfig.with(okHttpClient)

@@ -14,8 +14,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1200
-        versionName '12.0'
+        versionCode 1202
+        versionName '12.2'
     }
 
     // 支持 JDK 1.8
@@ -73,10 +73,10 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
     // 吐司框架：https://github.com/getActivity/Toaster
-    implementation 'com.github.getActivity:Toaster:12.2'
+    implementation 'com.github.getActivity:Toaster:12.3'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:18.2'
+    implementation 'com.github.getActivity:XXPermissions:18.3'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
     implementation 'com.github.getActivity:TitleBar:10.5'
@@ -84,17 +84,17 @@ dependencies {
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.10.1'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation 'com.github.getActivity:GsonFactory:6.5'
+    implementation 'com.github.getActivity:GsonFactory:8.0'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
     implementation 'com.tencent:mmkv-static:1.2.14'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:11.2'
+    debugImplementation 'com.github.getActivity:Logcat:11.8'
 
     // OkHttp 抓包框架：https://github.com/lygttpod/AndroidMonitor
     // debugImplementation 'io.github.lygttpod:monitor:0.0.7'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.10'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
 }
