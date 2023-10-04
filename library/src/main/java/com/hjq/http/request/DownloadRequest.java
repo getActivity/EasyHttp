@@ -8,12 +8,12 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
+import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.config.impl.EasyDownloadApi;
 import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
-import com.hjq.http.model.BodyType;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpHeaders;
@@ -186,23 +186,23 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType bodyType) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
         // 这里设置 api 的目的是为了打日志的时候不崩溃，因为现在打日志需要 api 对象
-        return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, bodyType);
+        return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, requestBodyStrategy);
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {
-        mRealRequest.addHttpParams(params, key, value, type);
+    protected void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy) {
+        mRealRequest.addHttpParams(params, key, value, requestBodyStrategy);
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {
-        mRealRequest.addRequestParams(requestBuilder, params, contentType, type);
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+        mRealRequest.addRequestParams(requestBuilder, params, contentType, requestBodyStrategy);
     }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {
-        mRealRequest.printRequestLog(request, params, headers, type);
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+        mRealRequest.printRequestLog(request, params, headers, requestBodyStrategy);
     }
 }

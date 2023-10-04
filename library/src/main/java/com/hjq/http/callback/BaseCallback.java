@@ -37,7 +37,7 @@ public abstract class BaseCallback implements Callback {
     public BaseCallback(@NonNull HttpRequest<?> request) {
         mHttpRequest = request;
         // Lifecycle addObserver 需要在主线程中执行，所以这里要做一下线程转换
-        EasyUtils.runOnAssignThread(ThreadSchedulers.MainThread,
+        EasyUtils.runOnAssignThread(ThreadSchedulers.MAIN,
                 () -> HttpLifecycleManager.register(mHttpRequest.getLifecycleOwner()));
     }
 

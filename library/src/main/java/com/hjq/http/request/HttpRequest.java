@@ -11,8 +11,10 @@ import com.hjq.http.EasyUtils;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
+import com.hjq.http.config.impl.RequestFormBodyStrategy;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
+import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.config.IRequestCache;
 import com.hjq.http.config.IRequestClient;
 import com.hjq.http.config.IRequestHandler;
@@ -24,7 +26,7 @@ import com.hjq.http.config.impl.EasyRequestApi;
 import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
-import com.hjq.http.model.BodyType;
+import com.hjq.http.model.RequestBodyType;
 import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.ContentType;
@@ -209,7 +211,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     @NonNull
     protected Call createCall() {
 
-        BodyType type = mRequestType.getBodyType();
+        IRequestBodyStrategy requestBodyStrategy = mRequestType.getBodyType();
 
         HttpParams params = new HttpParams();
         HttpHeaders headers = new HttpHeaders();
@@ -221,9 +223,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         params.setMultipart(EasyUtils.isMultipartParameter(fields));
 
         // 如果参数中包含流参数并且当前请求方式不是表单的话
-        if (params.isMultipart() && type != BodyType.FORM) {
+        if (!params.isEmpty() && params.isMultipart() && !(requestBodyStrategy instanceof RequestFormBodyStrategy)) {
             // 就强制设置成以表单形式提交参数
-            type = BodyType.FORM;
+            requestBodyStrategy = RequestBodyType.FORM;
         }
 
         for (Field field : fields) {
@@ -276,7 +278,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                     continue;
                 }
 
-                addHttpParams(params, key, value, type);
+                addHttpParams(params, key, value, requestBodyStrategy);
 
             } catch (IllegalAccessException e) {
                 EasyLog.printThrowable(this, e);
@@ -288,7 +290,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             mRequestInterceptor.interceptArguments(this, params, headers);
         }
 
-        Request request = createRequest(url, mTag, params, headers, type);
+        Request request = createRequest(url, mTag, params, headers, requestBodyStrategy);
 
         if (mRequestInterceptor != null) {
             request = mRequestInterceptor.interceptRequest(this, request);
@@ -563,20 +565,20 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 添加请求参数
      */
-    protected abstract void addHttpParams(HttpParams params, String key, Object value, BodyType type);
+    protected abstract void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy);
 
     /**
      * 创建请求的对象
      */
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, BodyType bodyType) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
         Request.Builder requestBuilder = createRequestBuilder(url, tag);
         addRequestHeader(requestBuilder, headers);
 
         String contentType = headers.get(ContentType.HTTP_HEAD_KEY);
-        addRequestParams(requestBuilder, params, contentType, bodyType);
+        addRequestParams(requestBuilder, params, contentType, requestBodyStrategy);
 
         Request request = requestBuilder.build();
-        printRequestLog(request, params, headers, bodyType);
+        printRequestLog(request, params, headers, requestBodyStrategy);
         return request;
     }
 
@@ -621,12 +623,12 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 添加请求参数
      */
-    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type);
+    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy);
 
     /**
      * 打印请求日志
      */
-    protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type);
+    protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy);
 
     /**
      * 生成日志的 TAG

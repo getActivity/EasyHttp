@@ -14,8 +14,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1202
-        versionName '12.2'
+        versionCode 1205
+        versionName '12.5'
     }
 
     // 支持 JDK 1.8
@@ -48,9 +48,9 @@ android {
         }
     }
 
-    applicationVariants.all { variant ->
+    applicationVariants.configureEach { variant ->
         // apk 输出文件名配置
-        variant.outputs.all { output ->
+        variant.outputs.configureEach { output ->
             outputFileName = rootProject.getName() + '.apk'
         }
     }
@@ -73,7 +73,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
     // 吐司框架：https://github.com/getActivity/Toaster
-    implementation 'com.github.getActivity:Toaster:12.3'
+    implementation 'com.github.getActivity:Toaster:12.5'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.github.getActivity:XXPermissions:18.3'

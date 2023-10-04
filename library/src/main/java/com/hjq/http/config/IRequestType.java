@@ -2,8 +2,6 @@ package com.hjq.http.config;
 
 import androidx.annotation.NonNull;
 
-import com.hjq.http.model.BodyType;
-
 /**
  *    author : Android 轮子哥
  *    github : https://github.com/getActivity/EasyHttp
@@ -16,5 +14,5 @@ public interface IRequestType {
      * 获取参数的提交类型
      */
     @NonNull
-    BodyType getBodyType();
+    IRequestBodyStrategy getBodyType();
 }

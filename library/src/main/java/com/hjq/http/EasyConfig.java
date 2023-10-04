@@ -57,7 +57,7 @@ public final class EasyConfig {
     private HashMap<String, String> mHeaders;
 
     /** 线程调度器 */
-    private ThreadSchedulers mThreadSchedulers = ThreadSchedulers.MainThread;
+    private ThreadSchedulers mThreadSchedulers = ThreadSchedulers.MAIN;
 
     /** 日志开关 */
     private boolean mLogEnabled = true;

@@ -2,7 +2,7 @@ package com.hjq.http.config;
 
 import androidx.annotation.NonNull;
 
-import com.hjq.http.model.BodyType;
+import com.hjq.http.model.RequestBodyType;
 import com.hjq.http.model.CacheMode;
 
 /**
@@ -17,9 +17,9 @@ public interface IRequestServer extends
 
     @NonNull
     @Override
-    default BodyType getBodyType() {
+    default IRequestBodyStrategy getBodyType() {
         // 默认以表单的方式提交
-        return BodyType.FORM;
+        return RequestBodyType.FORM;
     }
 
     @NonNull

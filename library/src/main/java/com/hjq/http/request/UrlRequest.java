@@ -2,17 +2,14 @@ package com.hjq.http.request;
 
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
-import com.hjq.http.model.BodyType;
+import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import okhttp3.HttpUrl;
 import okhttp3.Request;
 
@@ -29,12 +26,12 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, BodyType type) {
+    protected void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy) {
         params.put(key, value);
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, BodyType type) {
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
         HttpUrl.Builder urlBuilder = requestBuilder.build().url().newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
@@ -74,7 +71,7 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, BodyType type) {
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
         if (!EasyConfig.getInstance().isLogEnabled()) {
             return;
         }

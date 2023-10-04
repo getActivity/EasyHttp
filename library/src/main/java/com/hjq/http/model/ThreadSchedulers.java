@@ -9,8 +9,8 @@ package com.hjq.http.model;
 public enum ThreadSchedulers {
 
     /** 主线程 */
-    MainThread,
+    MAIN,
 
     /** IO 线程 */
-    IOThread
+    IO
 }

@@ -76,14 +76,14 @@ public final class EasyUtils {
      */
     public static void runOnAssignThread(ThreadSchedulers schedulers, Runnable runnable) {
         switch (schedulers) {
-            case IOThread:
+            case IO:
                 if (isMainThread()) {
                     runOnIOThread(runnable);
                 } else {
                     runnable.run();
                 }
                 break;
-            case MainThread:
+            case MAIN:
             default:
                 if (isMainThread()) {
                     runnable.run();
