@@ -160,9 +160,9 @@ public class RequestServer implements IRequestServer {
 
     @NonNull
     @Override
-    public BodyType getBodyType() {
+    public RequestBodyType getBodyType() {
         // 参数以 Json 格式提交（默认是表单）
-        return BodyType.JSON;
+        return RequestBodyType.JSON;
     }
 }
 ```
@@ -325,9 +325,9 @@ public final class UpdateImageApi implements IRequestApi, IRequestType {
 
     @NonNull
     @Override
-    public BodyType getBodyType() {
+    public RequestBodyType getBodyType() {
         // 上传文件需要使用表单的形式提交
-        return BodyType.FORM;
+        return RequestBodyType.FORM;
     }
 
     /** 本地图片 */
@@ -870,8 +870,8 @@ public class XxxServer implements IRequestServer {
 
     @NonNull
     @Override
-    public BodyType getBodyType() {
-        return BodyType.FORM;
+    public RequestBodyType getBodyType() {
+        return RequestBodyType.FORM;
     }
 }
 ```
@@ -889,8 +889,8 @@ public class XxxServer implements IRequestServer {
 
     @NonNull
     @Override
-    public BodyType getBodyType() {
-        return BodyType.JSON;
+    public RequestBodyType getBodyType() {
+        return RequestBodyType.JSON;
     }
 }
 ```
@@ -908,8 +908,8 @@ public final class XxxApi implements IRequestApi, IRequestType {
 
     @NonNull
     @Override
-    public BodyType getBodyType() {
-        return BodyType.JSON;
+    public RequestBodyType getBodyType() {
+        return RequestBodyType.JSON;
     }
 }
 ```
@@ -1474,7 +1474,7 @@ EasyHttp.post(this)
 EasyHttp.post(this)
         .api(new XxxApi())
         // 表示回调是在子线程中进行
-        .schedulers(ThreadSchedulers.IOThread)
+        .schedulers(ThreadSchedulers.IO)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
