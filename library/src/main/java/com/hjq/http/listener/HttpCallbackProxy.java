@@ -47,11 +47,11 @@ public class HttpCallbackProxy<T> implements OnHttpListener<T> {
     }
 
     @Override
-    public void onHttpFail(Exception e) {
+    public void onHttpFail(Throwable throwable) {
         if (mSourceListener == null) {
             return;
         }
-        mSourceListener.onHttpFail(e);
+        mSourceListener.onHttpFail(throwable);
     }
 
     @Override

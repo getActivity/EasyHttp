@@ -1,9 +1,6 @@
 package com.hjq.http.callback;
 
-import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
-
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.config.IRequestInterceptor;
@@ -13,11 +10,9 @@ import com.hjq.http.exception.ResponseException;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.request.HttpRequest;
-
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import okhttp3.Call;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -82,7 +77,7 @@ public final class DownloadCallback extends BaseCallback {
     }
 
     @Override
-    protected void onResponse(Response response) throws Exception {
+    protected void onHttpResponse(Response response) throws Throwable {
         // 打印请求耗时时间
         EasyLog.printLog(mHttpRequest, "RequestConsuming：" +
                 (response.receivedResponseAtMillis() - response.sentRequestAtMillis()) + " ms");
@@ -122,7 +117,7 @@ public final class DownloadCallback extends BaseCallback {
         }
 
         // 如果这个文件已经下载过，并且经过校验 MD5 是同一个文件的话，就直接回调下载成功监听
-        if (!TextUtils.isEmpty(mMd5) && mFile.isFile() &&
+        if (mFile.isFile() && mMd5 != null && !"".equals(mMd5) &&
                 mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile)))) {
             // 文件已存在，跳过下载
             EasyLog.printLog(mHttpRequest, mFile.getPath() + " file already exists, skip download");
@@ -138,74 +133,71 @@ public final class DownloadCallback extends BaseCallback {
         while ((readLength = inputStream.read(bytes)) != -1) {
             mDownloadByte += readLength;
             outputStream.write(bytes, 0, readLength);
-            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::dispatchDownloadProgressCallback);
+            EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::dispatchDownloadByteChangeCallback);
         }
         EasyUtils.closeStream(inputStream);
         EasyUtils.closeStream(outputStream);
 
         String md5 = EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile));
-        if (!TextUtils.isEmpty(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
+        if (mMd5 != null && !"".equals(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
             // 文件 MD5 值校验失败
-            throw new FileMd5Exception("MD5 verify failure", md5);
+            throw new FileMd5Exception("File md5 hash verify failure", md5);
         }
 
         // 下载成功
         mHttpRequest.getRequestHandler().downloadSuccess(mHttpRequest, response, mFile);
 
-        EasyLog.printLog(mHttpRequest, mFile.getPath() + " download completed");
         EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchDownloadSuccessCallback(false));
     }
 
     @Override
-    protected void onFailure(final Exception e) {
-        EasyLog.printThrowable(mHttpRequest, e);
+    protected void onHttpFailure(final Throwable throwable) {
+        EasyLog.printThrowable(mHttpRequest, throwable);
         // 打印错误堆栈
-        final Exception finalException = mHttpRequest.getRequestHandler().downloadFail(mHttpRequest, e);
-        if (finalException != e) {
-            EasyLog.printThrowable(mHttpRequest, finalException);
+        final Throwable finalThrowable = mHttpRequest.getRequestHandler().downloadFail(mHttpRequest, throwable);
+        if (finalThrowable != throwable) {
+            EasyLog.printThrowable(mHttpRequest, finalThrowable);
         }
-
-        EasyLog.printLog(mHttpRequest, mFile.getPath() + " download error");
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchDownloadFailCallback(finalException));
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchDownloadFailCallback(finalThrowable));
     }
 
     private void dispatchDownloadStartCallback() {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onDownloadStart(mFile);
         }
-        mListener.onDownloadStart(mFile);
+        EasyLog.printLog(mHttpRequest,  "Download file start, file path = " + mFile.getPath());
     }
 
-    private void dispatchDownloadProgressCallback() {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+    private void dispatchDownloadByteChangeCallback() {
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onDownloadByteChange(mFile, mTotalByte, mDownloadByte);
         }
-        mListener.onDownloadByteChange(mFile, mTotalByte, mDownloadByte);
-        int progress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
+        int currentProgress = EasyUtils.getProgressProgress(mTotalByte, mDownloadByte);
         // 只有下载进度发生改变的时候才回调此方法，避免引起不必要的 View 重绘
-        if (progress == mDownloadProgress) {
+        if (currentProgress == mDownloadProgress) {
             return;
         }
-        mDownloadProgress = progress;
-        mListener.onDownloadProgressChange(mFile, mDownloadProgress);
-        EasyLog.printLog(mHttpRequest, mFile.getPath() +
-                ", downloaded: " + mDownloadByte + " / " + mTotalByte +
-                ", progress: " + progress + " %");
+        mDownloadProgress = currentProgress;
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onDownloadProgressChange(mFile, mDownloadProgress);
+        }
+        EasyLog.printLog(mHttpRequest,  "Download file progress change, downloaded: " + mDownloadByte + " / " + mTotalByte +
+            ", progress: " + currentProgress + " %" + "file path = " + mFile.getPath());
     }
 
     private void dispatchDownloadSuccessCallback(boolean cache) {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onDownloadSuccess(mFile, cache);
+            mListener.onDownloadEnd(mFile);
         }
-        mListener.onDownloadSuccess(mFile, cache);
-        mListener.onDownloadEnd(mFile);
+        EasyLog.printLog(mHttpRequest,  "Download file success, file path = " + mFile.getPath());
     }
 
-    private void dispatchDownloadFailCallback(Exception e) {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+    private void dispatchDownloadFailCallback(Throwable throwable) {
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onDownloadFail(mFile, throwable);
+            mListener.onDownloadEnd(mFile);
         }
-        mListener.onDownloadFail(mFile, e);
-        mListener.onDownloadEnd(mFile);
+        EasyLog.printLog(mHttpRequest,  "Download file fail, file path = " + mFile.getPath());
     }
 }

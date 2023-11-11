@@ -2,7 +2,7 @@ package com.hjq.http.config.impl;
 
 import android.text.TextUtils;
 import com.hjq.http.EasyLog;
-import com.hjq.http.body.UpdateBody;
+import com.hjq.http.body.UpdateStreamRequestBody;
 import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpParams;
@@ -130,11 +130,11 @@ public class RequestFormBodyStrategy implements IRequestBodyStrategy {
                 if (file instanceof FileContentResolver) {
                     FileContentResolver fileContentResolver = (FileContentResolver) file;
                     InputStream inputStream = fileContentResolver.openInputStream();
-                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateBody(
+                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateStreamRequestBody(
                         Okio.source(inputStream), fileContentResolver.getContentType(),
                         fileName, inputStream.available()));
                 } else {
-                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateBody(file));
+                    part = MultipartBody.Part.createFormData(key, fileName, new UpdateStreamRequestBody(file));
                 }
                 bodyBuilder.addPart(part);
             } catch (FileNotFoundException e) {
@@ -154,7 +154,7 @@ public class RequestFormBodyStrategy implements IRequestBodyStrategy {
             // 如果这是一个 InputStream 对象
             InputStream inputStream = (InputStream) object;
             try {
-                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, new UpdateBody(inputStream, key)));
+                bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, new UpdateStreamRequestBody(inputStream, key)));
             } catch (IOException e) {
                 EasyLog.printThrowable(httpRequest, e);
             }
@@ -164,9 +164,9 @@ public class RequestFormBodyStrategy implements IRequestBodyStrategy {
         if (object instanceof RequestBody) {
             // 如果这是一个自定义的 RequestBody 对象
             RequestBody requestBody = (RequestBody) object;
-            if (requestBody instanceof UpdateBody) {
+            if (requestBody instanceof UpdateStreamRequestBody) {
                 bodyBuilder.addPart(MultipartBody.Part.createFormData(key,
-                    ((UpdateBody) requestBody).getKeyName(), requestBody));
+                    ((UpdateStreamRequestBody) requestBody).getKeyName(), requestBody));
             } else {
                 bodyBuilder.addPart(MultipartBody.Part.createFormData(key, null, requestBody));
             }

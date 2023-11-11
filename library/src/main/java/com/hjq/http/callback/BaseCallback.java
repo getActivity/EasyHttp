@@ -1,7 +1,6 @@
 package com.hjq.http.callback;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
@@ -9,10 +8,8 @@ import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.ThreadSchedulers;
 import com.hjq.http.request.HttpRequest;
-
 import java.io.IOException;
 import java.net.SocketTimeoutException;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Response;
@@ -59,10 +56,10 @@ public abstract class BaseCallback implements Callback {
     public void onResponse(@NonNull Call call, @NonNull Response response) {
         try {
             // 收到响应
-            onResponse(response);
-        } catch (Exception e) {
+            onHttpResponse(response);
+        } catch (Throwable throwable) {
             // 回调失败
-            onFailure(e);
+            onHttpFailure(throwable);
         } finally {
             // 关闭响应
             closeResponse(response);
@@ -95,7 +92,7 @@ public abstract class BaseCallback implements Callback {
 
             return;
         }
-        onFailure(e);
+        onHttpFailure(e);
     }
 
     /**
@@ -106,12 +103,12 @@ public abstract class BaseCallback implements Callback {
     /**
      * 请求成功
      */
-    protected abstract void onResponse(Response response) throws Exception;
+    protected abstract void onHttpResponse(Response response) throws Throwable;
 
     /**
      * 请求失败
      */
-    protected abstract void onFailure(Exception e);
+    protected abstract void onHttpFailure(Throwable e);
 
     /**
      * 关闭响应

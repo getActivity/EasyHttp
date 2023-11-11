@@ -1,12 +1,9 @@
 package com.hjq.easy.demo;
 
 import android.app.ProgressDialog;
-
 import androidx.appcompat.app.AppCompatActivity;
-
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.toast.Toaster;
-
 import okhttp3.Call;
 
 /**
@@ -68,8 +65,8 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     public void onHttpSuccess(Object result) {}
 
     @Override
-    public void onHttpFail(Exception e) {
-        Toaster.show(e.getMessage());
+    public void onHttpFail(Throwable throwable) {
+        Toaster.show(throwable.getMessage());
     }
 
     @Override

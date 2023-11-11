@@ -32,7 +32,7 @@ public interface OnHttpListener<T> {
     /**
      * 请求出错
      */
-    void onHttpFail(Exception e);
+    void onHttpFail(Throwable throwable);
 
     /**
      * 请求结束

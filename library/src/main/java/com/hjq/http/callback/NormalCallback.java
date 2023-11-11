@@ -1,7 +1,6 @@
 package com.hjq.http.callback;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.config.IRequestInterceptor;
@@ -9,11 +8,9 @@ import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.CacheMode;
 import com.hjq.http.request.HttpRequest;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-
 import okhttp3.Call;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -83,9 +80,9 @@ public final class NormalCallback extends BaseCallback {
                 }, 1);
             }
 
-        } catch (Exception cacheException) {
+        } catch (Throwable cacheThrowable) {
             EasyLog.printLog(mHttpRequest, "ReadCache error");
-            EasyLog.printThrowable(mHttpRequest, cacheException);
+            EasyLog.printThrowable(mHttpRequest, cacheThrowable);
             super.start();
         }
     }
@@ -96,7 +93,7 @@ public final class NormalCallback extends BaseCallback {
     }
 
     @Override
-    protected void onResponse(Response response) throws Exception {
+    protected void onHttpResponse(Response response) throws Throwable {
         // 打印请求耗时时间
         EasyLog.printLog(mHttpRequest, "RequestConsuming：" +
                 (response.receivedResponseAtMillis() - response.sentRequestAtMillis()) + " ms");
@@ -117,9 +114,9 @@ public final class NormalCallback extends BaseCallback {
             try {
                 boolean writeCacheResult = mHttpRequest.getRequestHandler().writeCache(mHttpRequest, response, result);
                 EasyLog.printLog(mHttpRequest, "write cache result：" + writeCacheResult);
-            } catch (Exception cacheException) {
+            } catch (Throwable cacheThrowable) {
                 EasyLog.printLog(mHttpRequest, "write cache error");
-                EasyLog.printThrowable(mHttpRequest, cacheException);
+                EasyLog.printThrowable(mHttpRequest, cacheThrowable);
             }
         }
 
@@ -127,11 +124,11 @@ public final class NormalCallback extends BaseCallback {
     }
 
     @Override
-    protected void onFailure(Exception exception) {
+    protected void onHttpFailure(Throwable throwable) {
         // 打印错误堆栈
-        EasyLog.printThrowable(mHttpRequest, exception);
+        EasyLog.printThrowable(mHttpRequest, throwable);
         // 如果设置了只在网络请求失败才去读缓存
-        if (exception instanceof IOException && mHttpRequest.getRequestCache().getCacheMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
+        if (throwable instanceof IOException && mHttpRequest.getRequestCache().getCacheMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
                 Object result = mHttpRequest.getRequestHandler().readCache(mHttpRequest,
                         mReflectType, mHttpRequest.getRequestCache().getCacheTime());
@@ -140,41 +137,41 @@ public final class NormalCallback extends BaseCallback {
                     EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSuccessCallback(result, true));
                     return;
                 }
-            } catch (Exception cacheException) {
+            } catch (Throwable cacheThrowable) {
                 EasyLog.printLog(mHttpRequest, "ReadCache error");
-                EasyLog.printThrowable(mHttpRequest, cacheException);
+                EasyLog.printThrowable(mHttpRequest, cacheThrowable);
             }
         }
 
-        final Exception finalException = mHttpRequest.getRequestHandler().requestFail(mHttpRequest, exception);
-        if (finalException != exception) {
-            EasyLog.printThrowable(mHttpRequest, finalException);
+        final Throwable finalThrowable = mHttpRequest.getRequestHandler().requestFail(mHttpRequest, throwable);
+        if (finalThrowable != throwable) {
+            EasyLog.printThrowable(mHttpRequest, finalThrowable);
         }
 
-        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpFailCallback(finalException));
+        EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpFailCallback(finalThrowable));
     }
 
     private void dispatchHttpStartCallback() {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onHttpStart(getCall());
         }
-        mListener.onHttpStart(getCall());
+        EasyLog.printLog(mHttpRequest,  "Http request start");
     }
 
     private void dispatchHttpSuccessCallback(Object result, boolean cache) {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onHttpSuccess(result, cache);
+            mListener.onHttpEnd(getCall());
         }
-        mListener.onHttpSuccess(result, cache);
-        mListener.onHttpEnd(getCall());
+        EasyLog.printLog(mHttpRequest,  "Http request success");
     }
 
-    private void dispatchHttpFailCallback(Exception e) {
-        if (mListener == null || !HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            return;
+    private void dispatchHttpFailCallback(Throwable throwable) {
+        if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
+            mListener.onHttpFail(throwable);
+            mListener.onHttpEnd(getCall());
         }
-        mListener.onHttpFail(e);
-        mListener.onHttpEnd(getCall());
+        EasyLog.printLog(mHttpRequest,  "Http request fail");
     }
 
     @Override

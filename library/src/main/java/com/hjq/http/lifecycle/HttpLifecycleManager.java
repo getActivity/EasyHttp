@@ -4,7 +4,6 @@ import androidx.annotation.NonNull;
 import androidx.lifecycle.Lifecycle;
 import androidx.lifecycle.LifecycleEventObserver;
 import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyHttp;
 
 /**
@@ -38,6 +37,6 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
         // 移除监听
         source.getLifecycle().removeObserver(this);
         // 取消请求
-        EasyHttp.cancel(source);
+        EasyHttp.cancelByTag(source);
     }
 }

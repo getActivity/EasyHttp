@@ -1,12 +1,14 @@
 package com.hjq.easy.demo;
 
 import android.app.Application;
-
 import androidx.annotation.NonNull;
-
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonToken;
 import com.hjq.easy.demo.http.model.RequestHandler;
 import com.hjq.easy.demo.http.server.ReleaseServer;
 import com.hjq.easy.demo.http.server.TestServer;
+import com.hjq.gson.factory.GsonFactory;
+import com.hjq.gson.factory.ParseExceptionCallback;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
@@ -14,8 +16,8 @@ import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
 import com.hjq.toast.Toaster;
+import com.tencent.bugly.crashreport.CrashReport;
 import com.tencent.mmkv.MMKV;
-
 import okhttp3.OkHttpClient;
 
 /**
@@ -31,6 +33,36 @@ public final class AppApplication extends Application {
         super.onCreate();
         Toaster.init(this);
         MMKV.initialize(this);
+
+        // Bugly 异常捕捉
+        CrashReport.initCrashReport(this, "8ca94a2408", BuildConfig.DEBUG);
+
+        // 设置 Json 解析容错监听
+        GsonFactory.setParseExceptionCallback(new ParseExceptionCallback() {
+
+            @Override
+            public void onParseObjectException(TypeToken<?> typeToken, String fieldName, JsonToken jsonToken) {
+                handlerGsonParseException("解析对象析异常：" + typeToken + "#" + fieldName + "，后台返回的类型为：" + jsonToken);
+            }
+
+            @Override
+            public void onParseListException(TypeToken<?> typeToken, String fieldName, JsonToken listItemJsonToken) {
+                handlerGsonParseException("解析 List 异常：" + typeToken + "#" + fieldName + "，后台返回的条目类型为：" + listItemJsonToken);
+            }
+
+            @Override
+            public void onParseMapException(TypeToken<?> typeToken, String fieldName, String mapItemKey, JsonToken mapItemJsonToken) {
+                handlerGsonParseException("解析 Map 异常：" + typeToken + "#" + fieldName + "，mapItemKey = " + mapItemKey + "，后台返回的条目类型为：" + mapItemJsonToken);
+            }
+
+            private void handlerGsonParseException(String message) {
+                if (BuildConfig.DEBUG) {
+                    throw new IllegalArgumentException(message);
+                }  else {
+                    CrashReport.postCatchedException(new IllegalArgumentException(message));
+                }
+            }
+        });
 
         // 网络请求框架初始化
         IRequestServer server;

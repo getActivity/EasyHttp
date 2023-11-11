@@ -1,11 +1,9 @@
 package com.hjq.http;
 
 import android.text.TextUtils;
-
 import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.request.DeleteBodyRequest;
-import com.hjq.http.request.DeleteRequest;
+import com.hjq.http.request.DeleteUrlRequest;
 import com.hjq.http.request.DownloadRequest;
 import com.hjq.http.request.GetRequest;
 import com.hjq.http.request.HeadRequest;
@@ -14,7 +12,6 @@ import com.hjq.http.request.PatchRequest;
 import com.hjq.http.request.PostRequest;
 import com.hjq.http.request.PutRequest;
 import com.hjq.http.request.TraceRequest;
-
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 
@@ -64,15 +61,27 @@ public final class EasyHttp {
     }
 
     /**
-     * Delete 请求
+     * Delete 请求（默认使用 Url 传递参数）
      *
      * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
      *                            如需传入其他对象请参考以下两个类
      *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
-    public static DeleteRequest delete(LifecycleOwner lifecycleOwner) {
-        return new DeleteRequest(lifecycleOwner);
+    public static DeleteUrlRequest delete(LifecycleOwner lifecycleOwner) {
+        return deleteByUrl(lifecycleOwner);
+    }
+
+    /**
+     * Delete 请求（参数使用 Url 传递）
+     *
+     * @param lifecycleOwner      请传入 AppCompatActivity 或者 AndroidX.Fragment 子类
+     *                            如需传入其他对象请参考以下两个类
+     *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
+     *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
+     */
+    public static DeleteUrlRequest deleteByUrl(LifecycleOwner lifecycleOwner) {
+        return new DeleteUrlRequest(lifecycleOwner);
     }
 
     /**
@@ -83,7 +92,7 @@ public final class EasyHttp {
      *                            {@link com.hjq.http.lifecycle.ActivityLifecycle}
      *                            {@link com.hjq.http.lifecycle.ApplicationLifecycle}
      */
-    public static DeleteBodyRequest deleteBody(LifecycleOwner lifecycleOwner) {
+    public static DeleteBodyRequest deleteByBody(LifecycleOwner lifecycleOwner) {
         return new DeleteBodyRequest(lifecycleOwner);
     }
 
@@ -150,11 +159,11 @@ public final class EasyHttp {
     /**
      * 根据 TAG 取消请求任务
      */
-    public static void cancel(Object tag) {
-        cancel(EasyUtils.getObjectTag(tag));
+    public static void cancelByTag(Object tag) {
+        cancelByTag(EasyUtils.getObjectTag(tag));
     }
 
-    public static void cancel(String tag) {
+    public static void cancelByTag(String tag) {
         if (tag == null) {
             return;
         }
@@ -192,7 +201,7 @@ public final class EasyHttp {
     /**
      * 清除所有请求任务
      */
-    public static void cancel() {
+    public static void cancelAll() {
         OkHttpClient client = EasyConfig.getInstance().getClient();
 
         // 清除排队等候的任务

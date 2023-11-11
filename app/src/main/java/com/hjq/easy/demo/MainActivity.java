@@ -151,8 +151,8 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                                     .setKeyword("搬砖不再有"))
                             .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
                     Toaster.show("同步请求成功，请看日志");
-                } catch (Exception e) {
-                    Toaster.show(e.getMessage());
+                } catch (Throwable throwable) {
+                    Toaster.show(throwable.getMessage());
                 }
                 runOnUiThread(this::hideDialog);
             }).start();
@@ -219,7 +219,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         }
 
                         @Override
-                        public void onUpdateFail(Exception e) {
+                        public void onUpdateFail(Throwable throwable) {
                             Toaster.show("上传失败");
                         }
 
@@ -282,9 +282,9 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         }
 
                         @Override
-                        public void onDownloadFail(File file, Exception e) {
-                            Toaster.show("下载失败：" + e.getMessage());
-                            if (e instanceof FileMd5Exception) {
+                        public void onDownloadFail(File file, Throwable throwable) {
+                            Toaster.show("下载失败：" + throwable.getMessage());
+                            if (throwable instanceof FileMd5Exception) {
                                 // 如果是文件 md5 校验失败，则删除文件
                                 file.delete();
                             }

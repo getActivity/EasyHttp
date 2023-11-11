@@ -1,11 +1,8 @@
 package com.hjq.http.body;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.http.model.ContentType;
-
 import java.io.IOException;
-
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
@@ -16,7 +13,7 @@ import okio.BufferedSink;
  *    time   : 2020/10/26
  *    desc   : 文本参数提交
  */
-public class TextBody extends RequestBody {
+public class TextRequestBody extends RequestBody {
 
     /** 字符串数据 */
     private final String mText;
@@ -24,11 +21,11 @@ public class TextBody extends RequestBody {
     /** 字节数组 */
     private final byte[] mBytes;
 
-    public TextBody() {
+    public TextRequestBody() {
         this("");
     }
 
-    public TextBody(String text) {
+    public TextRequestBody(String text) {
         mText = text;
         mBytes = mText.getBytes();
     }

@@ -31,7 +31,8 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params,
+                                    @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
         HttpUrl.Builder urlBuilder = requestBuilder.build().url().newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
@@ -71,7 +72,8 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers,
+                                    IRequestBodyStrategy requestBodyStrategy) {
         if (!EasyConfig.getInstance().isLogEnabled()) {
             return;
         }

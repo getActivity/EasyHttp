@@ -6,10 +6,8 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.google.gson.JsonSyntaxException;
 import com.hjq.easy.demo.R;
 import com.hjq.easy.demo.http.exception.ResultException;
@@ -27,14 +25,12 @@ import com.hjq.http.exception.ResponseException;
 import com.hjq.http.exception.ServerException;
 import com.hjq.http.exception.TimeoutException;
 import com.hjq.http.request.HttpRequest;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
-
 import okhttp3.Headers;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -55,8 +51,7 @@ public final class RequestHandler implements IRequestHandler {
 
     @NonNull
     @Override
-    public Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response,
-                                 @NonNull Type type) throws Exception {
+    public Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Type type) throws Throwable {
         if (Response.class.equals(type)) {
             return response;
         }
@@ -141,59 +136,59 @@ public final class RequestHandler implements IRequestHandler {
 
     @NonNull
     @Override
-    public Exception requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
-        if (e instanceof HttpException) {
-            if (e instanceof TokenException) {
+    public Throwable requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Throwable throwable) {
+        if (throwable instanceof HttpException) {
+            if (throwable instanceof TokenException) {
                 // 登录信息失效，跳转到登录页
 
             }
-            return e;
+            return throwable;
         }
 
-        if (e instanceof SocketTimeoutException) {
-            return new TimeoutException(mApplication.getString(R.string.http_server_out_time), e);
+        if (throwable instanceof SocketTimeoutException) {
+            return new TimeoutException(mApplication.getString(R.string.http_server_out_time), throwable);
         }
 
-        if (e instanceof UnknownHostException) {
+        if (throwable instanceof UnknownHostException) {
             NetworkInfo info = ((ConnectivityManager) mApplication.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
             // 判断网络是否连接
             if (info != null && info.isConnected()) {
                 // 有连接就是服务器的问题
-                return new ServerException(mApplication.getString(R.string.http_server_error), e);
+                return new ServerException(mApplication.getString(R.string.http_server_error), throwable);
             }
             // 没有连接就是网络异常
-            return new NetworkException(mApplication.getString(R.string.http_network_error), e);
+            return new NetworkException(mApplication.getString(R.string.http_network_error), throwable);
         }
 
-        if (e instanceof IOException) {
+        if (throwable instanceof IOException) {
             // 出现该异常的两种情况
-            // 1. 调用 EasyHttp.cancel
+            // 1. 调用 EasyHttp 取消请求
             // 2. 网络请求被中断
-            return new CancelException(mApplication.getString(R.string.http_request_cancel), e);
+            return new CancelException(mApplication.getString(R.string.http_request_cancel), throwable);
         }
 
-        return new HttpException(e.getMessage(), e);
+        return new HttpException(throwable.getMessage(), throwable);
     }
 
     @NonNull
     @Override
-    public Exception downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
-        if (e instanceof ResponseException) {
-            ResponseException responseException = ((ResponseException) e);
+    public Throwable downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Throwable throwable) {
+        if (throwable instanceof ResponseException) {
+            ResponseException responseException = ((ResponseException) throwable);
             Response response = responseException.getResponse();
             responseException.setMessage(String.format(mApplication.getString(R.string.http_response_error),
                     response.code(), response.message()));
             return responseException;
-        } else if (e instanceof NullBodyException) {
-            NullBodyException nullBodyException = ((NullBodyException) e);
+        } else if (throwable instanceof NullBodyException) {
+            NullBodyException nullBodyException = ((NullBodyException) throwable);
             nullBodyException.setMessage(mApplication.getString(R.string.http_response_null_body));
             return nullBodyException;
-        } else if (e instanceof FileMd5Exception) {
-            FileMd5Exception fileMd5Exception = ((FileMd5Exception) e);
+        } else if (throwable instanceof FileMd5Exception) {
+            FileMd5Exception fileMd5Exception = ((FileMd5Exception) throwable);
             fileMd5Exception.setMessage(mApplication.getString(R.string.http_response_md5_error));
             return fileMd5Exception;
         }
-        return requestFail(httpRequest, e);
+        return requestFail(httpRequest, throwable);
     }
 
     @Nullable

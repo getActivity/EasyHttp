@@ -1,7 +1,7 @@
 package com.hjq.http.config.impl;
 
 import com.hjq.http.EasyUtils;
-import com.hjq.http.body.JsonBody;
+import com.hjq.http.body.JsonRequestBody;
 import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
@@ -23,6 +23,6 @@ public class RequestJsonBodyStrategy implements IRequestBodyStrategy {
 
     @Override
     public RequestBody createRequestBody(HttpRequest<?> httpRequest, HttpParams params) {
-        return new JsonBody(params.getParams());
+        return new JsonRequestBody(params.getParams());
     }
 }

@@ -47,7 +47,7 @@ public interface OnDownloadListener {
     /**
      * 下载失败
      */
-    void onDownloadFail(File file, Exception e);
+    void onDownloadFail(File file, Throwable throwable);
 
     /**
      * 下载结束

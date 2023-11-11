@@ -14,8 +14,8 @@ android {
         applicationId 'com.hjq.easy.demo'
         minSdkVersion 21
         targetSdkVersion 31
-        versionCode 1205
-        versionName '12.5'
+        versionCode 1206
+        versionName '12.6'
     }
 
     // 支持 JDK 1.8
@@ -76,7 +76,7 @@ dependencies {
     implementation 'com.github.getActivity:Toaster:12.5'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
-    implementation 'com.github.getActivity:XXPermissions:18.3'
+    implementation 'com.github.getActivity:XXPermissions:18.5'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
     implementation 'com.github.getActivity:TitleBar:10.5'
@@ -84,10 +84,14 @@ dependencies {
     // Json 解析框架：https://github.com/google/gson
     implementation 'com.google.code.gson:gson:2.10.1'
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation 'com.github.getActivity:GsonFactory:8.0'
+    implementation 'com.github.getActivity:GsonFactory:9.0'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
     implementation 'com.tencent:mmkv-static:1.2.14'
+
+    // Bugly 异常捕捉：https://bugly.qq.com/docs/user-guide/instruction-manual-android/?v=20190418140644
+    implementation 'com.tencent.bugly:crashreport:4.1.9'
+    implementation 'com.tencent.bugly:nativecrashreport:3.9.2'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
     debugImplementation 'com.github.getActivity:Logcat:11.8'

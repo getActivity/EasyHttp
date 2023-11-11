@@ -2,13 +2,10 @@ package com.hjq.http.config;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.hjq.http.EasyUtils;
 import com.hjq.http.request.HttpRequest;
-
 import java.io.File;
 import java.lang.reflect.Type;
-
 import okhttp3.Response;
 
 /**
@@ -27,10 +24,10 @@ public interface IRequestHandler {
      * @param type          解析类型
      * @return              返回结果
      *
-     * @throws Exception    如果抛出则回调失败
+     * @throws Throwable    如果抛出则回调失败
      */
     @NonNull
-    Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Type type) throws Exception;
+    Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Type type) throws Throwable;
 
     /**
      * 请求失败
@@ -40,7 +37,7 @@ public interface IRequestHandler {
      * @return              错误对象
      */
     @NonNull
-    Exception requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e);
+    Throwable requestFail(@NonNull HttpRequest<?> httpRequest, @NonNull Throwable e);
 
     /**
      * 下载开始
@@ -57,18 +54,18 @@ public interface IRequestHandler {
      * @param response      响应对象
      * @param file          下载的文件对象
      */
-    default void downloadSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull File file) throws Exception {}
+    default void downloadSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull File file) throws Throwable {}
 
     /**
      * 下载失败
      *
      * @param httpRequest   请求接口对象
-     * @param e             错误对象
+     * @param throwable             错误对象
      * @return              错误对象
      */
     @NonNull
-    default Exception downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Exception e) {
-        return requestFail(httpRequest, e);
+    default Throwable downloadFail(@NonNull HttpRequest<?> httpRequest, @NonNull Throwable throwable) {
+        return requestFail(httpRequest, throwable);
     }
 
     /**
@@ -79,7 +76,7 @@ public interface IRequestHandler {
      * @return              返回新的请求对象
      */
     @Nullable
-    default Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
+    default Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) throws Throwable {
         return null;
     }
 
@@ -90,7 +87,7 @@ public interface IRequestHandler {
      * @param result        请求结果对象
      * @return              缓存写入结果
      */
-    default boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
+    default boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) throws Throwable {
         return false;
     }
 

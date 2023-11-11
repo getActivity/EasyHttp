@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
-import com.hjq.http.body.WrapperBody;
+import com.hjq.http.body.WrapperRequestBody;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.ThreadSchedulers;
 import java.io.Closeable;
@@ -140,8 +140,8 @@ public final class EasyUtils {
         }
         try {
             closeable.close();
-        } catch (Exception e) {
-            e.printStackTrace();
+        } catch (Throwable throwable) {
+            throwable.printStackTrace();
         }
     }
 
@@ -617,8 +617,8 @@ public final class EasyUtils {
      */
     public static RequestBody findRealRequestBody(RequestBody body) {
         while (true) {
-            if (body instanceof WrapperBody) {
-                body = ((WrapperBody) body).getRequestBody();
+            if (body instanceof WrapperRequestBody) {
+                body = ((WrapperRequestBody) body).getRequestBody();
             } else {
                 return body;
             }

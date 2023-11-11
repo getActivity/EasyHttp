@@ -6,9 +6,9 @@ import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.body.CustomTypeBody;
-import com.hjq.http.body.JsonBody;
-import com.hjq.http.body.ProgressBody;
-import com.hjq.http.body.TextBody;
+import com.hjq.http.body.JsonRequestBody;
+import com.hjq.http.body.ProgressMonitorRequestBody;
+import com.hjq.http.body.TextRequestBody;
 import com.hjq.http.config.IRequestBodyStrategy;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
@@ -46,21 +46,21 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         if (map == null) {
             return (T) this;
         }
-        return body(new JsonBody(map));
+        return body(new JsonRequestBody(map));
     }
 
     public T json(List<?> list) {
         if (list == null) {
             return (T) this;
         }
-        return body(new JsonBody(list));
+        return body(new JsonRequestBody(list));
     }
 
     public T json(String json) {
         if (json == null) {
             return (T) this;
         }
-        return body(new JsonBody(json));
+        return body(new JsonRequestBody(json));
     }
 
     /**
@@ -70,7 +70,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         if (text == null) {
             return (T) this;
         }
-        return body(new TextBody(text));
+        return body(new TextRequestBody(text));
     }
 
     /**
@@ -90,24 +90,27 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
             mUpdateListener = (OnUpdateListener<?>) listener;
         }
         if (mRequestBody != null) {
-            mRequestBody = new ProgressBody(this, mRequestBody, getLifecycleOwner(), mUpdateListener);
+            mRequestBody = new ProgressMonitorRequestBody(this, mRequestBody, getLifecycleOwner(), mUpdateListener);
         }
         super.request(listener);
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addHttpParams(HttpParams params, String key, Object value,
+                                    IRequestBodyStrategy requestBodyStrategy) {
         requestBodyStrategy.addParams(params, key, value);
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params,
+                                    @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
         RequestBody body = mRequestBody != null ? mRequestBody : createRequestBody(params, contentType, requestBodyStrategy);
         requestBuilder.method(getRequestMethod(), body);
     }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+    protected void printRequestLog(Request request, HttpParams params,
+                                    HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
         if (!EasyConfig.getInstance().isLogEnabled()) {
             return;
         }
@@ -162,10 +165,10 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
 
                 printKeyValue(key, value);
             }
-        } else if (body instanceof JsonBody) {
+        } else if (body instanceof JsonRequestBody) {
             // 打印 Json
-            EasyLog.printJson(this, String.valueOf(params));
-        } else if (body instanceof TextBody) {
+            EasyLog.printJson(this, String.valueOf(body));
+        } else if (body instanceof TextRequestBody) {
             // 打印文本
             EasyLog.printLog(this, String.valueOf(body));
         } else if (body != null) {
@@ -180,7 +183,8 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
     /**
      * 组装 RequestBody 对象
      */
-    private RequestBody createRequestBody(HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+    private RequestBody createRequestBody(HttpParams params, @Nullable String contentType,
+                                            IRequestBodyStrategy requestBodyStrategy) {
         RequestBody requestBody = requestBodyStrategy.createRequestBody(this, params);
 
         // 如果外层需要自定义 Content-Type 这个字段，那么就使用装饰设计模式，对原有的 RequestBody 对象进行扩展
@@ -195,7 +199,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
 
         // 如果当前设置了上传监听，那么就使用装饰设计模式，对原有的 RequestBody 对象进行扩展
         if (mUpdateListener != null) {
-            requestBody = new ProgressBody(this, requestBody, getLifecycleOwner(), mUpdateListener);
+            requestBody = new ProgressMonitorRequestBody(this, requestBody, getLifecycleOwner(), mUpdateListener);
         }
 
         return requestBody;

@@ -10,6 +10,7 @@ import com.hjq.http.model.ThreadSchedulers;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Map;
 import okhttp3.OkHttpClient;
 
 /**
@@ -52,9 +53,9 @@ public final class EasyConfig {
     private OkHttpClient mClient;
 
     /** 通用参数 */
-    private HashMap<String, Object> mParams;
+    private Map<String, Object> mParams;
     /** 通用请求头 */
-    private HashMap<String, String> mHeaders;
+    private Map<String, String> mHeaders;
 
     /** 线程调度器 */
     private ThreadSchedulers mThreadSchedulers = ThreadSchedulers.MAIN;
@@ -102,17 +103,17 @@ public final class EasyConfig {
         return this;
     }
 
-    public EasyConfig setParams(HashMap<String, Object> params) {
+    public EasyConfig setParams(Map<String, Object> params) {
         if (params == null) {
-            params = new HashMap<>();
+            params = new HashMap<>(10);
         }
         mParams = params;
         return this;
     }
 
-    public EasyConfig setHeaders(HashMap<String, String> headers) {
+    public EasyConfig setHeaders(Map<String, String> headers) {
         if (headers == null) {
-            headers = new HashMap<>();
+            headers = new HashMap<>(10);
         }
         mHeaders = headers;
         return this;
@@ -204,11 +205,11 @@ public final class EasyConfig {
         return mClient;
     }
 
-    public HashMap<String, Object> getParams() {
+    public Map<String, Object> getParams() {
         return mParams;
     }
 
-    public HashMap<String, String> getHeaders() {
+    public Map<String, String> getHeaders() {
         return mHeaders;
     }
 

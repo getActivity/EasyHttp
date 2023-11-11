@@ -112,6 +112,14 @@
 
     * [对返回的数据进行包装](#对返回的数据进行包装)
 
+* [支持 Protobuf](#支持-protobuf)
+
+    * [准备工作](#准备工作)
+
+    * [请求体解析成 Protobuf](#请求体解析成-protobuf)
+
+    * [响应体解析支持 Protobuf](#响应体解析支持-protobuf)
+
 # 集成文档
 
 #### 配置权限
@@ -365,7 +373,7 @@ EasyHttp.post(this)
             }
 
             @Override
-            public void onUpdateFail(Exception e) {
+            public void onUpdateFail(Throwable throwable) {
                 toast("上传失败");
             }
 
@@ -410,8 +418,8 @@ EasyHttp.download(this)
             }
 
             @Override
-            public void onDownloadFail(File file, Exception e) {
-                toast("下载出错：" + e.getMessage());
+            public void onDownloadFail(File file, Throwable throwable) {
+                toast("下载出错：" + throwable.getMessage());
             }
 
             @Override
@@ -465,8 +473,8 @@ try {
                     .setKeyword("搬砖不再有"))
             .execute(new ResponseClass<HttpData<SearchBean>>() {});
     toast("请求成功，请看日志");
-} catch (Exception e) {
-    toast(e.getMessage());
+} catch (Throwable throwable) {
+    toast(throwable.getMessage());
 }
 ```
 
@@ -647,8 +655,8 @@ lifecycleScope.launch(Dispatchers.IO) {
         withContext(Dispatchers.Main) {
             // 在这里进行 UI 刷新
         }
-    } catch (e: Exception) {
-        toast(e.message)
+    } catch (throwable: Throwable) {
+        toast(throwable.message)
     }
 }
 ```
@@ -991,6 +999,8 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何传入请求头
 
+* 给字段加上 `@HttpHeader` 注解即可，则表示这个字段是一个请求头，如果没有加上此注解，则框架默认将字段作为请求参数
+
 ```java
 public final class XxxApi implements IRequestApi {
 
@@ -1006,6 +1016,8 @@ public final class XxxApi implements IRequestApi {
 ```
 
 #### 如何重命名参数或者请求头的名称
+
+* 给字段加上 `@HttpRename` 注解即可，则可以修改参数名的值，如果没有加上此注解，则框架默认使用字段名作为参数名
 
 ```java
 public final class XxxApi implements IRequestApi {
@@ -1156,12 +1168,12 @@ EasyConfig.with(okHttpClient)
 #### 如何取消已发起的请求
 
 ```java
-// 取消和这个 LifecycleOwner 关联的请求
-EasyHttp.cancel(LifecycleOwner lifecycleOwner);
+// 根据 TAG 取消请求任务
+EasyHttp.cancelByTag(Object tag);
 // 取消指定 Tag 标记的请求
-EasyHttp.cancel(Object tag);
+EasyHttp.cancelByTag(Object tag);
 // 取消所有请求
-EasyHttp.cancel();
+EasyHttp.cancelAll();
 ```
 
 #### 如何延迟发起一个请求
@@ -1296,7 +1308,7 @@ EasyHttp.post(ApplicationLifecycle.getInstance())
             }
 
             @Override
-            public void onHttpFail(Exception e) {
+            public void onHttpFail(Throwable throwable) {
 
             }
         });
@@ -1307,7 +1319,7 @@ EasyHttp.post(ApplicationLifecycle.getInstance())
 * 除了 Application，如果你在 Activity 或者 Service 中采用了 ApplicationLifecycle 的写法，那么为了避免内存泄漏或者崩溃的事情发生，需要你在请求的时候设置对应的 Tag，然后在恰当的时机手动取消请求（一般在 Activity 或者 Service 销毁或者退出的时候取消请求）。
 
 ```java
-EasyHttp.cancel("abc");
+EasyHttp.cancelByTag("abc");
 ```
 
 #### 如何在 ViewModel 中使用 EasyHttp 请求网络
@@ -1354,7 +1366,7 @@ public class XxxViewModel extends BaseViewModel {
                     }
 
                     @Override
-                    public void onHttpFail(Exception e) {
+                    public void onHttpFail(Throwable throwable) {
 
                     }
                 });
@@ -1401,7 +1413,7 @@ EasyHttp.post(this)
             }
 
             @Override
-            public void onHttpFail(Exception e) {
+            public void onHttpFail(Throwable throwable) {
 
             }
         });
@@ -1419,7 +1431,7 @@ String json = gson.toJson(parameter);
 
 EasyHttp.post(this)
         .api(new XxxApi())
-        .body(new JsonBody(json))
+        .body(new JsonRequestBody(json))
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
@@ -1450,11 +1462,11 @@ parameter.put("key1", value1);
 parameter.put("key2", value2);
 
 String json = gson.toJson(parameter);
-JsonBody jsonBody = new JsonBody(json)
+JsonRequestBody jsonRequestBody = new JsonRequestBody(json)
 
 EasyHttp.post(this)
         .api(new XxxApi())
-        .body(jsonBody)
+        .body(jsonRequestBody)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
@@ -1655,8 +1667,12 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
                     .api(new SearchBlogsApi()
                             .setKeyword("搬砖不再有"))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
-        } catch (Exception e) {
-            throw e;
+        } catch (Throwable throwable) {
+            if (throwable instanceof Exception) {
+                throw (Exception) throwable;
+            } else {
+                throw new RuntimeException(throwable);
+            }
         }
 
         HttpData<SearchBean> data2;
@@ -1665,8 +1681,12 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
                     .api(new SearchBlogsApi()
                             .setKeyword(data1.getMessage()))
                     .execute(new ResponseClass<HttpData<SearchBean>>() {});
-        } catch (Exception e) {
-            throw e;
+        } catch (Throwable throwable) {
+            if (throwable instanceof Exception) {
+                throw (Exception) throwable;
+            } else {
+                throw new RuntimeException(throwable);
+            }
         }
 
         emitter.onNext(data2);
@@ -1740,9 +1760,9 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
                     }
 
                     @Override
-                    public void onHttpFail(Exception e) {
-                        super.onHttpFail(e);
-                        emitter.onError(e);
+                    public void onHttpFail(Throwable throwable) {
+                        super.onHttpFail(throwable);
+                        emitter.onError(throwable);
                     }
                 });
     }
@@ -1764,7 +1784,7 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
 
     @Override
     public void accept(String s) throws Exception {
-        Log.i("EasyHttp", ""当前页码位置" + s);
+        Log.i("EasyHttp", "当前页码位置" + s);
     }
 
 }, new Consumer<Throwable>() {
@@ -1774,4 +1794,193 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
         toast(throwable.getMessage());
     }
 });
+```
+
+# 支持 Protobuf
+
+#### 准备工作
+
+* 在项目根目录下得 `build.gradle` 文件加入以下配置
+
+```groovy
+buildscript {
+
+    ......
+
+    dependencies {
+        // 自动生成 Protobuf 类插件：https://github.com/google/protobuf-gradle-plugin
+        classpath 'com.google.protobuf:protobuf-gradle-plugin:0.9.3'
+    }
+}
+```
+
+* 在项目 app 模块下的 `build.gradle` 文件中加入远程依赖
+
+```groovy
+......
+
+apply plugin: 'com.google.protobuf'
+
+android {
+    ......
+    
+    sourceSets {
+        main {
+            proto {
+                // 指定 Protobuf 文件路径
+                srcDir 'src/main/proto'
+            }
+        }
+    }
+}
+
+protobuf {
+
+    protoc {
+        // 也可以配置本地编译器路径
+        artifact = 'com.google.protobuf:protoc:3.23.0'
+    }
+
+    generateProtoTasks {
+        all().each { task ->
+            task.builtins {
+                remove java
+            }
+            task.builtins {
+                // 生产java源码
+                java {}
+            }
+        }
+    }
+}
+
+dependencies {
+
+    ......
+
+    // Protobuf：https://github.com/protocolbuffers/protobuf
+    implementation 'com.google.protobuf:protobuf-java:3.23.1'
+    implementation 'com.google.protobuf:protoc:3.23.0'
+}
+```
+
+* 在 `app/src/main/` 新建一个名为 `proto` 文件夹，用于存放 Protobuf 相关文件，然后创建 `Person.proto` 文件，具体内容如下：
+
+```text
+syntax = "proto3";
+package tutorial;
+
+message Person {
+    string name = 1;
+    int32 id = 2;
+    string email = 3;
+    string phone = 4;
+}
+```
+
+* 然后 `Rebuild Project`，就能看到插件自动生成的 `PersonOuterClass` 类，`PersonOuterClass` 类中还有一个名为 `Person` 的静态内部类
+
+#### 请求体解析成 Protobuf
+
+* 创建一个自定义的 RequestBody 类，用于将 Protocol 对象解析成流，建议存放在 `com.xxx.xxx/http/model` 包名下，
+
+```java
+public class ProtocolRequestBody extends RequestBody {
+
+    /** MessageLite 对象 */
+    private final MessageLite mMessageLite;
+    /** 字节数组 */
+    private final byte[] mBytes;
+
+    public ProtocolRequestBody(MessageLite messageLite) {
+        mMessageLite = messageLite;
+        mBytes = messageLite.toByteArray();
+    }
+
+    @Override
+    public MediaType contentType() {
+        return ContentType.JSON;
+    }
+
+    @Override
+    public long contentLength() {
+        // 需要注意：这里需要用字节数组的长度来计算
+        return mBytes.length;
+    }
+
+    @Override
+    public void writeTo(BufferedSink sink) throws IOException {
+        sink.write(mBytes, 0, mBytes.length);
+    }
+
+    @NonNull
+    @Override
+    public String toString() {
+        return mMessageLite.toString();
+    }
+
+    /**
+     * 获取 MessageLite 对象
+     */
+    @NonNull
+    public MessageLite getMessageLite() {
+        return mMessageLite;
+    }
+}
+```
+
+* 发起请求示例
+
+```java
+// 假装生成一个 Protobuf 对象
+Person person = Person.parseFrom("xxxxxxxxx".getBytes());
+
+EasyHttp.post(this)
+    .api(new XxxApi())
+    .body(new ProtocolRequestBody(person))
+    .request(new HttpCallbackProxy<HttpData<SearchBlogsApi.Bean>>(this) {
+
+        @Override
+        public void onHttpSuccess(HttpData<SearchBlogsApi.Bean> result) {
+            
+        }
+    });
+```
+
+#### 响应体解析支持 Protobuf
+
+* 这个支持很简单了，只需要修改 `IRequestHandler` 接口的实现即可，具体的代码实现如下：
+
+```
+public final class RequestHandler implements IRequestHandler {
+
+    ......
+
+    @NonNull
+    @Override
+    public Object requestSuccess(@NonNull HttpRequest<?> httpRequest, @NonNull Response response,
+                                 @NonNull Type type) throws Throwable {
+        ......
+
+        final Object result;
+
+        try {
+            if (type instanceof Class<?> && AbstractParser.class.isAssignableFrom((Class<?>) type)) {
+                String simpleName = ((Class<?>) type).getSimpleName();
+                Class<?> clazz = Class.forName("tutorial." + simpleName + ".OuterClass." + simpleName);
+                Method parseFromMethod = clazz.getMethod("parseFrom", byte[].class);
+                // 调用静态方法
+                result = parseFromMethod.invoke(null, (Object) text.getBytes());
+            } else {
+                result = GsonFactory.getSingletonGson().fromJson(text, type);
+            }
+        } catch (JsonSyntaxException e) {
+            // 返回结果读取异常
+            throw new DataException(mApplication.getString(R.string.http_data_explain_error), e);
+        }
+
+        ......
+        return result;
+    }
+}
 ```

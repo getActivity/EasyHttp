@@ -5,12 +5,9 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-
 import com.hjq.http.EasyUtils;
-
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileNotFoundException;
@@ -18,7 +15,6 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 
@@ -51,7 +47,7 @@ public class FileContentResolver extends File {
     public FileContentResolver(ContentResolver resolver, Uri uri, String fileName) {
         super(new File(uri.toString()).getPath());
         mContentResolver = resolver;
-        // 请注意这个 uri 是通过 ContentResolver.insert 方法生成的，并且没有经过修改的，否则会导致文件流读取失败
+        // 请注意这个 uri 需要通过 ContentResolver.insert 方法生成的，并且没有经过修改的，否则会导致文件流读取失败
         // 经过测试，ContentResolver.insert 生成的 uri 类型为 Uri.HierarchicalUri 这个内部类的
         mContentUri = uri;
         if (!TextUtils.isEmpty(fileName)) {

@@ -1,8 +1,8 @@
 package com.hjq.http.model;
 
 import com.hjq.http.EasyConfig;
-
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -14,7 +14,7 @@ import java.util.Set;
 public final class HttpParams {
 
     /** 请求参数存放集合 */
-    private final HashMap<String, Object> mParams = new HashMap<>(EasyConfig.getInstance().getParams());
+    private final Map<String, Object> mParams = new HashMap<>(EasyConfig.getInstance().getParams());
 
     /** 是否有流参数 */
     private boolean mMultipart;
@@ -49,7 +49,7 @@ public final class HttpParams {
         return mParams.keySet();
     }
 
-    public HashMap<String, Object> getParams() {
+    public Map<String, Object> getParams() {
         return mParams;
     }
 

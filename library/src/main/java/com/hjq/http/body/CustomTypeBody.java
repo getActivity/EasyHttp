@@ -9,7 +9,7 @@ import okhttp3.RequestBody;
  *    time   : 2022/09/17
  *    desc   : 支持自定义 Content-Type 的 RequestBody
  */
-public class CustomTypeBody extends WrapperBody {
+public class CustomTypeBody extends WrapperRequestBody {
 
    /** 内容类型 */
    private MediaType mContentType;

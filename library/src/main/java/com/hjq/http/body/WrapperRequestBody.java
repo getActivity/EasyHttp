@@ -1,9 +1,7 @@
 package com.hjq.http.body;
 
 import androidx.annotation.NonNull;
-
 import java.io.IOException;
-
 import okhttp3.MediaType;
 import okhttp3.RequestBody;
 import okio.BufferedSink;
@@ -14,11 +12,11 @@ import okio.BufferedSink;
  *    time   : 2022/09/17
  *    desc   : RequestBody 包装类
  */
-public class WrapperBody extends RequestBody {
+public class WrapperRequestBody extends RequestBody {
 
    private final RequestBody mRequestBody;
 
-   public WrapperBody(RequestBody body) {
+   public WrapperRequestBody(RequestBody body) {
       mRequestBody = body;
    }
 

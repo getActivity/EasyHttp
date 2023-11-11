@@ -30,8 +30,8 @@ public interface OnUpdateListener<T> extends OnHttpListener<T> {
      * 请求出错
      */
     @Override
-    default void onHttpFail(Exception e) {
-        onUpdateFail(e);
+    default void onHttpFail(Throwable throwable) {
+        onUpdateFail(throwable);
     }
 
     /**
@@ -72,7 +72,7 @@ public interface OnUpdateListener<T> extends OnHttpListener<T> {
     /**
      * 上传出错
      */
-    void onUpdateFail(Exception e);
+    void onUpdateFail(Throwable throwable);
 
     /**
      * 上传结束

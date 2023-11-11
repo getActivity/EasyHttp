@@ -3,7 +3,6 @@ package com.hjq.http.request;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
-
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyLog;
@@ -11,7 +10,6 @@ import com.hjq.http.EasyUtils;
 import com.hjq.http.annotation.HttpHeader;
 import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
-import com.hjq.http.config.impl.RequestFormBodyStrategy;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.config.IRequestBodyStrategy;
@@ -24,24 +22,23 @@ import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
 import com.hjq.http.config.impl.EasyRequestApi;
 import com.hjq.http.config.impl.EasyRequestServer;
+import com.hjq.http.config.impl.RequestFormBodyStrategy;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
-import com.hjq.http.model.RequestBodyType;
 import com.hjq.http.model.CacheMode;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.ContentType;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
+import com.hjq.http.model.RequestBodyType;
 import com.hjq.http.model.ResponseClass;
 import com.hjq.http.model.ThreadSchedulers;
-
 import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
-
 import okhttp3.CacheControl;
 import okhttp3.Call;
 import okhttp3.Request;
@@ -186,7 +183,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     /**
-     * 设置请求的标记（可用于 {@link EasyHttp#cancel(String)}）
+     * 设置请求的标记（可用于 {@link EasyHttp#cancelByTag(String)}）
      */
     public T tag(Object tag) {
         return tag(EasyUtils.getObjectTag(tag));
@@ -339,9 +336,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 执行同步请求
      * @param responseClass                 需要解析泛型的对象
      * @return                              返回解析完成的对象
-     * @throws Exception                    如果请求失败或者解析失败则抛出异常
+     * @throws Throwable                    如果请求失败或者解析失败则抛出异常
      */
-    public <Bean> Bean execute(ResponseClass<Bean> responseClass) throws Exception {
+    public <Bean> Bean execute(ResponseClass<Bean> responseClass) throws Throwable {
         if (EasyUtils.isMainThread()) {
             // 同步请求是耗时操作，耗时操作不能在主线程中直接执行
             throw new IllegalStateException("Synchronous requests are time-consuming operations, " +
@@ -381,9 +378,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                 if (cacheResult != null) {
                     return (Bean) cacheResult;
                 }
-            } catch (Exception cacheException) {
+            } catch (Throwable cacheThrowable) {
                 EasyLog.printLog(this, "ReadCache error");
-                EasyLog.printThrowable(this, cacheException);
+                EasyLog.printThrowable(this, cacheThrowable);
             }
         }
 
@@ -395,37 +392,37 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                 try {
                     boolean writeCacheResult = mRequestHandler.writeCache(this, response, result);
                     EasyLog.printLog(this, "WriteCache result：" + writeCacheResult);
-                } catch (Exception cacheException) {
+                } catch (Throwable cacheThrowable) {
                     EasyLog.printLog(this, "WriteCache error");
-                    EasyLog.printThrowable(this, cacheException);
+                    EasyLog.printThrowable(this, cacheThrowable);
                 }
             }
 
             return (Bean) result;
 
-        } catch (Exception exception) {
+        } catch (Throwable throwable) {
 
-            EasyLog.printThrowable(this, exception);
+            EasyLog.printThrowable(this, throwable);
 
             // 如果设置了只在网络请求失败才去读缓存
-            if (exception instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
+            if (throwable instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
                     Object cacheResult = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
                     EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                     if (cacheResult != null) {
                         return (Bean) cacheResult;
                     }
-                } catch (Exception cacheException) {
+                } catch (Throwable cacheThrowable) {
                     EasyLog.printLog(this, "ReadCache error");
-                    EasyLog.printThrowable(this, cacheException);
+                    EasyLog.printThrowable(this, cacheThrowable);
                 }
             }
 
-            Exception finalException = mRequestHandler.requestFail(this, exception);
-            if (finalException != exception) {
-                EasyLog.printThrowable(this, finalException);
+            Throwable finalThrowable = mRequestHandler.requestFail(this, throwable);
+            if (finalThrowable != throwable) {
+                EasyLog.printThrowable(this, finalThrowable);
             }
-            throw finalException;
+            throw finalThrowable;
         }
     }
 

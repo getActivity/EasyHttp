@@ -1,8 +1,8 @@
 package com.hjq.http.model;
 
 import com.hjq.http.EasyConfig;
-
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -14,7 +14,7 @@ import java.util.Set;
 public final class HttpHeaders {
 
     /** 请求头存放集合 */
-    private final HashMap<String, String> mHeaders = new HashMap<>(EasyConfig.getInstance().getHeaders());
+    private final Map<String, String> mHeaders = new HashMap<>(EasyConfig.getInstance().getHeaders());
 
     public void put(String key, String value) {
         if (key == null || value == null) {
@@ -46,7 +46,7 @@ public final class HttpHeaders {
         return mHeaders.keySet();
     }
 
-    public HashMap<String, String> getHeaders() {
+    public Map<String, String> getHeaders() {
         return mHeaders;
     }
 }
