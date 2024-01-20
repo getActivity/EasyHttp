@@ -49,7 +49,7 @@ public final class HttpParams {
         return mParams.keySet();
     }
 
-    public Map<String, Object> getParams() {
+    public Map<String, Object> getMap() {
         return mParams;
     }
 

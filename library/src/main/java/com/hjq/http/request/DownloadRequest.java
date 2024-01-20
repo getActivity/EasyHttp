@@ -42,6 +42,9 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     /** 校验的 md5 */
     private String mMd5;
 
+    /** 断点续传开关 */
+    private boolean mResumableTransfer = false;
+
     /** 下载监听回调 */
     private OnDownloadListener mListener;
 
@@ -113,6 +116,14 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     /**
+     * 是否支持断点续传
+     */
+    public DownloadRequest resumableTransfer(boolean enable) {
+        mResumableTransfer = enable;
+        return this;
+    }
+
+    /**
      * 设置下载监听
      */
     public DownloadRequest listener(OnDownloadListener listener) {
@@ -132,21 +143,35 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
 
-        EasyUtils.postDelayedRunnable(() -> {
+        Runnable runnable = () -> {
+            // 放到子线程中执行，避免占用主线程资源
             if (!HttpLifecycleManager.isLifecycleActive(getLifecycleOwner())) {
                 // 宿主已被销毁，请求无法进行
                 EasyLog.printLog(this, "LifecycleOwner has been destroyed and the request cannot be made");
                 return;
             }
             EasyLog.printStackTrace(this, stackTrace);
-            mCallProxy = new CallProxy(createCall());
-            new DownloadCallback(this)
-                    .setFile(mFile)
-                    .setMd5(mMd5)
-                    .setListener(mListener)
-                    .setCall(mCallProxy)
-                    .start();
-        }, delayMillis);
+
+            DownloadCallback downloadCallback = new DownloadCallback(this);
+            downloadCallback.setFile(mFile)
+                .setMd5(mMd5)
+                .setResumableTransfer(mResumableTransfer)
+                .setListener(mListener)
+                .setCallProxyFactory(() -> mCallProxy = new CallProxy(createCall()));
+
+            // 如果本地有这个文件，并且校验通过，则回调下载成功
+            if (downloadCallback.verifyFileMd5()) {
+                // 文件已存在，跳过请求
+                EasyLog.printLog(this, mFile.getPath() + " download file already exists, skip download");
+                // 回调相关的监听方法
+                EasyUtils.runOnAssignThread(getThreadSchedulers(), downloadCallback::dispatchDownloadStartCallback);
+                EasyUtils.runOnAssignThread(getThreadSchedulers(), () -> downloadCallback.dispatchDownloadSuccessCallback(true));
+                return;
+            }
+            downloadCallback.start();
+        };
+
+        sendRunnable(runnable, delayMillis, getTag());
 
         return this;
     }
@@ -187,6 +212,10 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
 
     @Override
     protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+        if (mResumableTransfer && mFile.isFile() && mFile.length() > 0) {
+            // 添加断点续传请求头
+            headers.put("Range", "bytes=" + mFile.length() + "-");
+        }
         // 这里设置 api 的目的是为了打日志的时候不崩溃，因为现在打日志需要 api 对象
         return mRealRequest.api(getRequestApi()).createRequest(url, tag, params, headers, requestBodyStrategy);
     }

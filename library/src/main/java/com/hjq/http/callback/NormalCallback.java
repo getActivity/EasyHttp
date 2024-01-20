@@ -11,7 +11,6 @@ import com.hjq.http.request.HttpRequest;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import okhttp3.Call;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
 
@@ -64,7 +63,7 @@ public final class NormalCallback extends BaseCallback {
 
             // 读取缓存成功
             EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> {
-                onStart(getCall());
+                dispatchHttpStartCallback();
                 dispatchHttpSuccessCallback(result, true);
             });
 
@@ -88,7 +87,7 @@ public final class NormalCallback extends BaseCallback {
     }
 
     @Override
-    protected void onStart(Call call) {
+    protected void onStart() {
         EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), this::dispatchHttpStartCallback);
     }
 
@@ -153,7 +152,7 @@ public final class NormalCallback extends BaseCallback {
 
     private void dispatchHttpStartCallback() {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            mListener.onHttpStart(getCall());
+            mListener.onHttpStart(getCallProxy());
         }
         EasyLog.printLog(mHttpRequest,  "Http request start");
     }
@@ -161,7 +160,7 @@ public final class NormalCallback extends BaseCallback {
     private void dispatchHttpSuccessCallback(Object result, boolean cache) {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             mListener.onHttpSuccess(result, cache);
-            mListener.onHttpEnd(getCall());
+            mListener.onHttpEnd(getCallProxy());
         }
         EasyLog.printLog(mHttpRequest,  "Http request success");
     }
@@ -169,7 +168,7 @@ public final class NormalCallback extends BaseCallback {
     private void dispatchHttpFailCallback(Throwable throwable) {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             mListener.onHttpFail(throwable);
-            mListener.onHttpEnd(getCall());
+            mListener.onHttpEnd(getCallProxy());
         }
         EasyLog.printLog(mHttpRequest,  "Http request fail");
     }

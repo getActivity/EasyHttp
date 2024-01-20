@@ -25,8 +25,11 @@ public abstract class BaseCallback implements Callback {
     /** 请求配置 */
     private final HttpRequest<?> mHttpRequest;
 
+    /** 请求任务对象创建工厂 */
+    private CallProxy.Factory mCallProxyFactory;
+
     /** 请求任务对象 */
-    private CallProxy mCall;
+    private CallProxy mCallProxy;
 
     /** 当前重试次数 */
     private int mRetryCount;
@@ -38,18 +41,28 @@ public abstract class BaseCallback implements Callback {
                 () -> HttpLifecycleManager.register(mHttpRequest.getLifecycleOwner()));
     }
 
-    public BaseCallback setCall(CallProxy call) {
-        mCall = call;
+    public BaseCallback setCallProxy(CallProxy callProxy) {
+        mCallProxy = callProxy;
+        return this;
+    }
+
+    public BaseCallback setCallProxyFactory(CallProxy.Factory factory) {
+        mCallProxyFactory = factory;
         return this;
     }
 
     public void start() {
-        mCall.enqueue(this);
-        onStart(mCall);
+        onStart();
+        mCallProxy = mCallProxyFactory.create();
+        try {
+            mCallProxy.enqueue(this);
+        } catch (Throwable throwable) {
+            onHttpFailure(throwable);
+        }
     }
 
-    protected CallProxy getCall() {
-        return mCall;
+    protected CallProxy getCallProxy() {
+        return mCallProxy;
     }
 
     @Override
@@ -82,7 +95,7 @@ public abstract class BaseCallback implements Callback {
 
                 mRetryCount++;
                 Call newCall = call.clone();
-                mCall.setCall(newCall);
+                mCallProxy.setRealCall(newCall);
                 newCall.enqueue(BaseCallback.this);
                 // 请求超时，正在执行延迟重试
                 EasyLog.printLog(mHttpRequest, "The request timed out, a delayed retry is being performed, the number of retries: " +
@@ -98,7 +111,7 @@ public abstract class BaseCallback implements Callback {
     /**
      * 请求开始
      */
-    protected abstract void onStart(Call call);
+    protected abstract void onStart();
 
     /**
      * 请求成功

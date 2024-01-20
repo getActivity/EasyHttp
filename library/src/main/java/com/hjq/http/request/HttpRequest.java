@@ -207,7 +207,6 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      */
     @NonNull
     protected Call createCall() {
-
         IRequestBodyStrategy requestBodyStrategy = mRequestType.getBodyType();
 
         HttpParams params = new HttpParams();
@@ -292,9 +291,6 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (mRequestInterceptor != null) {
             request = mRequestInterceptor.interceptRequest(this, request);
         }
-        if (request == null) {
-            throw new NullPointerException("The request object cannot be empty");
-        }
         return mRequestClient.getOkHttpClient().newCall(request);
     }
 
@@ -309,27 +305,24 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
         StackTraceElement[] stackTrace = new Throwable().getStackTrace();
         Runnable runnable = () -> {
-            if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
-                // 宿主已被销毁，请求无法进行
-                EasyLog.printLog(HttpRequest.this,
+            // 放到子线程中执行，避免占用主线程资源
+            EasyUtils.runOnAssignThread(ThreadSchedulers.IO, () -> {
+                if (!HttpLifecycleManager.isLifecycleActive(mLifecycleOwner)) {
+                    // 宿主已被销毁，请求无法进行
+                    EasyLog.printLog(HttpRequest.this,
                         "LifecycleOwner has been destroyed and the request cannot be made");
-                return;
-            }
-            EasyLog.printStackTrace(HttpRequest.this, stackTrace);
+                    return;
+                }
+                EasyLog.printStackTrace(HttpRequest.this, stackTrace);
 
-            mCallProxy = new CallProxy(createCall());
-            new NormalCallback(HttpRequest.this)
+                new NormalCallback(HttpRequest.this)
                     .setListener(listener)
-                    .setCall(mCallProxy)
+                    .setCallProxyFactory(() -> mCallProxy = new CallProxy(createCall()))
                     .start();
+            });
         };
-        if (mDelayMillis > 0) {
-            // issue 地址：https://github.com/getActivity/EasyHttp/issues/159
-            int what = mTag == null ? Integer.MAX_VALUE : mTag.hashCode();
-            EasyUtils.postDelayedRunnable(runnable, what, mDelayMillis);
-        } else {
-            runnable.run();
-        }
+
+        sendRunnable(runnable, mDelayMillis, mTag);
     }
 
     /**
@@ -372,7 +365,14 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                 if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                     // 使用异步请求来刷新缓存
                     new NormalCallback(this)
-                            .setCall(mCallProxy)
+                            .setCallProxyFactory(() -> {
+                                // 如果存在缓存的情况下，则后面的逻辑不会继续请求，可以直接使用 CallProxy 对象字段
+                                // 如果不存在缓存的话，则重新 new 一个 CallProxy 对象，这是因为后面的逻辑会请重新发起网络请求
+                                if (cacheResult != null) {
+                                    return mCallProxy;
+                                }
+                                return new CallProxy(createCall()) ;
+                            })
                             .start();
                 }
                 if (cacheResult != null) {
@@ -523,6 +523,23 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     /**
+     * 发送一个任务
+     *
+     * @param runnable          任务对象
+     * @param delayMillis       延迟时间
+     * @param tag               任务标记
+     */
+    protected void sendRunnable(Runnable runnable, long delayMillis, String tag) {
+        if (delayMillis > 0) {
+            // issue 地址：https://github.com/getActivity/EasyHttp/issues/159
+            int what = tag == null ? Integer.MAX_VALUE : tag.hashCode();
+            EasyUtils.postDelayedRunnable(runnable, what, delayMillis);
+        } else {
+            runnable.run();
+        }
+    }
+
+    /**
      * 获取延迟请求时间
      */
     protected long getDelayMillis() {
@@ -567,6 +584,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 创建请求的对象
      */
+    @NonNull
     protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
         Request.Builder requestBuilder = createRequestBuilder(url, tag);
         addRequestHeader(requestBuilder, headers);
@@ -582,7 +600,8 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 创建请求构建对象
      */
-    public Request.Builder createRequestBuilder(String url, String tag) {
+    @NonNull
+    protected Request.Builder createRequestBuilder(String url, String tag) {
         Request.Builder requestBuilder = new Request.Builder();
         requestBuilder.url(url);
         if (tag != null) {

@@ -4,7 +4,7 @@
 
 * 博客地址：[网络请求，如斯优雅](https://www.jianshu.com/p/93cd59dec002)
 
-* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/12.6/EasyHttp.apk)
+* 可以扫码下载 Demo 进行演示或者测试，如果扫码下载不了的，[点击此处下载Demo](https://github.com/getActivity/EasyHttp/releases/download/12.8/EasyHttp.apk)
 
 ![](picture/demo_code.png)
 
@@ -61,7 +61,7 @@ android {
 
 dependencies {
     // 网络请求框架：https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:12.6'
+    implementation 'com.github.getActivity:EasyHttp:12.8'
     // OkHttp 框架：https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
@@ -72,11 +72,44 @@ dependencies {
 
 #### 框架混淆规则
 
-* 在混淆规则文件 `proguard-rules.pro` 中加入
+* OkHttp3 框架混淆规则
 
 ```text
+# OkHttp3 框架混淆规则
+-keepattributes Signature
+-keepattributes *Annotation*
+-keep class okhttp3.** { *; }
+-keep interface okhttp3.** { *; }
+-dontwarn okhttp3.**
+-dontwarn okio.**
+```
+
+* EasyHttp 框架混淆规则
+
+```text
+# EasyHttp 框架混淆规则
 -keep class com.hjq.http.** {*;}
 ```
+
+* 不混淆实现 OnHttpListener 接口的类
+
+```text
+# 必须要加上此规则，否则会导致泛型解析失败
+-keep public class * implements com.hjq.http.listener.OnHttpListener {
+    *;
+}
+```
+
+* 不混淆某个包下的 Bean 类
+
+```text
+# 必须要加上此规则，否则可能会导致 Bean 类的字段无法解析成后台返回的字段，xxx 请替换成对应包名
+-keep class com.xxx.xxx.xxx.xxx.** {
+    <fields>;
+}
+```
+
+* 以上混淆规则，可以在主模块的 `proguard-rules.pro` 文件中加入
 
 ## [框架的具体用法请点击这里查看](HelpDoc.md)
 
@@ -84,18 +117,19 @@ dependencies {
 
 |  功能或细节  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    对应版本  |  12.6 |  2.9.0  |  3.0.4    |
+|    对应版本  |  12.8 |  2.9.0  |  3.0.4    |
 |    issues 数   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
-|    **aar 包大小**  |  93 KB  | 123 KB  |  131 KB  |
+|    **aar 包大小**  |  95 KB  | 123 KB  |  131 KB  |
 |    minSdk 要求  |  API 14+ |  API 21+  |  API 14+   |
 |    配置多域名  |  ✅  |  ❌  |   ✅   |
 |    **动态 Host**  |  ✅  |  ❌  |   ❌   |
 |    全局参数   |  ✅  |  ❌  |    ✅   |
 |    日志打印   |  ✅  |  ❌  |    ✅   |
 |    超时重试   |  ✅  |  ✅  |    ✅   |
-|    **请求缓存**   |  ✅  |  ❌  |    ✅   |
-|    **下载校验**   |  ✅  |  ❌  |   ❌  |
+|    **配置 Http 缓存**   |  ✅  |  ❌  |    ✅   |
+|    **下载文件校验**   |  ✅  |  ❌  |   ❌  |
 |    **极速下载**   |  ✅  |  ❌  |   ❌  |
+|    **下载断点续传**   |  ✅  |  ❌  |   ✅  |
 |    上传进度监听   |  ✅  |   ❌   |    ✅    |
 |    Json 参数提交  |  ✅  |   ❌   |    ✅   |
 |    Json 日志打印格式化  |  ✅  |   ❌   |    ❌   |
@@ -282,18 +316,6 @@ EasyHttp.post(this)
 * [张鸿洋](https://github.com/hongyangAndroid)
 
 * [WanAndroid](https://www.wanandroid.com/)
-
-#### 广告区
-
-* 我现在任腾讯云服务器推广大使，大家如果有购买服务器的需求，可以通过下面的链接购买
-
-[![](https://upload-dianshi-1255598498.file.myqcloud.com/upload/nodir/345X200-9ae456f58874df499adf7c331c02cb0fed12b81d.jpg)](https://curl.qcloud.com/A6cYskvv)
-
-[【腾讯云】云服务器、云数据库、COS、CDN、短信等云产品特惠热卖中](https://curl.qcloud.com/A6cYskvv)
-
-[![](https://upload-dianshi-1255598498.file.myqcloud.com/345-200-b28f7dee9552f4241ea6a543f15a9798049701d4.jpg)](https://curl.qcloud.com/up4fQsdn)
-
-[【腾讯云】中小企业福利专场，多款刚需产品，满足企业通用场景需求](https://curl.qcloud.com/up4fQsdn)
 
 ## License
 

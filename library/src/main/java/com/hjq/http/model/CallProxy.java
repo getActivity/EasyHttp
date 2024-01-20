@@ -1,9 +1,7 @@
 package com.hjq.http.model;
 
 import androidx.annotation.NonNull;
-
 import java.io.IOException;
-
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -18,57 +16,66 @@ import okio.Timeout;
  */
 public final class CallProxy implements Call {
 
-    private Call mCall;
+    private Call mRealCall;
 
-    public CallProxy(@NonNull Call call) {
-        mCall = call;
+    public CallProxy(@NonNull Call realCall) {
+        mRealCall = realCall;
     }
 
-    public void setCall(@NonNull Call call) {
-        mCall = call;
+    public void setRealCall(@NonNull Call call) {
+        mRealCall = call;
+    }
+
+    public Call getRealCall() {
+        return mRealCall;
     }
 
     @NonNull
     @Override
     public Request request() {
-        return mCall.request();
+        return mRealCall.request();
     }
 
     @NonNull
     @Override
     public Response execute() throws IOException {
-        return mCall.execute();
+        return mRealCall.execute();
     }
 
     @Override
     public void enqueue(@NonNull Callback responseCallback) {
-        mCall.enqueue(responseCallback);
+        mRealCall.enqueue(responseCallback);
     }
 
     @Override
     public void cancel() {
-        mCall.cancel();
+        mRealCall.cancel();
     }
 
     @Override
     public boolean isExecuted() {
-        return mCall.isExecuted();
+        return mRealCall.isExecuted();
     }
 
     @Override
     public boolean isCanceled() {
-        return mCall.isCanceled();
+        return mRealCall.isCanceled();
     }
 
     @NonNull
     @Override
     public Timeout timeout() {
-        return mCall.timeout();
+        return mRealCall.timeout();
     }
 
     @NonNull
     @Override
     public Call clone() {
-        return mCall.clone();
+        return mRealCall.clone();
+    }
+
+    public interface Factory {
+
+        CallProxy create();
     }
 }

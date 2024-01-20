@@ -23,7 +23,6 @@ import com.hjq.easy.demo.http.api.UpdateImageApi;
 import com.hjq.easy.demo.http.model.HttpData;
 import com.hjq.http.EasyHttp;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.exception.FileMd5Exception;
 import com.hjq.http.listener.HttpCallbackProxy;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnUpdateListener;
@@ -164,21 +163,23 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 return;
             }
 
+            /*
             // 如果是放到外部存储目录下则需要适配分区存储
-//            String fileName = "EasyHttp.png";
-//            File file;
-//            Uri outputUri;
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//                // 适配 Android 10 分区存储特性
-//                ContentValues values = new ContentValues();
-//                // 设置显示的文件名
-//                values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
-//                // 生成一个新的 uri 路径
-//                outputUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
-//                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
-//            } else {
-//                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), fileName);
-//            }
+            String fileName = "EasyHttp.png";
+            File file;
+            Uri outputUri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // 适配 Android 10 分区存储特性
+                ContentValues values = new ContentValues();
+                // 设置显示的文件名
+                values.put(MediaStore.Images.Media.DISPLAY_NAME, fileName);
+                // 生成一个新的 uri 路径
+                outputUri = getContentResolver().insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values);
+                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
+            } else {
+                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), fileName);
+            }
+            */
 
             // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
             File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "我是测试专用的图片.png");
@@ -236,22 +237,27 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 return;
             }
 
+            /*
             // 如果是放到外部存储目录下则需要适配分区存储
-//            String fileName = "微信 8.0.15.apk";
-//
-//            File file;
-//            Uri outputUri;
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-//                // 适配 Android 10 分区存储特性
-//                ContentValues values = new ContentValues();
-//                // 设置显示的文件名
-//                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
-//                // 生成一个新的 uri 路径
-//                outputUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
-//                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
-//            } else {
-//                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
-//            }
+            String fileName = "微信 8.0.15.apk";
+
+            File file;
+            Uri outputUri;
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                // 适配 Android 10 分区存储特性
+                ContentValues values = new ContentValues();
+                // 设置显示的文件名
+                values.put(MediaStore.Downloads.DISPLAY_NAME, fileName);
+                // 生成一个新的 uri 路径
+                // 注意这里使用 ContentResolver 插入的时候都会生成新的 Uri
+                // 解决方式将 ContentValues 和 Uri 作为 key 和 value 进行持久化关联
+                // outputUri = getContentResolver().insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, values);
+                outputUri = ContentResolverUriStore.insert(this, Downloads.EXTERNAL_CONTENT_URI, values);
+                file = new FileContentResolver(getContentResolver(), outputUri, fileName);
+            } else {
+                file = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName);
+            }
+            */
 
             // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
             File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "微信 8.0.15.apk");
@@ -262,6 +268,8 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                     //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
                     .url("https://dldir1.qq.com/weixin/android/weixin8015android2020_arm64.apk")
                     .md5("b05b25d4738ea31091dd9f80f4416469")
+                    // 设置断点续传（默认不开启）
+                    .resumableTransfer(true)
                     .listener(new OnDownloadListener() {
 
                         @Override
@@ -284,10 +292,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                         @Override
                         public void onDownloadFail(File file, Throwable throwable) {
                             Toaster.show("下载失败：" + throwable.getMessage());
-                            if (throwable instanceof FileMd5Exception) {
-                                // 如果是文件 md5 校验失败，则删除文件
-                                file.delete();
-                            }
+                            file.delete();
                         }
 
                         @Override

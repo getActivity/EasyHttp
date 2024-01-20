@@ -10,8 +10,6 @@
 
     * [框架初始化](#框架初始化)
 
-    * [混淆规则](#混淆规则)
-
 * [使用文档](#使用文档)
 
     * [配置接口](#配置接口)
@@ -36,7 +34,7 @@
 
     * [如何添加或者删除全局参数](#如何添加或者删除全局参数)
 
-    * [如何定义全局的动态参数](#如何定义全局的动态参数)
+    * [如何动态添加全局的参数或者请求头](#如何动态添加全局的参数或者请求头)
 
     * [如何在请求中忽略某个全局参数](#如何在请求中忽略某个全局参数)
 
@@ -205,23 +203,6 @@ EasyConfig.with(okHttpClient)
 ```java
 EasyConfig.getInstance()
         .addParam("token", data.getData().getToken());
-```
-
-#### 混淆规则
-
-```groovy
-# OkHttp3
--keepattributes Signature
--keepattributes *Annotation*
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-
-# 不混淆这个包下的类
--keep class com.xxx.xxx.xxx.xxx.** {
-    <fields>;
-}
 ```
 
 # 使用文档
@@ -399,6 +380,8 @@ EasyHttp.download(this)
         //.url("https://qd.myapp.com/myapp/qqteam/AndroidQQ/mobileqq_android.apk")
         .url("http://dldir1.qq.com/weixin/android/weixin708android1540.apk")
         .md5("2E8BDD7686474A7BC4A51ADC3667CABF")
+        // 设置断点续传（默认不开启）
+        //.resumableTransfer(true)
         .listener(new OnDownloadListener() {
 
             @Override
@@ -419,7 +402,8 @@ EasyHttp.download(this)
 
             @Override
             public void onDownloadFail(File file, Throwable throwable) {
-                toast("下载出错：" + throwable.getMessage());
+                toast("下载失败：" + throwable.getMessage());
+                file.delete();
             }
 
             @Override
@@ -705,14 +689,16 @@ EasyConfig.getInstance().addHeader("key", "value");
 EasyConfig.getInstance().removeHeader("key");
 ```
 
-#### 如何定义全局的动态参数
+#### 如何动态添加全局的参数或者请求头
 
 ```java
 EasyConfig.getInstance().setInterceptor(new IRequestInterceptor() {
 
     @Override
     public void interceptArguments(@NonNull HttpRequest<?> httpRequest, @NonNull HttpParams params, @NonNull HttpHeaders headers) {
+        // 添加请求头
         headers.put("key", "value");
+        // 添加参数
         params.put("key", "value");
     }
 });

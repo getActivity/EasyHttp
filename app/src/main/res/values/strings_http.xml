@@ -10,6 +10,6 @@
     <string name="http_server_error">服务器连接异常，请稍后再试</string>
     <string name="http_request_cancel">请求被中断，请重试</string>
     <string name="http_response_null_body">服务器数据返回异常，请稍后再试</string>
-    <string name="http_response_md5_error">下载失败，文件 md5 校验失败</string>
+    <string name="http_response_md5_error">文件 md5 校验失败</string>
 
 </resources>

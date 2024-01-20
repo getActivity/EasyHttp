@@ -104,8 +104,10 @@ public class FileContentResolver extends File {
     /**
      * 打开文件输出流
      */
-    public OutputStream openOutputStream() throws FileNotFoundException {
-        return mContentResolver.openOutputStream(mContentUri);
+    public OutputStream openOutputStream(boolean append) throws FileNotFoundException {
+        // w：写入模式，如果文件存在则覆盖，如果文件不存在则创建
+        // wa：追加模式，如果文件存在则追加到文件末尾，如果文件不存在则创建
+        return mContentResolver.openOutputStream(mContentUri, append ? "wa" : "w");
     }
 
     @Override

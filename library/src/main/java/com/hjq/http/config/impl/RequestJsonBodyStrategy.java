@@ -23,6 +23,6 @@ public class RequestJsonBodyStrategy implements IRequestBodyStrategy {
 
     @Override
     public RequestBody createRequestBody(HttpRequest<?> httpRequest, HttpParams params) {
-        return new JsonRequestBody(params.getParams());
+        return new JsonRequestBody(params.getMap());
     }
 }

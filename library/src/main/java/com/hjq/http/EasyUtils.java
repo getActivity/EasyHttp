@@ -573,10 +573,20 @@ public final class EasyUtils {
      * 打开文件的输出流
      */
     public static OutputStream openFileOutputStream(File file) throws FileNotFoundException {
+        return openFileOutputStream(file, false);
+    }
+
+    /**
+     * 打开文件的输出流
+     *
+     * @param file              文件对象
+     * @param append            是否追加内容
+     */
+    public static OutputStream openFileOutputStream(File file, boolean append) throws FileNotFoundException {
         if (file instanceof FileContentResolver) {
-            return ((FileContentResolver) file).openOutputStream();
+            return ((FileContentResolver) file).openOutputStream(append);
         }
-        return new FileOutputStream(file);
+        return new FileOutputStream(file, append);
     }
 
     /**

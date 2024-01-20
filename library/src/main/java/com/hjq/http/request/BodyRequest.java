@@ -5,7 +5,7 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.body.CustomTypeBody;
+import com.hjq.http.body.CustomTypeRequestBody;
 import com.hjq.http.body.JsonRequestBody;
 import com.hjq.http.body.ProgressMonitorRequestBody;
 import com.hjq.http.body.TextRequestBody;
@@ -191,9 +191,9 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         if (contentType != null && !"".equals(contentType)) {
             MediaType mediaType = MediaType.parse(contentType);
             if (mediaType != null) {
-                CustomTypeBody customTypeBody = new CustomTypeBody(requestBody);
-                customTypeBody.setContentType(mediaType);
-                requestBody = customTypeBody;
+                CustomTypeRequestBody customTypeRequestBody = new CustomTypeRequestBody(requestBody);
+                customTypeRequestBody.setContentType(mediaType);
+                requestBody = customTypeRequestBody;
             }
         }
 

@@ -46,7 +46,7 @@ public final class HttpHeaders {
         return mHeaders.keySet();
     }
 
-    public Map<String, String> getHeaders() {
+    public Map<String, String> getMap() {
         return mHeaders;
     }
 }

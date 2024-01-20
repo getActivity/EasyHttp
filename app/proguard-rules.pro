@@ -32,6 +32,13 @@
 -dontwarn okhttp3.**
 -dontwarn okio.**
 
+# EasyHttp
+-keep class com.hjq.http.** {*;}
+# 必须要加上此规则，否则会导致泛型解析失败
+-keep public class * implements com.hjq.http.listener.OnHttpListener {
+    *;
+}
+
 # 不混淆这个包下的类
 -keep class com.hjq.easy.demo.http.** {
     <fields>;
