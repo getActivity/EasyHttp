@@ -24,6 +24,8 @@
 
 ![](picture/demo_preview.jpg)
 
+![](picture/resumable_transfer.gif)
+
 #### 集成步骤
 
 * 如果你的项目 Gradle 配置是在 `7.0 以下`，需要在 `build.gradle` 文件中加入
