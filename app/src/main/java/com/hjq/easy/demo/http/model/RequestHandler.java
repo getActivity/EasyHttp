@@ -31,6 +31,8 @@ import java.lang.reflect.GenericArrayType;
 import java.lang.reflect.Type;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.HashMap;
+import java.util.Map;
 import okhttp3.Headers;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
@@ -116,7 +118,14 @@ public final class RequestHandler implements IRequestHandler {
 
         if (result instanceof HttpData) {
             HttpData<?> model = (HttpData<?>) result;
-            model.setResponseHeaders(response.headers());
+            Headers headers = response.headers();
+            int headersSize = headers.size();
+            Map<String, String> headersMap = new HashMap<>(headersSize);
+            for (int i = 0; i < headersSize; i++) {
+                headersMap.put(headers.name(i), headers.value(i));
+            }
+            // Github issue 地址：https://github.com/getActivity/EasyHttp/issues/233
+            model.setResponseHeaders(headersMap);
 
             if (model.isRequestSuccess()) {
                 // 代表执行成功

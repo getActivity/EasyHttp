@@ -1,10 +1,8 @@
 package com.hjq.easy.demo.http.api;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.config.IRequestApi;
-
 import java.util.List;
 
 /**
@@ -30,7 +28,7 @@ public final class SearchBlogsApi implements IRequestApi {
         return this;
     }
 
-    public final static class Bean {
+    public static final class Bean {
 
         private int curPage;
         private int offset;

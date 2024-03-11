@@ -1,8 +1,7 @@
 package com.hjq.easy.demo.http.model;
 
 import androidx.annotation.Nullable;
-
-import okhttp3.Headers;
+import java.util.Map;
 
 /**
  *    author : Android 轮子哥
@@ -14,7 +13,7 @@ public class HttpData<T> {
 
     /** 响应头 */
     @Nullable
-    private Headers responseHeaders;
+    private Map<String, String> responseHeaders;
 
     /** 返回码 */
     private int errorCode;
@@ -24,12 +23,12 @@ public class HttpData<T> {
     @Nullable
     private T data;
 
-    public void setResponseHeaders(@Nullable Headers responseHeaders) {
+    public void setResponseHeaders(@Nullable Map<String, String> responseHeaders) {
         this.responseHeaders = responseHeaders;
     }
 
     @Nullable
-    public Headers getResponseHeaders() {
+    public Map<String, String> getResponseHeaders() {
         return responseHeaders;
     }
 
