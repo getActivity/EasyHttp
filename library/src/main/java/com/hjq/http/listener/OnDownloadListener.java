@@ -1,5 +1,6 @@
 package com.hjq.http.listener;
 
+import androidx.annotation.NonNull;
 import java.io.File;
 
 /**
@@ -13,7 +14,7 @@ public interface OnDownloadListener {
     /**
      * 下载开始
      */
-    default void onDownloadStart(File file) {}
+    default void onDownloadStart(@NonNull File file) {}
 
     /**
      * 下载字节改变
@@ -21,36 +22,36 @@ public interface OnDownloadListener {
      * @param totalByte             总字节数
      * @param downloadByte          已下载字节数
      */
-    default void onDownloadByteChange(File file, long totalByte, long downloadByte) {}
+    default void onDownloadByteChange(@NonNull File file, long totalByte, long downloadByte) {}
 
     /**
      * 下载进度改变
      *
      * @param progress              下载进度值（0-100）
      */
-    void onDownloadProgressChange(File file, int progress);
+    void onDownloadProgressChange(@NonNull File file, int progress);
 
     /**
      * 下载成功
      *
      * @param cache         是否是通过缓存下载成功的
      */
-    default void onDownloadSuccess(File file, boolean cache) {
+    default void onDownloadSuccess(@NonNull File file, boolean cache) {
         onDownloadSuccess(file);
     }
 
     /**
      * 下载成功
      */
-    void onDownloadSuccess(File file);
+    void onDownloadSuccess(@NonNull File file);
 
     /**
      * 下载失败
      */
-    void onDownloadFail(File file, Throwable throwable);
+    void onDownloadFail(@NonNull File file, @NonNull Throwable throwable);
 
     /**
      * 下载结束
      */
-    default void onDownloadEnd(File file) {}
+    default void onDownloadEnd(@NonNull File file) {}
 }

@@ -1,6 +1,7 @@
 package com.hjq.http.listener;
 
-import okhttp3.Call;
+import androidx.annotation.NonNull;
+import com.hjq.http.config.IRequestApi;
 
 /**
  *    author : Android 轮子哥
@@ -13,29 +14,29 @@ public interface OnHttpListener<T> {
     /**
      * 请求开始
      */
-    default void onHttpStart(Call call) {}
+    default void onHttpStart(@NonNull IRequestApi api) {}
 
     /**
      * 请求成功
      *
      * @param cache         是否是通过缓存请求成功的
      */
-    default void onHttpSuccess(T result, boolean cache) {
+    default void onHttpSuccess(@NonNull T result, boolean cache) {
         onHttpSuccess(result);
     }
 
     /**
      * 请求成功
      */
-    void onHttpSuccess(T result);
+    void onHttpSuccess(@NonNull T result);
 
     /**
      * 请求出错
      */
-    void onHttpFail(Throwable throwable);
+    void onHttpFail(@NonNull Throwable throwable);
 
     /**
      * 请求结束
      */
-    default void onHttpEnd(Call call) {}
+    default void onHttpEnd(@NonNull IRequestApi api) {}
 }

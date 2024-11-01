@@ -41,6 +41,11 @@ public final class NormalCallback extends BaseCallback {
         return this;
     }
 
+    public NormalCallback setReflectType(Type reflectType) {
+        mReflectType = reflectType;
+        return this;
+    }
+
     @Override
     public void start() {
         CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
@@ -152,15 +157,15 @@ public final class NormalCallback extends BaseCallback {
 
     private void dispatchHttpStartCallback() {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
-            mListener.onHttpStart(getCallProxy());
+            mListener.onHttpStart(mHttpRequest.getRequestApi());
         }
         EasyLog.printLog(mHttpRequest,  "Http request start");
     }
 
-    private void dispatchHttpSuccessCallback(Object result, boolean cache) {
+    private void dispatchHttpSuccessCallback(@NonNull Object result, boolean cache) {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             mListener.onHttpSuccess(result, cache);
-            mListener.onHttpEnd(getCallProxy());
+            mListener.onHttpEnd(mHttpRequest.getRequestApi());
         }
         EasyLog.printLog(mHttpRequest,  "Http request success");
     }
@@ -168,7 +173,7 @@ public final class NormalCallback extends BaseCallback {
     private void dispatchHttpFailCallback(Throwable throwable) {
         if (mListener != null && HttpLifecycleManager.isLifecycleActive(mHttpRequest.getLifecycleOwner())) {
             mListener.onHttpFail(throwable);
-            mListener.onHttpEnd(getCallProxy());
+            mListener.onHttpEnd(mHttpRequest.getRequestApi());
         }
         EasyLog.printLog(mHttpRequest,  "Http request fail");
     }

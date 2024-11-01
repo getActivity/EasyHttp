@@ -27,7 +27,7 @@ public class ContentResolverUriStore {
         // 使用字符串作为缓存键
         String cacheKey = "ContentResolver insert: " + "Uri = " + url + ", ContentValues = " + convertContentValuesToString(values);
         String oldUriString = sharedPreferences.getString(cacheKey, "");
-        if (oldUriString != null && !"".equals(oldUriString)) {
+        if (oldUriString != null && !oldUriString.isEmpty()) {
             Cursor cursor = null;
             try {
                 Uri oldUri = Uri.parse(oldUriString);

@@ -365,6 +365,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
                 if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                     // 使用异步请求来刷新缓存
                     new NormalCallback(this)
+                            .setReflectType(reflectType)
                             .setCallProxyFactory(() -> {
                                 // 如果存在缓存的情况下，则后面的逻辑不会继续请求，可以直接使用 CallProxy 对象字段
                                 // 如果不存在缓存的话，则重新 new 一个 CallProxy 对象，这是因为后面的逻辑会请重新发起网络请求
@@ -386,6 +387,10 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
         try {
             Response response = mCallProxy.execute();
+            IRequestInterceptor interceptor = mRequestInterceptor;
+            if (interceptor != null) {
+                response = interceptor.interceptResponse(this, response);
+            }
             Object result = mRequestHandler.requestSuccess(this, response, reflectType);
 
             if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {

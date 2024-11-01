@@ -26,7 +26,7 @@ public final class SearchAuthorApi implements IRequestApi {
         return this;
     }
 
-    public final static class Bean {
+    public static final class Bean {
 
         private int courseId;
         private int id;

@@ -41,11 +41,6 @@ public abstract class BaseCallback implements Callback {
                 () -> HttpLifecycleManager.register(mHttpRequest.getLifecycleOwner()));
     }
 
-    public BaseCallback setCallProxy(CallProxy callProxy) {
-        mCallProxy = callProxy;
-        return this;
-    }
-
     public BaseCallback setCallProxyFactory(CallProxy.Factory factory) {
         mCallProxyFactory = factory;
         return this;

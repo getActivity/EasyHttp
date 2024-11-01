@@ -1,10 +1,11 @@
 package com.hjq.easy.demo;
 
 import android.app.ProgressDialog;
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import com.hjq.http.config.IRequestApi;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.toast.Toaster;
-import okhttp3.Call;
 
 /**
  *    author : Android 轮子哥
@@ -57,20 +58,20 @@ public class BaseActivity extends AppCompatActivity implements OnHttpListener<Ob
     }
 
     @Override
-    public void onHttpStart(Call call) {
+    public void onHttpStart(@NonNull IRequestApi api) {
         showDialog();
     }
 
     @Override
-    public void onHttpSuccess(Object result) {}
+    public void onHttpSuccess(@NonNull Object result) {}
 
     @Override
-    public void onHttpFail(Throwable throwable) {
+    public void onHttpFail(@NonNull Throwable throwable) {
         Toaster.show(throwable.getMessage());
     }
 
     @Override
-    public void onHttpEnd(Call call) {
+    public void onHttpEnd(@NonNull IRequestApi api) {
         hideDialog();
     }
 }

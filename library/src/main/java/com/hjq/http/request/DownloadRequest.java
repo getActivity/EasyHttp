@@ -152,9 +152,8 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
             }
             EasyLog.printStackTrace(this, stackTrace);
 
-            DownloadCallback downloadCallback = new DownloadCallback(this);
-            downloadCallback.setFile(mFile)
-                .setMd5(mMd5)
+            DownloadCallback downloadCallback = new DownloadCallback(this, mFile);
+            downloadCallback.setMd5(mMd5)
                 .setResumableTransfer(mResumableTransfer)
                 .setListener(mListener)
                 .setCallProxyFactory(() -> mCallProxy = new CallProxy(createCall()));

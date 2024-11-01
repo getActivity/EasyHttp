@@ -205,7 +205,7 @@ public final class RequestHandler implements IRequestHandler {
     public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
         String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
         String cacheValue = HttpCacheManager.readHttpCache(cacheKey);
-        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
             return null;
         }
         EasyLog.printLog(httpRequest, "----- read cache key -----");
@@ -226,7 +226,7 @@ public final class RequestHandler implements IRequestHandler {
     public boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
         String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
-        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
             return false;
         }
         EasyLog.printLog(httpRequest, "----- write cache key -----");
@@ -238,6 +238,16 @@ public final class RequestHandler implements IRequestHandler {
         boolean refreshHttpCacheTimeResult = HttpCacheManager.setHttpCacheTime(cacheKey, System.currentTimeMillis());
         EasyLog.printLog(httpRequest, "refreshHttpCacheTimeResult = " + refreshHttpCacheTimeResult);
         return writeHttpCacheResult && refreshHttpCacheTimeResult;
+    }
+
+    @Override
+    public boolean deleteCache(@NonNull HttpRequest<?> httpRequest) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
+        EasyLog.printLog(httpRequest, "----- delete cache key -----");
+        EasyLog.printJson(httpRequest, cacheKey);
+        boolean deleteHttpCacheResult = HttpCacheManager.deleteHttpCache(cacheKey);
+        EasyLog.printLog(httpRequest, "deleteHttpCacheResult = " + deleteHttpCacheResult);
+        return deleteHttpCacheResult;
     }
 
     @Override

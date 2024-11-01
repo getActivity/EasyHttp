@@ -293,7 +293,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<LoginBean>>(activity) {
 
             @Override
-            public void onHttpSuccess(HttpData<LoginBean> data) {
+            public void onHttpSuccess(@NonNull HttpData<LoginBean> data) {
                 toast("登录成功");
             }
         });
@@ -339,7 +339,7 @@ EasyHttp.post(this)
         .request(new OnUpdateListener<Void>() {
 
             @Override
-            public void onUpdateStart(Call call) {
+            public void onUpdateStart(@NonNull IRequestApi api) {
                 mProgressBar.setVisibility(View.VISIBLE);
             }
 
@@ -349,17 +349,17 @@ EasyHttp.post(this)
             }
 
             @Override
-            public void onUpdateSuccess(Void result) {
+            public void onUpdateSuccess(@NonNull Void result) {
                 toast("上传成功");
             }
 
             @Override
-            public void onUpdateFail(Throwable throwable) {
+            public void onUpdateFail(@NonNull Throwable throwable) {
                 toast("上传失败");
             }
 
             @Override
-            public void onUpdateEnd(Call call) {
+            public void onUpdateEnd(@NonNull IRequestApi api) {
                 mProgressBar.setVisibility(View.GONE);
             }
         });
@@ -385,29 +385,29 @@ EasyHttp.download(this)
         .listener(new OnDownloadListener() {
 
             @Override
-            public void onDownloadStart(File file) {
+            public void onDownloadStart(@NonNull File file) {
                 mProgressBar.setVisibility(View.VISIBLE);
             }
 
             @Override
-            public void onDownloadProgressChange(File file, int progress) {
+            public void onDownloadProgressChange(@NonNull File file, int progress) {
                 mProgressBar.setProgress(progress);
             }
 
             @Override
-            public void onDownloadSuccess(File file) {
+            public void onDownloadSuccess(@NonNull File file) {
                 toast("下载完成：" + file.getPath());
                 installApk(XxxActivity.this, file);
             }
 
             @Override
-            public void onDownloadFail(File file, Throwable throwable) {
+            public void onDownloadFail(@NonNull File file, @NonNull Throwable throwable) {
                 toast("下载失败：" + throwable.getMessage());
                 file.delete();
             }
 
             @Override
-            public void onDownloadEnd(File file) {
+            public void onDownloadEnd(@NonNull File file) {
                 mProgressBar.setVisibility(View.GONE);
             }
 
@@ -437,7 +437,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<Xxx <Xxx>>(this) {
 
             @Override
-            public void onHttpSuccess(Xxx<Xxx> data) {
+            public void onHttpSuccess(@NonNull Xxx<Xxx> data) {
 
             }
         });
@@ -469,28 +469,25 @@ try {
 ```java
 public final class RequestHandler implements IRequestHandler {
 
-    private final Application mApplication;
-    private final MMKV mMmkv;
-
-    public RequestHandler(Application application) {
-        mApplication = application;
-        mMmkv = MMKV.mmkvWithID("http_cache_id");
-    }
-
-    ..................
-
     @Nullable
     @Override
     public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
         String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
-        String cacheValue = HttpCacheManager.getMmkv().getString(cacheKey, null);
-        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+        String cacheValue = HttpCacheManager.readHttpCache(cacheKey);
+        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
             return null;
         }
-        EasyLog.printLog(httpRequest, "----- readCache cacheKey -----");
+        EasyLog.printLog(httpRequest, "----- read cache key -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- readCache cacheValue -----");
+        EasyLog.printLog(httpRequest, "----- read cache value -----");
         EasyLog.printJson(httpRequest, cacheValue);
+        EasyLog.printLog(httpRequest, "cacheTime = " + cacheTime);
+        boolean cacheInvalidate = HttpCacheManager.isCacheInvalidate(cacheKey, cacheTime);
+        EasyLog.printLog(httpRequest, "cacheInvalidate = " + cacheInvalidate);
+        if (cacheInvalidate) {
+            // 表示缓存已经过期了，直接返回 null 给外层，表示缓存不可用
+            return null;
+        }
         return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
     }
 
@@ -498,50 +495,131 @@ public final class RequestHandler implements IRequestHandler {
     public boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
         String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
         String cacheValue = GsonFactory.getSingletonGson().toJson(result);
-        if (cacheValue == null || "".equals(cacheValue) || "{}".equals(cacheValue)) {
+        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
             return false;
         }
-        EasyLog.printLog(httpRequest, "----- writeCache cacheKey -----");
+        EasyLog.printLog(httpRequest, "----- write cache key -----");
         EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- writeCache cacheValue -----");
+        EasyLog.printLog(httpRequest, "----- write cache value -----");
         EasyLog.printJson(httpRequest, cacheValue);
-        return HttpCacheManager.getMmkv().putString(cacheKey, cacheValue).commit();
+        boolean writeHttpCacheResult = HttpCacheManager.writeHttpCache(cacheKey, cacheValue);
+        EasyLog.printLog(httpRequest, "writeHttpCacheResult = " + writeHttpCacheResult);
+        boolean refreshHttpCacheTimeResult = HttpCacheManager.setHttpCacheTime(cacheKey, System.currentTimeMillis());
+        EasyLog.printLog(httpRequest, "refreshHttpCacheTimeResult = " + refreshHttpCacheTimeResult);
+        return writeHttpCacheResult && refreshHttpCacheTimeResult;
+    }
+
+    @Override
+    public boolean deleteCache(@NonNull HttpRequest<?> httpRequest) {
+        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
+        EasyLog.printLog(httpRequest, "----- delete cache key -----");
+        EasyLog.printJson(httpRequest, cacheKey);
+        boolean deleteHttpCacheResult = HttpCacheManager.deleteHttpCache(cacheKey);
+        EasyLog.printLog(httpRequest, "deleteHttpCacheResult = " + deleteHttpCacheResult);
+        return deleteHttpCacheResult;
     }
 
     @Override
     public void clearCache() {
-        HttpCacheManager.getMmkv().clearMemoryCache();
-        HttpCacheManager.getMmkv().clearAll();
+        HttpCacheManager.clearCache();
+    }
+```
+
+```java
+public final class HttpCacheManager {
+
+    private static final MMKV HTTP_CACHE_CONTENT = MMKV.mmkvWithID("http_cache_content");;
+
+    private static final MMKV HTTP_CACHE_TIME = MMKV.mmkvWithID("http_cache_time");
+
+    /**
+     * 生成缓存的 key
+     */
+    @NonNull
+    public static String generateCacheKey(@NonNull HttpRequest<?> httpRequest) {
+        IRequestApi requestApi = httpRequest.getRequestApi();
+        return "请替换成当前的用户 id" + "\n" + requestApi.getApi() + "\n" + GsonFactory.getSingletonGson().toJson(requestApi);
+    }
+
+    /**
+     * 读取缓存
+     */
+    public static String readHttpCache(@NonNull String cacheKey) {
+        String cacheValue = HTTP_CACHE_CONTENT.getString(cacheKey, null);
+        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
+            return null;
+        }
+        return cacheValue;
+    }
+
+    /**
+     * 写入缓存
+     */
+    public static boolean writeHttpCache(String cacheKey, String cacheValue) {
+        return HTTP_CACHE_CONTENT.putString(cacheKey, cacheValue).commit();
+    }
+
+    /**
+     * 删除缓存
+     */
+    public static boolean deleteHttpCache(String cacheKey) {
+        return HTTP_CACHE_CONTENT.remove(cacheKey).commit();
+    }
+
+    /**
+     * 清理缓存
+     */
+    public static void clearCache() {
+        HTTP_CACHE_CONTENT.clearMemoryCache();
+        HTTP_CACHE_CONTENT.clearAll();
+
+        HTTP_CACHE_TIME.clearMemoryCache();
+        HTTP_CACHE_TIME.clearAll();
+    }
+
+    /**
+     * 获取 Http 写入缓存的时间
+     */
+    public static long getHttpCacheTime(String cacheKey) {
+        return HTTP_CACHE_TIME.getLong(cacheKey, 0);
+    }
+
+    /**
+     * 设置 Http 写入缓存的时间
+     */
+    public static boolean setHttpCacheTime(String cacheKey, long cacheTime) {
+        return HTTP_CACHE_TIME.putLong(cacheKey, cacheTime).commit();
+    }
+
+    /**
+     * 判断缓存是否过期
+     */
+    public static boolean isCacheInvalidate(String cacheKey, long maxCacheTime) {
+        if (maxCacheTime == Long.MAX_VALUE) {
+            // 表示缓存长期有效，永远不会过期
+            return false;
+        }
+        long httpCacheTime = getHttpCacheTime(cacheKey);
+        if (httpCacheTime == 0) {
+            // 表示不知道缓存的时间，这里默认当做已经过期了
+            return true;
+        }
+        return httpCacheTime + maxCacheTime < System.currentTimeMillis();
     }
 }
 ```
 
+* 最后记得在应用启动的时候初始化 MMKV
+
 ```java
-public class HttpCacheManager {
+public final class AppApplication extends Application {
 
-   private volatile static MMKV sMmkv;
-
-   /**
-    * 获取单例的 MMKV 实例
-    */
-   public static MMKV getMmkv() {
-      if(sMmkv == null) {
-         synchronized (RequestHandler.class) {
-            if (sMmkv == null) {
-               sMmkv = MMKV.mmkvWithID("http_cache_id");
-            }
-         }
-      }
-      return sMmkv;
-   }
-
-   /**
-    * 生成缓存的 key
-    */
-   public static String generateCacheKey(@NonNull HttpRequest<?> httpRequest) {
-      IRequestApi requestApi = httpRequest.getRequestApi();
-      return "用户 id" + "\n" + requestApi.getApi() + "\n" + GsonFactory.getSingletonGson().toJson(requestApi);
-   }
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        
+        MMKV.initialize(this);
+    }
 }
 ```
 
@@ -1169,10 +1247,10 @@ EasyHttp.post(MainActivity.this)
         .api(new XxxApi())
         // 延迟 5 秒后请求
         .delay(5000)
-        .request(new HttpCallbackProxy<HttpData<XxxBean>>(MainActivity.this) {
+        .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<XxxBean> result) {
+            public void onHttpSuccess(@NonNull HttpData<XxxBean> result) {
 
             }
         });
@@ -1207,7 +1285,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onHttpSuccess(Xxx result) {
+            public void onHttpSuccess(@NonNull Xxx result) {
 
             }
         });
@@ -1248,7 +1326,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<XxxBean> result) {
+            public void onHttpSuccess(@NonNull HttpData<XxxBean> result) {
 
             }
         });
@@ -1270,7 +1348,7 @@ EasyHttp.post(new ActivityLifecycle(this))
         .request(new HttpCallbackProxy<HttpData<XxxBean>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<XxxBean> result) {
+            public void onHttpSuccess(@NonNull HttpData<XxxBean> result) {
 
             }
         });
@@ -1289,12 +1367,12 @@ EasyHttp.post(ApplicationLifecycle.getInstance())
         .request(new OnHttpListener<HttpData<XxxBean>>() {
 
             @Override
-            public void onHttpSuccess(HttpData<XxxBean> result) {
+            public void onHttpSuccess(@NonNull HttpData<XxxBean> result) {
 
             }
 
             @Override
-            public void onHttpFail(Throwable throwable) {
+            public void onHttpFail(@NonNull Throwable throwable) {
 
             }
         });
@@ -1347,12 +1425,12 @@ public class XxxViewModel extends BaseViewModel {
                 .request(new OnHttpListener<HttpData<Xxx>>() {
 
                     @Override
-                    public void onHttpSuccess(HttpData<Xxx> result) {
+                    public void onHttpSuccess(@NonNull HttpData<Xxx> result) {
 
                     }
 
                     @Override
-                    public void onHttpFail(Throwable throwable) {
+                    public void onHttpFail(@NonNull Throwable throwable) {
 
                     }
                 });
@@ -1372,13 +1450,13 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onHttpStart(Call call) {
+            public void onHttpStart(@NonNull IRequestApi api) {
                 // 重写方法并注释父类调用
                 //super.onHttpStart(call);
             }
 
             @Override
-            public void onHttpEnd(Call call) {
+            public void onHttpEnd(@NonNull IRequestApi api) {
                 // 重写方法并注释父类调用
                 //super.onHttpEnd(call);
             }
@@ -1394,12 +1472,12 @@ EasyHttp.post(this)
         .request(new OnHttpListener<Xxx>() {
 
             @Override
-            public void onHttpSuccess(Xxx result) {
+            public void onHttpSuccess(@NonNull Xxx result) {
 
             }
 
             @Override
-            public void onHttpFail(Throwable throwable) {
+            public void onHttpFail(@NonNull Throwable throwable) {
 
             }
         });
@@ -1421,7 +1499,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<Xxx> result) {
+            public void onHttpSuccess(@NonNull HttpData<Xxx> result) {
 
             }
         });
@@ -1456,7 +1534,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<Xxx> result) {
+            public void onHttpSuccess(@NonNull HttpData<Xxx> result) {
 
             }
         });
@@ -1476,7 +1554,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<Xxx> result) {
+            public void onHttpSuccess(@NonNull HttpData<Xxx> result) {
 
             }
         });
@@ -1493,7 +1571,7 @@ EasyHttp.post(this)
         .request(new HttpCallbackProxy<HttpData<Xxx>>(this) {
 
             @Override
-            public void onHttpSuccess(HttpData<Xxx> result) {
+            public void onHttpSuccess(@NonNull HttpData<Xxx> result) {
 
             }
         });
@@ -1590,7 +1668,7 @@ EasyHttp.get(this)
         .request(new HttpCallbackProxy<Xxx>(this) {
 
             @Override
-            public void onHttpSuccess(Xxx result) {
+            public void onHttpSuccess(@NonNull Xxx result) {
 
             }
         });
@@ -1719,7 +1797,7 @@ Observable.intervalRange(1, 3, 5000, 1000, TimeUnit.MILLISECONDS)
                         .request(new HttpCallbackProxy<HttpData<SearchBean>>(MainActivity.this) {
 
                             @Override
-                            public void onHttpSuccess(HttpData<SearchBean> result) {
+                            public void onHttpSuccess(@NonNull HttpData<SearchBean> result) {
 
                             }
                         });
@@ -1740,13 +1818,13 @@ Observable.create(new ObservableOnSubscribe<HttpData<SearchBean>>() {
                 .request(new HttpCallbackProxy<HttpData<SearchBean>>(MainActivity.this) {
 
                     @Override
-                    public void onHttpSuccess(HttpData<SearchBean> result) {
+                    public void onHttpSuccess(@NonNull HttpData<SearchBean> result) {
                         emitter.onNext(result);
                         emitter.onComplete();
                     }
 
                     @Override
-                    public void onHttpFail(Throwable throwable) {
+                    public void onHttpFail(@NonNull Throwable throwable) {
                         super.onHttpFail(throwable);
                         emitter.onError(throwable);
                     }
@@ -1927,7 +2005,7 @@ EasyHttp.post(this)
     .request(new HttpCallbackProxy<HttpData<SearchBlogsApi.Bean>>(this) {
 
         @Override
-        public void onHttpSuccess(HttpData<SearchBlogsApi.Bean> result) {
+        public void onHttpSuccess(@NonNull HttpData<SearchBlogsApi.Bean> result) {
             
         }
     });

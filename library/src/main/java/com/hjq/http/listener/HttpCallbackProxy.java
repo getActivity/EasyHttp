@@ -1,6 +1,7 @@
 package com.hjq.http.listener;
 
-import okhttp3.Call;
+import androidx.annotation.NonNull;
+import com.hjq.http.config.IRequestApi;
 
 /**
  *    author : Android 轮子哥
@@ -18,15 +19,15 @@ public class HttpCallbackProxy<T> implements OnHttpListener<T> {
     }
 
     @Override
-    public void onHttpStart(Call call) {
+    public void onHttpStart(@NonNull IRequestApi api) {
         if (mSourceListener == null) {
             return;
         }
-        mSourceListener.onHttpStart(call);
+        mSourceListener.onHttpStart(api);
     }
 
     @Override
-    public void onHttpSuccess(T result, boolean cache) {
+    public void onHttpSuccess(@NonNull T result, boolean cache) {
         // 这里解释一下，为什么不那么写
         // 这是因为回调原有的监听器的 onHttpSuccess(T result, boolean cache) 方法，
         // 最终它只会回调原有监听器的 onHttpSuccess(T result) 方法
@@ -39,7 +40,7 @@ public class HttpCallbackProxy<T> implements OnHttpListener<T> {
     }
 
     @Override
-    public void onHttpSuccess(T result) {
+    public void onHttpSuccess(@NonNull T result) {
         if (mSourceListener == null) {
             return;
         }
@@ -47,7 +48,7 @@ public class HttpCallbackProxy<T> implements OnHttpListener<T> {
     }
 
     @Override
-    public void onHttpFail(Throwable throwable) {
+    public void onHttpFail(@NonNull Throwable throwable) {
         if (mSourceListener == null) {
             return;
         }
@@ -55,10 +56,10 @@ public class HttpCallbackProxy<T> implements OnHttpListener<T> {
     }
 
     @Override
-    public void onHttpEnd(Call call) {
+    public void onHttpEnd(@NonNull IRequestApi api) {
         if (mSourceListener == null) {
             return;
         }
-        mSourceListener.onHttpEnd(call);
+        mSourceListener.onHttpEnd(api);
     }
 }

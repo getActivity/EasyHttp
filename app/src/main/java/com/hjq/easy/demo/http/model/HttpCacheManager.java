@@ -1,7 +1,6 @@
 package com.hjq.easy.demo.http.model;
 
 import androidx.annotation.NonNull;
-
 import com.hjq.gson.factory.GsonFactory;
 import com.hjq.http.config.IRequestApi;
 import com.hjq.http.request.HttpRequest;
@@ -22,6 +21,7 @@ public final class HttpCacheManager {
    /**
     * 生成缓存的 key
     */
+   @NonNull
    public static String generateCacheKey(@NonNull HttpRequest<?> httpRequest) {
       IRequestApi requestApi = httpRequest.getRequestApi();
       return "请替换成当前的用户 id" + "\n" + requestApi.getApi() + "\n" + GsonFactory.getSingletonGson().toJson(requestApi);
@@ -30,9 +30,9 @@ public final class HttpCacheManager {
    /**
     * 读取缓存
     */
-   public static String readHttpCache(String cacheKey) {
+   public static String readHttpCache(@NonNull String cacheKey) {
       String cacheValue = HTTP_CACHE_CONTENT.getString(cacheKey, null);
-      if ("".equals(cacheValue) || "{}".equals(cacheValue)) {
+      if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
          return null;
       }
       return cacheValue;
@@ -44,6 +44,13 @@ public final class HttpCacheManager {
    public static boolean writeHttpCache(String cacheKey, String cacheValue) {
       return HTTP_CACHE_CONTENT.putString(cacheKey, cacheValue).commit();
    }
+
+    /**
+     * 删除缓存
+     */
+    public static boolean deleteHttpCache(String cacheKey) {
+        return HTTP_CACHE_CONTENT.remove(cacheKey).commit();
+    }
 
    /**
     * 清理缓存

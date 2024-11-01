@@ -74,6 +74,16 @@ public interface IRequestHandler {
     }
 
     /**
+     * 删除缓存
+     *
+     * @param httpRequest   请求接口对象
+     * @return              删除缓存的结果
+     */
+    default boolean deleteCache(@NonNull HttpRequest<?> httpRequest) {
+        return false;
+    }
+
+    /**
      * 清空缓存
      */
     default void clearCache() {}

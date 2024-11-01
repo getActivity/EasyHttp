@@ -38,7 +38,8 @@ public final class DownloadCallback extends BaseCallback {
     private static final String FILE_MD5_REGEX = "^[\\w]{32}$";
 
     /** 保存的文件 */
-    private File mFile;
+    @NonNull
+    private final File mFile;
 
     /** 校验的 MD5 */
     private String mMd5;
@@ -58,14 +59,10 @@ public final class DownloadCallback extends BaseCallback {
     /** 断点续传开关 */
     private boolean mResumableTransfer;
 
-    public DownloadCallback(@NonNull HttpRequest<?> request) {
+    public DownloadCallback(@NonNull HttpRequest<?> request, @NonNull File file) {
         super(request);
         mHttpRequest = request;
-    }
-
-    public DownloadCallback setFile(File file) {
         mFile = file;
-        return this;
     }
 
     public DownloadCallback setMd5(String md5) {
@@ -151,10 +148,10 @@ public final class DownloadCallback extends BaseCallback {
             String contentRange = response.header("Content-Range");
             // 若能够找到 Content-Range，则表明服务器支持断点续传
             // 有些服务器还会返回 Accept-Ranges，输出结果 Accept-Ranges: bytes，说明服务器支持按字节下载
-            if (acceptRanges != null && !"".equals(acceptRanges)) {
+            if (acceptRanges != null && !acceptRanges.isEmpty()) {
                 // Accept-Ranges：bytes
                 supportResumableTransfer = "bytes".equalsIgnoreCase(acceptRanges);
-            } else if (contentRange != null && !"".equals(contentRange)) {
+            } else if (contentRange != null && !contentRange.isEmpty()) {
                 // Content-Range: bytes 7897088-221048888/221048889
                 supportResumableTransfer = contentRange.matches("bytes\\s+\\d+-\\d+/\\d+");
             }
@@ -203,7 +200,7 @@ public final class DownloadCallback extends BaseCallback {
         EasyUtils.closeStream(response);
 
         String md5 = EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile));
-        if (mMd5 != null && !"".equals(mMd5) && !mMd5.equalsIgnoreCase(md5)) {
+        if (mMd5 != null && !mMd5.isEmpty() && !mMd5.equalsIgnoreCase(md5)) {
             // 文件 MD5 值校验失败
             throw new FileMd5Exception("File md5 hash verify failure", md5);
         }
@@ -224,7 +221,7 @@ public final class DownloadCallback extends BaseCallback {
 
     public boolean verifyFileMd5() {
         try {
-            return mFile.isFile() && mMd5 != null && !"".equals(mMd5) &&
+            return mFile.isFile() && mMd5 != null && !mMd5.isEmpty() &&
                 mMd5.equalsIgnoreCase(EasyUtils.getFileMd5(EasyUtils.openFileInputStream(mFile)));
         } catch (FileNotFoundException e) {
             e.printStackTrace();

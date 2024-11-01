@@ -188,7 +188,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
         RequestBody requestBody = requestBodyStrategy.createRequestBody(this, params);
 
         // 如果外层需要自定义 Content-Type 这个字段，那么就使用装饰设计模式，对原有的 RequestBody 对象进行扩展
-        if (contentType != null && !"".equals(contentType)) {
+        if (contentType != null && !contentType.isEmpty()) {
             MediaType mediaType = MediaType.parse(contentType);
             if (mediaType != null) {
                 CustomTypeRequestBody customTypeRequestBody = new CustomTypeRequestBody(requestBody);
