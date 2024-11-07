@@ -97,11 +97,11 @@ dependencies {
 
 ```text
 # 必须要加上此规则，否则会导致泛型解析失败
--keep public class * implements com.hjq.http.listener.OnHttpListener {
+-keep class * implements com.hjq.http.listener.OnHttpListener {
     *;
 }
 
--keep public class * extends com.hjq.http.model.ResponseClass {
+-keep class * extends com.hjq.http.model.ResponseClass {
     *;
 }
 ```
