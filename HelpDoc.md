@@ -52,6 +52,8 @@
 
     * [如何传入请求头](#如何传入请求头)
 
+    * [如何传入动态的请求头](#如何传入动态的请求头)
+
     * [如何重命名参数或者请求头的名称](#如何重命名参数或者请求头的名称)
 
     * [如何上传文件](#如何上传文件)
@@ -1079,9 +1081,9 @@ public final class XxxApi implements IRequestApi {
 }
 ```
 
-#### 如何重命名参数或者请求头的名称
+#### 如何传入动态的请求头
 
-* 给字段加上 `@HttpRename` 注解即可，则可以修改参数名的值，如果没有加上此注解，则框架默认使用字段名作为参数名
+* 定义一个字段，并在上面添加 `@HTTPHeader` 注解即可
 
 ```java
 public final class XxxApi implements IRequestApi {
@@ -1092,8 +1094,26 @@ public final class XxxApi implements IRequestApi {
         return "xxx/xxxx";
     }
 
-    @HttpRename("k")
-    private String keyword;
+    @HttpHeader
+    private String time;
+}
+```
+
+#### 如何重命名参数或者请求头的名称
+
+* 传入一个 HashMap 类型的字段，并在上面添加 `@HTTPHeader` 注解即可
+
+```java
+public final class XxxApi implements IRequestApi {
+
+    @NonNull
+    @Override
+    public String getApi() {
+        return "xxx/xxxx";
+    }
+
+    @HTTPHeader
+    private HashMap<String,String> headers;
 }
 ```
 
