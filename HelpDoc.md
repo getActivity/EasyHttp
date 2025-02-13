@@ -1083,25 +1083,7 @@ public final class XxxApi implements IRequestApi {
 
 #### 如何传入动态的请求头
 
-* 定义一个字段，并在上面添加 `@HTTPHeader` 注解即可
-
-```java
-public final class XxxApi implements IRequestApi {
-
-    @NonNull
-    @Override
-    public String getApi() {
-        return "xxx/xxxx";
-    }
-
-    @HttpHeader
-    private String time;
-}
-```
-
-#### 如何重命名参数或者请求头的名称
-
-* 传入一个 HashMap 类型的字段，并在上面添加 `@HTTPHeader` 注解即可
+* 传入一个 `HashMap` 类型的字段，并在上面添加 `@HTTPHeader` 注解即可
 
 ```java
 public final class XxxApi implements IRequestApi {
@@ -1114,6 +1096,24 @@ public final class XxxApi implements IRequestApi {
 
     @HTTPHeader
     private HashMap<String,String> headers;
+}
+```
+
+#### 如何重命名参数或者请求头的名称
+
+* 给字段加上 `@HttpRename` 注解即可，则可以修改参数名的值，如果没有加上此注解，则框架默认使用字段名作为参数名
+
+```java
+public final class XxxApi implements IRequestApi {
+
+    @NonNull
+    @Override
+    public String getApi() {
+        return "xxx/xxxx";
+    }
+
+    @HttpRename("k")
+    private String keyword;
 }
 ```
 
