@@ -10,7 +10,7 @@ import com.hjq.http.model.CacheMode;
  *    time   : 2021/05/22
  *    desc   : 请求缓存配置
  */
-public interface IRequestCache {
+public interface IRequestCacheConfig {
 
     /**
      * 获取缓存的模式

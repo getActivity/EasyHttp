@@ -10,13 +10,13 @@ import com.hjq.http.config.IRequestServer;
  *    time   : 2019/05/19
  *    desc   : 服务器简单配置
  */
-public final class EasyRequestServer implements IRequestServer {
+public final class SimpleRequestServer implements IRequestServer {
 
     /** 主机地址 */
     @HttpIgnore
     private final String mHost;
 
-    public EasyRequestServer(String host) {
+    public SimpleRequestServer(String host) {
         mHost = host;
     }
 

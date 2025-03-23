@@ -6,9 +6,9 @@ package com.hjq.http.config.impl;
  *    time   : 2021/12/09
  *    desc   : 下载请求接口简单配置类
  */
-public final class EasyDownloadApi extends EasyRequestApi {
+public final class SimpleDownloadRequestApi extends SimpleRequestApi {
 
-    public EasyDownloadApi(String api) {
+    public SimpleDownloadRequestApi(String api) {
         super(api);
     }
 }

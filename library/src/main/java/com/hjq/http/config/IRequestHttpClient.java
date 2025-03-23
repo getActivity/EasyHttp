@@ -12,7 +12,7 @@ import okhttp3.OkHttpClient;
  *    time   : 2021/03/02
  *    desc   : OkHttpClient 配置
  */
-public interface IRequestClient {
+public interface IRequestHttpClient {
 
     /**
      * 获取 OkHttpClient

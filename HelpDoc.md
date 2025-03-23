@@ -168,7 +168,7 @@ public class RequestServer implements IRequestServer {
 
     @NonNull
     @Override
-    public RequestBodyType getBodyType() {
+    public IHttpPostBodyStrategy getBodyType() {
         // 参数以 Json 格式提交（默认是表单）
         return RequestBodyType.JSON;
     }
@@ -252,11 +252,11 @@ public final class LoginApi implements IRequestApi {
 
     * implements IRequestHost：实现这个接口之后可以重新指定这个请求的主机地址
 
-    * implements IRequestType：实现这个接口之后可以重新指定这个请求的提交方式
+    * implements IRequestBodyType：实现这个接口之后可以重新指定这个请求体的提交方式
 
-    * implements IRequestCache：实现这个接口之后可以重新指定这个请求的缓存模式
+    * implements IRequestCacheConfig：实现这个接口之后可以重新指定这个请求的缓存模式配置
 
-    * implements IRequestClient：实现这个接口之后可以重新指定这个请求所用的 OkHttpClient 对象
+    * implements IRequestHttpClient：实现这个接口之后可以重新指定这个请求所用的 OkHttpClient 对象
 
 * 字段作为请求参数的衡量标准
 
@@ -308,7 +308,7 @@ EasyHttp.post(this)
 #### 上传文件
 
 ```java
-public final class UpdateImageApi implements IRequestApi, IRequestType {
+public final class UpdateImageApi implements IRequestApi, IRequestBodyType {
 
     @NonNull
     @Override
@@ -318,7 +318,7 @@ public final class UpdateImageApi implements IRequestApi, IRequestType {
 
     @NonNull
     @Override
-    public RequestBodyType getBodyType() {
+    public IHttpPostBodyStrategy getBodyType() {
         // 上传文件需要使用表单的形式提交
         return RequestBodyType.FORM;
     }
@@ -544,7 +544,7 @@ public enum CacheMode {
 * 为某个接口设置缓存模式
 
 ```java
-public final class XxxApi implements IRequestApi, IRequestCache {
+public final class XxxApi implements IRequestApi, IRequestCacheConfig {
 
     @NonNull
     @Override
@@ -822,7 +822,7 @@ public class XxxServer implements IRequestServer {
 
     @NonNull
     @Override
-    public RequestBodyType getBodyType() {
+    public IHttpPostBodyStrategy getBodyType() {
         return RequestBodyType.FORM;
     }
 }
@@ -841,7 +841,7 @@ public class XxxServer implements IRequestServer {
 
     @NonNull
     @Override
-    public RequestBodyType getBodyType() {
+    public IHttpPostBodyStrategy getBodyType() {
         return RequestBodyType.JSON;
     }
 }
@@ -850,7 +850,7 @@ public class XxxServer implements IRequestServer {
 * 当然也支持对某个接口进行单独配置
 
 ```java
-public final class XxxApi implements IRequestApi, IRequestType {
+public final class XxxApi implements IRequestApi, IRequestBodyType {
 
     @NonNull
     @Override
@@ -860,7 +860,7 @@ public final class XxxApi implements IRequestApi, IRequestType {
 
     @NonNull
     @Override
-    public RequestBodyType getBodyType() {
+    public IHttpPostBodyStrategy getBodyType() {
         return RequestBodyType.JSON;
     }
 }
@@ -1083,7 +1083,7 @@ EasyConfig.with(builder.build())
 * 局部配置（只在某个接口上生效）
 
 ```java
-public final class XxxApi implements IRequestApi, IRequestClient {
+public final class XxxApi implements IRequestApi, IRequestHttpClient {
 
     @NonNull
     @Override
@@ -1111,7 +1111,7 @@ EasyConfig.getInstance().setLogEnabled(false);
 
 #### 如何修改日志打印策略
 
-* 可以先定义一个类实现 [IRequestLogStrategy](library/src/main/java/com/hjq/http/config/IRequestLogStrategy.java) 接口，然后在框架初始化的时候传入即可
+* 可以先定义一个类实现 [IHttpLogStrategy](library/src/main/java/com/hjq/http/config/IHttpLogStrategy.java) 接口，然后在框架初始化的时候传入即可
 
 ```java
 EasyConfig.with(okHttpClient)

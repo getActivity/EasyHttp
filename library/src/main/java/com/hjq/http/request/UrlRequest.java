@@ -4,7 +4,7 @@ import androidx.annotation.Nullable;
 import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyConfig;
 import com.hjq.http.EasyLog;
-import com.hjq.http.config.IRequestBodyStrategy;
+import com.hjq.http.config.IHttpPostBodyStrategy;
 import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import java.util.HashMap;
@@ -26,13 +26,13 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addHttpParams(HttpParams params, String key, Object value, IHttpPostBodyStrategy requestBodyStrategy) {
         params.put(key, value);
     }
 
     @Override
     protected void addRequestParams(Request.Builder requestBuilder, HttpParams params,
-                                    @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+                                    @Nullable String contentType, IHttpPostBodyStrategy requestBodyStrategy) {
         HttpUrl.Builder urlBuilder = requestBuilder.build().url().newBuilder();
         // 添加参数
         if (!params.isEmpty()) {
@@ -73,7 +73,7 @@ public abstract class UrlRequest<T extends UrlRequest<?>> extends HttpRequest<T>
 
     @Override
     protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers,
-                                    IRequestBodyStrategy requestBodyStrategy) {
+                                    IHttpPostBodyStrategy requestBodyStrategy) {
         if (!EasyConfig.getInstance().isLogEnabled()) {
             return;
         }

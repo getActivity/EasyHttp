@@ -1,8 +1,8 @@
 package com.hjq.http.model;
 
-import com.hjq.http.config.impl.RequestFormBodyStrategy;
-import com.hjq.http.config.impl.RequestJsonBodyStrategy;
-import com.hjq.http.config.IRequestBodyStrategy;
+import com.hjq.http.config.impl.HttpPostFormBodyStrategy;
+import com.hjq.http.config.impl.HttpPostJsonBodyStrategy;
+import com.hjq.http.config.IHttpPostBodyStrategy;
 
 /**
  *    author : Android 轮子哥
@@ -15,10 +15,10 @@ public class RequestBodyType {
     /**
      * 表单提交
      */
-    public static final IRequestBodyStrategy FORM = new RequestFormBodyStrategy();
+    public static final IHttpPostBodyStrategy FORM = new HttpPostFormBodyStrategy();
 
     /**
      * JSON 提交
      */
-    public static final IRequestBodyStrategy JSON = new RequestJsonBodyStrategy();
+    public static final IHttpPostBodyStrategy JSON = new HttpPostJsonBodyStrategy();
 }

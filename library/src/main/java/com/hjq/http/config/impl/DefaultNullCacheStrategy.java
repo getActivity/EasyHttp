@@ -13,7 +13,7 @@ import okhttp3.Response;
  *    time   : 2025/03/23
  *    desc   : 请求缓存默认实现的空策略
  */
-public class EasyNullCacheStrategy implements IHttpCacheStrategy {
+public class DefaultNullCacheStrategy implements IHttpCacheStrategy {
 
     @Nullable
     @Override

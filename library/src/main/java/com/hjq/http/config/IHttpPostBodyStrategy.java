@@ -10,7 +10,7 @@ import okhttp3.RequestBody;
  *    time   : 2023/09/23
  *    desc   : 请求 Body 策略接口
  */
-public interface IRequestBodyStrategy {
+public interface IHttpPostBodyStrategy {
 
     /**
      * 添加参数

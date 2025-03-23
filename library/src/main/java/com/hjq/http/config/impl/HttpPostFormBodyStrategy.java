@@ -3,7 +3,7 @@ package com.hjq.http.config.impl;
 import android.text.TextUtils;
 import com.hjq.http.EasyLog;
 import com.hjq.http.body.UpdateStreamRequestBody;
-import com.hjq.http.config.IRequestBodyStrategy;
+import com.hjq.http.config.IHttpPostBodyStrategy;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
@@ -24,7 +24,7 @@ import okio.Okio;
  *    time   : 2023/09/23
  *    desc   : RequestBody 表单策略实现接口
  */
-public class RequestFormBodyStrategy implements IRequestBodyStrategy {
+public class HttpPostFormBodyStrategy implements IHttpPostBodyStrategy {
 
     @Override
     public void addParams(HttpParams params, String key, Object value) {

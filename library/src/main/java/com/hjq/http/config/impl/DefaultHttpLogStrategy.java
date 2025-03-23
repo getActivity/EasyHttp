@@ -5,7 +5,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.hjq.http.EasyUtils;
-import com.hjq.http.config.IRequestLogStrategy;
+import com.hjq.http.config.IHttpLogStrategy;
 
 /**
  *    author : Android 轮子哥
@@ -13,7 +13,7 @@ import com.hjq.http.config.IRequestLogStrategy;
  *    time   : 2020/04/24
  *    desc   : 网络请求日志打印默认实现
  */
-public final class EasyHttpLogStrategy implements IRequestLogStrategy {
+public final class DefaultHttpLogStrategy implements IHttpLogStrategy {
 
     @Override
     public void printLog(@NonNull String tag, @Nullable String message) {

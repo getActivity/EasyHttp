@@ -12,18 +12,18 @@ import com.hjq.http.annotation.HttpIgnore;
 import com.hjq.http.annotation.HttpRename;
 import com.hjq.http.callback.NormalCallback;
 import com.hjq.http.config.IRequestApi;
-import com.hjq.http.config.IRequestBodyStrategy;
-import com.hjq.http.config.IRequestCache;
-import com.hjq.http.config.IRequestClient;
+import com.hjq.http.config.IHttpPostBodyStrategy;
+import com.hjq.http.config.IRequestCacheConfig;
+import com.hjq.http.config.IRequestHttpClient;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
-import com.hjq.http.config.IRequestType;
+import com.hjq.http.config.IRequestBodyType;
 import com.hjq.http.config.IHttpCacheStrategy;
-import com.hjq.http.config.impl.EasyRequestApi;
-import com.hjq.http.config.impl.EasyRequestServer;
-import com.hjq.http.config.impl.RequestFormBodyStrategy;
+import com.hjq.http.config.impl.SimpleRequestApi;
+import com.hjq.http.config.impl.SimpleRequestServer;
+import com.hjq.http.config.impl.HttpPostFormBodyStrategy;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.model.CacheMode;
@@ -64,13 +64,13 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
     /** 提交参数类型 */
     @NonNull
-    private IRequestType mRequestType = EasyConfig.getInstance().getServer();
+    private IRequestBodyType mRequestType = EasyConfig.getInstance().getServer();
     /** 接口缓存方式 */
     @NonNull
-    private IRequestCache mRequestCache = EasyConfig.getInstance().getServer();
+    private IRequestCacheConfig mRequestCache = EasyConfig.getInstance().getServer();
     /** OkHttp 客户端 */
     @NonNull
-    private IRequestClient mRequestClient = EasyConfig.getInstance().getServer();
+    private IRequestHttpClient mRequestClient = EasyConfig.getInstance().getServer();
     /** 请求处理策略 */
     @NonNull
     private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
@@ -109,7 +109,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     public T api(String api) {
-        return api(new EasyRequestApi(api));
+        return api(new SimpleRequestApi(api));
     }
 
     /**
@@ -120,14 +120,14 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (api instanceof IRequestHost) {
             mRequestHost = (IRequestHost) api;
         }
-        if (api instanceof IRequestClient) {
-            mRequestClient = (IRequestClient) api;
+        if (api instanceof IRequestHttpClient) {
+            mRequestClient = (IRequestHttpClient) api;
         }
-        if (api instanceof IRequestType) {
-            mRequestType = (IRequestType) api;
+        if (api instanceof IRequestBodyType) {
+            mRequestType = (IRequestBodyType) api;
         }
-        if (api instanceof IRequestCache) {
-            mRequestCache = (IRequestCache) api;
+        if (api instanceof IRequestCacheConfig) {
+            mRequestCache = (IRequestCacheConfig) api;
         }
         if (api instanceof IRequestHandler) {
             mRequestHandler = (IRequestHandler) api;
@@ -152,7 +152,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     }
 
     public T server(String host) {
-        return server(new EasyRequestServer(host));
+        return server(new SimpleRequestServer(host));
     }
 
     /**
@@ -229,7 +229,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      */
     @NonNull
     protected Call createCall() {
-        IRequestBodyStrategy requestBodyStrategy = mRequestType.getBodyType();
+        IHttpPostBodyStrategy requestBodyStrategy = mRequestType.getBodyType();
 
         HttpParams params = new HttpParams();
         HttpHeaders headers = new HttpHeaders();
@@ -241,7 +241,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         params.setMultipart(EasyUtils.isMultipartParameter(fields));
 
         // 如果参数中包含流参数并且当前请求方式不是表单的话
-        if (!params.isEmpty() && params.isMultipart() && !(requestBodyStrategy instanceof RequestFormBodyStrategy)) {
+        if (!params.isEmpty() && params.isMultipart() && !(requestBodyStrategy instanceof HttpPostFormBodyStrategy)) {
             // 就强制设置成以表单形式提交参数
             requestBodyStrategy = RequestBodyType.FORM;
         }
@@ -499,7 +499,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 获取参数提交方式
      */
     @NonNull
-    public IRequestType getRequestType() {
+    public IRequestBodyType getRequestType() {
         return mRequestType;
     }
 
@@ -507,7 +507,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 获取请求缓存策略
      */
     @NonNull
-    public IRequestCache getRequestCache() {
+    public IRequestCacheConfig getRequestCache() {
         return mRequestCache;
     }
 
@@ -515,7 +515,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 获取请求的 OkHttpClient 对象
      */
     @NonNull
-    public IRequestClient getRequestClient() {
+    public IRequestHttpClient getRequestClient() {
         return mRequestClient;
     }
 
@@ -614,13 +614,13 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 添加请求参数
      */
-    protected abstract void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy);
+    protected abstract void addHttpParams(HttpParams params, String key, Object value, IHttpPostBodyStrategy requestBodyStrategy);
 
     /**
      * 创建请求的对象
      */
     @NonNull
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IHttpPostBodyStrategy requestBodyStrategy) {
         Request.Builder requestBuilder = createRequestBuilder(url, tag);
         addRequestHeader(requestBuilder, headers);
 
@@ -674,12 +674,12 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 添加请求参数
      */
-    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy);
+    protected abstract void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IHttpPostBodyStrategy requestBodyStrategy);
 
     /**
      * 打印请求日志
      */
-    protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy);
+    protected abstract void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IHttpPostBodyStrategy requestBodyStrategy);
 
     /**
      * 生成日志的 TAG

@@ -11,7 +11,7 @@ import com.hjq.http.config.IRequestServer;
  *    time   : 2022/03/03
  *    desc   : 请求 url 简单配置类
  */
-public final class EasyRequestUrl implements IRequestServer, IRequestApi {
+public final class SimpleRequestUrl implements IRequestServer, IRequestApi {
 
    /** 主机地址 */
    @HttpIgnore
@@ -21,11 +21,11 @@ public final class EasyRequestUrl implements IRequestServer, IRequestApi {
    @HttpIgnore
    private final String mApi;
 
-   public EasyRequestUrl(String url) {
+   public SimpleRequestUrl(String url) {
       this(url, "");
    }
 
-   public EasyRequestUrl(String host, String api) {
+   public SimpleRequestUrl(String host, String api) {
       mHost = host;
       mApi = api;
    }

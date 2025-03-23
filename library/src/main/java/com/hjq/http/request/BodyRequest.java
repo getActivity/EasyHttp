@@ -9,7 +9,7 @@ import com.hjq.http.body.CustomTypeRequestBody;
 import com.hjq.http.body.JsonRequestBody;
 import com.hjq.http.body.ProgressMonitorRequestBody;
 import com.hjq.http.body.TextRequestBody;
-import com.hjq.http.config.IRequestBodyStrategy;
+import com.hjq.http.config.IHttpPostBodyStrategy;
 import com.hjq.http.listener.OnHttpListener;
 import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.HttpHeaders;
@@ -97,20 +97,20 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
 
     @Override
     protected void addHttpParams(HttpParams params, String key, Object value,
-                                    IRequestBodyStrategy requestBodyStrategy) {
+                                    IHttpPostBodyStrategy requestBodyStrategy) {
         requestBodyStrategy.addParams(params, key, value);
     }
 
     @Override
     protected void addRequestParams(Request.Builder requestBuilder, HttpParams params,
-                                    @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+                                    @Nullable String contentType, IHttpPostBodyStrategy requestBodyStrategy) {
         RequestBody body = mRequestBody != null ? mRequestBody : createRequestBody(params, contentType, requestBodyStrategy);
         requestBuilder.method(getRequestMethod(), body);
     }
 
     @Override
     protected void printRequestLog(Request request, HttpParams params,
-                                    HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+                                    HttpHeaders headers, IHttpPostBodyStrategy requestBodyStrategy) {
         if (!EasyConfig.getInstance().isLogEnabled()) {
             return;
         }
@@ -184,7 +184,7 @@ public abstract class BodyRequest<T extends BodyRequest<?>> extends HttpRequest<
      * 组装 RequestBody 对象
      */
     private RequestBody createRequestBody(HttpParams params, @Nullable String contentType,
-                                            IRequestBodyStrategy requestBodyStrategy) {
+                                            IHttpPostBodyStrategy requestBodyStrategy) {
         RequestBody requestBody = requestBodyStrategy.createRequestBody(this, params);
 
         // 如果外层需要自定义 Content-Type 这个字段，那么就使用装饰设计模式，对原有的 RequestBody 对象进行扩展

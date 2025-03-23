@@ -12,12 +12,12 @@ import com.hjq.http.model.CacheMode;
  *    desc   : 请求服务配置
  */
 public interface IRequestServer extends
-        IRequestHost, IRequestClient,
-        IRequestType, IRequestCache {
+        IRequestHost, IRequestHttpClient,
+    IRequestBodyType, IRequestCacheConfig {
 
     @NonNull
     @Override
-    default IRequestBodyStrategy getBodyType() {
+    default IHttpPostBodyStrategy getBodyType() {
         // 默认以表单的方式提交
         return RequestBodyType.FORM;
     }

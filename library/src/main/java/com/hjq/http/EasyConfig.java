@@ -5,11 +5,11 @@ import androidx.annotation.Nullable;
 import com.hjq.http.config.IHttpCacheStrategy;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestInterceptor;
-import com.hjq.http.config.IRequestLogStrategy;
+import com.hjq.http.config.IHttpLogStrategy;
 import com.hjq.http.config.IRequestServer;
-import com.hjq.http.config.impl.EasyHttpLogStrategy;
-import com.hjq.http.config.impl.EasyNullCacheStrategy;
-import com.hjq.http.config.impl.EasyRequestServer;
+import com.hjq.http.config.impl.DefaultHttpLogStrategy;
+import com.hjq.http.config.impl.DefaultNullCacheStrategy;
+import com.hjq.http.config.impl.SimpleRequestServer;
 import com.hjq.http.model.ThreadSchedulers;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -53,7 +53,7 @@ public final class EasyConfig {
     /** 请求缓存策略 */
     private IHttpCacheStrategy mCacheStrategy;
     /** 日志打印策略 */
-    private IRequestLogStrategy mLogStrategy;
+    private IHttpLogStrategy mLogStrategy;
 
     /** OkHttp 客户端 */
     private OkHttpClient mClient;
@@ -83,7 +83,7 @@ public final class EasyConfig {
     }
 
     public EasyConfig setServer(@NonNull String host) {
-        return setServer(new EasyRequestServer(host));
+        return setServer(new SimpleRequestServer(host));
     }
 
     public EasyConfig setServer(@NonNull IRequestServer server) {
@@ -164,7 +164,7 @@ public final class EasyConfig {
         return this;
     }
 
-    public EasyConfig setLogStrategy(IRequestLogStrategy strategy) {
+    public EasyConfig setLogStrategy(IHttpLogStrategy strategy) {
         mLogStrategy = strategy;
         return this;
     }
@@ -229,7 +229,7 @@ public final class EasyConfig {
         return mThreadSchedulers;
     }
 
-    public IRequestLogStrategy getLogStrategy() {
+    public IHttpLogStrategy getLogStrategy() {
         return mLogStrategy;
     }
 
@@ -271,11 +271,11 @@ public final class EasyConfig {
         }
 
         if (mLogStrategy == null) {
-            mLogStrategy = new EasyHttpLogStrategy();
+            mLogStrategy = new DefaultHttpLogStrategy();
         }
 
         if (mCacheStrategy == null) {
-            mCacheStrategy = new EasyNullCacheStrategy();
+            mCacheStrategy = new DefaultNullCacheStrategy();
         }
 
         EasyConfig.setInstance(this);

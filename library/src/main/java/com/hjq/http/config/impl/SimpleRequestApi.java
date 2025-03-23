@@ -10,13 +10,13 @@ import com.hjq.http.config.IRequestApi;
  *    time   : 2019/05/19
  *    desc   : 请求接口简单配置类
  */
-public class EasyRequestApi implements IRequestApi {
+public class SimpleRequestApi implements IRequestApi {
 
     /** 接口地址 */
     @HttpIgnore
     private final String mApi;
 
-    public EasyRequestApi(String api) {
+    public SimpleRequestApi(String api) {
         mApi = api;
     }
 

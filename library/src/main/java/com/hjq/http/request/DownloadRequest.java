@@ -8,9 +8,9 @@ import androidx.lifecycle.LifecycleOwner;
 import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
-import com.hjq.http.config.IRequestBodyStrategy;
-import com.hjq.http.config.impl.EasyDownloadApi;
-import com.hjq.http.config.impl.EasyRequestServer;
+import com.hjq.http.config.IHttpPostBodyStrategy;
+import com.hjq.http.config.impl.SimpleDownloadRequestApi;
+import com.hjq.http.config.impl.SimpleRequestServer;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
@@ -80,8 +80,8 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
      * 设置下载地址
      */
     public DownloadRequest url(String url) {
-        server(new EasyRequestServer(url));
-        api(new EasyDownloadApi(""));
+        server(new SimpleRequestServer(url));
+        api(new SimpleDownloadRequestApi(""));
         return this;
     }
 
@@ -210,7 +210,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+    protected Request createRequest(String url, String tag, HttpParams params, HttpHeaders headers, IHttpPostBodyStrategy requestBodyStrategy) {
         if (mResumableTransfer && mFile.isFile() && mFile.length() > 0) {
             // 添加断点续传请求头
             headers.put("Range", "bytes=" + mFile.length() + "-");
@@ -220,17 +220,17 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
     }
 
     @Override
-    protected void addHttpParams(HttpParams params, String key, Object value, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addHttpParams(HttpParams params, String key, Object value, IHttpPostBodyStrategy requestBodyStrategy) {
         mRealRequest.addHttpParams(params, key, value, requestBodyStrategy);
     }
 
     @Override
-    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IRequestBodyStrategy requestBodyStrategy) {
+    protected void addRequestParams(Request.Builder requestBuilder, HttpParams params, @Nullable String contentType, IHttpPostBodyStrategy requestBodyStrategy) {
         mRealRequest.addRequestParams(requestBuilder, params, contentType, requestBodyStrategy);
     }
 
     @Override
-    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IRequestBodyStrategy requestBodyStrategy) {
+    protected void printRequestLog(Request request, HttpParams params, HttpHeaders headers, IHttpPostBodyStrategy requestBodyStrategy) {
         mRealRequest.printRequestLog(request, params, headers, requestBodyStrategy);
     }
 }
