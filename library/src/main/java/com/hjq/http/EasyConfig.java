@@ -1,10 +1,14 @@
 package com.hjq.http;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import com.hjq.http.config.IHttpCacheStrategy;
 import com.hjq.http.config.IRequestHandler;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestLogStrategy;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.impl.EasyHttpLogStrategy;
+import com.hjq.http.config.impl.EasyNullCacheStrategy;
 import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.model.ThreadSchedulers;
 import java.net.MalformedURLException;
@@ -46,6 +50,8 @@ public final class EasyConfig {
     private IRequestHandler mHandler;
     /** 请求拦截器 */
     private IRequestInterceptor mInterceptor;
+    /** 请求缓存策略 */
+    private IHttpCacheStrategy mCacheStrategy;
     /** 日志打印策略 */
     private IRequestLogStrategy mLogStrategy;
 
@@ -76,30 +82,32 @@ public final class EasyConfig {
         mHeaders = new HashMap<>();
     }
 
-    public EasyConfig setServer(String host) {
+    public EasyConfig setServer(@NonNull String host) {
         return setServer(new EasyRequestServer(host));
     }
 
-    public EasyConfig setServer(IRequestServer server) {
+    public EasyConfig setServer(@NonNull IRequestServer server) {
         mServer = server;
         return this;
     }
 
-    public EasyConfig setHandler(IRequestHandler handler) {
+    public EasyConfig setHandler(@NonNull IRequestHandler handler) {
         mHandler = handler;
         return this;
     }
 
-    public EasyConfig setInterceptor(IRequestInterceptor interceptor) {
+    public EasyConfig setInterceptor(@Nullable IRequestInterceptor interceptor) {
         mInterceptor = interceptor;
         return this;
     }
 
-    public EasyConfig setClient(OkHttpClient client) {
+    public EasyConfig setCacheStrategy(@NonNull IHttpCacheStrategy strategy) {
+        mCacheStrategy = strategy;
+        return this;
+    }
+
+    public EasyConfig setClient(@NonNull OkHttpClient client) {
         mClient = client;
-        if (mClient == null) {
-            throw new IllegalArgumentException("The OkHttp client object cannot be empty");
-        }
         return this;
     }
 
@@ -147,7 +155,7 @@ public final class EasyConfig {
         return this;
     }
 
-    public EasyConfig setThreadSchedulers(ThreadSchedulers schedulers) {
+    public EasyConfig setThreadSchedulers(@NonNull ThreadSchedulers schedulers) {
         if (mThreadSchedulers == null) {
             // 线程调度器不能为空
             throw new NullPointerException("Thread schedulers cannot be empty");
@@ -195,6 +203,10 @@ public final class EasyConfig {
 
     public IRequestHandler getHandler() {
         return mHandler;
+    }
+
+    public IHttpCacheStrategy getCacheStrategy() {
+        return mCacheStrategy;
     }
 
     public IRequestInterceptor getInterceptor() {
@@ -261,6 +273,11 @@ public final class EasyConfig {
         if (mLogStrategy == null) {
             mLogStrategy = new EasyHttpLogStrategy();
         }
+
+        if (mCacheStrategy == null) {
+            mCacheStrategy = new EasyNullCacheStrategy();
+        }
+
         EasyConfig.setInstance(this);
     }
 }

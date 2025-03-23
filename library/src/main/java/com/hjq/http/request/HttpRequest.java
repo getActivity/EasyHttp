@@ -20,6 +20,7 @@ import com.hjq.http.config.IRequestHost;
 import com.hjq.http.config.IRequestInterceptor;
 import com.hjq.http.config.IRequestServer;
 import com.hjq.http.config.IRequestType;
+import com.hjq.http.config.IHttpCacheStrategy;
 import com.hjq.http.config.impl.EasyRequestApi;
 import com.hjq.http.config.impl.EasyRequestServer;
 import com.hjq.http.config.impl.RequestFormBodyStrategy;
@@ -59,18 +60,28 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /** 请求接口配置 */
     private IRequestApi mRequestApi;
     /** 接口主机地址 */
+    @NonNull
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
     /** 提交参数类型 */
+    @NonNull
     private IRequestType mRequestType = EasyConfig.getInstance().getServer();
     /** 接口缓存方式 */
+    @NonNull
     private IRequestCache mRequestCache = EasyConfig.getInstance().getServer();
     /** OkHttp 客户端 */
+    @NonNull
     private IRequestClient mRequestClient = EasyConfig.getInstance().getServer();
     /** 请求处理策略 */
+    @NonNull
     private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
     /** 请求拦截策略 */
+    @Nullable
     private IRequestInterceptor mRequestInterceptor = EasyConfig.getInstance().getInterceptor();
+    /** 请求缓存策略 */
+    @NonNull
+    private IHttpCacheStrategy mHttpCacheStrategy = EasyConfig.getInstance().getCacheStrategy();
     /** 线程调度器 */
+    @NonNull
     private ThreadSchedulers mThreadSchedulers = EasyConfig.getInstance().getThreadSchedulers();
 
     /** 请求执行代理类 */
@@ -121,6 +132,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (api instanceof IRequestHandler) {
             mRequestHandler = (IRequestHandler) api;
         }
+        if (api instanceof IHttpCacheStrategy) {
+            mHttpCacheStrategy = (IHttpCacheStrategy) api;
+        }
         if (api instanceof IRequestInterceptor) {
             mRequestInterceptor = (IRequestInterceptor) api;
         }
@@ -155,7 +169,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 替换默认的请求处理策略
      */
-    public T handler(IRequestHandler handler) {
+    public T handler(@NonNull IRequestHandler handler) {
         mRequestHandler = handler;
         return (T) this;
     }
@@ -163,8 +177,16 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     /**
      * 替换默认的拦截器策略
      */
-    public T interceptor(IRequestInterceptor interceptor) {
+    public T interceptor(@Nullable IRequestInterceptor interceptor) {
         mRequestInterceptor = interceptor;
+        return (T) this;
+    }
+
+    /**
+     * 替换默认的缓存策略
+     */
+    public T cacheStrategy(@NonNull IHttpCacheStrategy strategy) {
+        mHttpCacheStrategy = strategy;
         return (T) this;
     }
 
@@ -360,7 +382,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (cacheMode == CacheMode.USE_CACHE_ONLY ||
                 cacheMode == CacheMode.USE_CACHE_FIRST) {
             try {
-                Object cacheResult = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
+                Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCache.getCacheTime());
                 EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                 if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                     // 使用异步请求来刷新缓存
@@ -395,7 +417,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
 
             if (cacheMode == CacheMode.USE_CACHE_ONLY || cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    boolean writeCacheResult = mRequestHandler.writeCache(this, response, result);
+                    boolean writeCacheResult = mHttpCacheStrategy.writeCache(this, response, result);
                     EasyLog.printLog(this, "WriteCache result：" + writeCacheResult);
                 } catch (Throwable cacheThrowable) {
                     EasyLog.printLog(this, "WriteCache error");
@@ -412,7 +434,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             // 如果设置了只在网络请求失败才去读缓存
             if (throwable instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    Object cacheResult = mRequestHandler.readCache(this, reflectType, mRequestCache.getCacheTime());
+                    Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCache.getCacheTime());
                     EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                     if (cacheResult != null) {
                         return (Bean) cacheResult;
@@ -525,6 +547,14 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     @NonNull
     public ThreadSchedulers getThreadSchedulers() {
         return mThreadSchedulers;
+    }
+
+    /**
+     * 获取请求缓存策略
+     */
+    @NonNull
+    public IHttpCacheStrategy getHttpCacheStrategy() {
+        return mHttpCacheStrategy;
     }
 
     /**

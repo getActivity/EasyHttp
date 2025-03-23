@@ -4,6 +4,7 @@ import android.app.Application;
 import androidx.annotation.NonNull;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonToken;
+import com.hjq.easy.demo.http.model.HttpCacheStrategy;
 import com.hjq.easy.demo.http.model.RequestHandler;
 import com.hjq.easy.demo.http.server.ReleaseServer;
 import com.hjq.easy.demo.http.server.TestServer;
@@ -82,6 +83,8 @@ public final class AppApplication extends Application {
                 .setServer(server)
                 // 设置请求处理策略（必须设置）
                 .setHandler(new RequestHandler(this))
+                // 设置请求缓存实现策略（非必须）
+                .setCacheStrategy(new HttpCacheStrategy())
                 // 设置请求参数拦截器
                 .setInterceptor(new IRequestInterceptor() {
                     @Override

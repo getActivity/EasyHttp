@@ -190,6 +190,8 @@ EasyConfig.with(okHttpClient)
         .setServer(server)
         // 设置请求处理策略（必须设置）
         .setHandler(new RequestHandler())
+        // 设置请求缓存实现策略（非必须）
+        //.setCacheStrategy(new HttpCacheStrategy())
         // 设置请求重试次数
         .setRetryCount(3)
         // 添加全局请求参数
@@ -466,152 +468,28 @@ try {
 
 #### 设置请求缓存
 
-* 需要先实现读取和写入缓存的接口，如果已配置则可以跳过，这里以 MMKV 为例
+* 需要先实现读取和写入缓存的接口，具体封装可以参考 [HttpCacheStrategy](app/src/main/java/com/hjq/easy/demo/http/model/HttpCacheStrategy.java)
+
+* 在初始化框架的代码时设置缓存策略
 
 ```java
-public final class RequestHandler implements IRequestHandler {
-
-    @Nullable
-    @Override
-    public Object readCache(@NonNull HttpRequest<?> httpRequest, @NonNull Type type, long cacheTime) {
-        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
-        String cacheValue = HttpCacheManager.readHttpCache(cacheKey);
-        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
-            return null;
-        }
-        EasyLog.printLog(httpRequest, "----- read cache key -----");
-        EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- read cache value -----");
-        EasyLog.printJson(httpRequest, cacheValue);
-        EasyLog.printLog(httpRequest, "cacheTime = " + cacheTime);
-        boolean cacheInvalidate = HttpCacheManager.isCacheInvalidate(cacheKey, cacheTime);
-        EasyLog.printLog(httpRequest, "cacheInvalidate = " + cacheInvalidate);
-        if (cacheInvalidate) {
-            // 表示缓存已经过期了，直接返回 null 给外层，表示缓存不可用
-            return null;
-        }
-        return GsonFactory.getSingletonGson().fromJson(cacheValue, type);
-    }
+public final class AppApplication extends Application {
 
     @Override
-    public boolean writeCache(@NonNull HttpRequest<?> httpRequest, @NonNull Response response, @NonNull Object result) {
-        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
-        String cacheValue = GsonFactory.getSingletonGson().toJson(result);
-        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
-            return false;
-        }
-        EasyLog.printLog(httpRequest, "----- write cache key -----");
-        EasyLog.printJson(httpRequest, cacheKey);
-        EasyLog.printLog(httpRequest, "----- write cache value -----");
-        EasyLog.printJson(httpRequest, cacheValue);
-        boolean writeHttpCacheResult = HttpCacheManager.writeHttpCache(cacheKey, cacheValue);
-        EasyLog.printLog(httpRequest, "writeHttpCacheResult = " + writeHttpCacheResult);
-        boolean refreshHttpCacheTimeResult = HttpCacheManager.setHttpCacheTime(cacheKey, System.currentTimeMillis());
-        EasyLog.printLog(httpRequest, "refreshHttpCacheTimeResult = " + refreshHttpCacheTimeResult);
-        return writeHttpCacheResult && refreshHttpCacheTimeResult;
-    }
-
-    @Override
-    public boolean deleteCache(@NonNull HttpRequest<?> httpRequest) {
-        String cacheKey = HttpCacheManager.generateCacheKey(httpRequest);
-        EasyLog.printLog(httpRequest, "----- delete cache key -----");
-        EasyLog.printJson(httpRequest, cacheKey);
-        boolean deleteHttpCacheResult = HttpCacheManager.deleteHttpCache(cacheKey);
-        EasyLog.printLog(httpRequest, "deleteHttpCacheResult = " + deleteHttpCacheResult);
-        return deleteHttpCacheResult;
-    }
-
-    @Override
-    public void clearCache() {
-        HttpCacheManager.clearCache();
-    }
-```
-
-```java
-public final class HttpCacheManager {
-
-    private static final MMKV HTTP_CACHE_CONTENT = MMKV.mmkvWithID("http_cache_content");;
-
-    private static final MMKV HTTP_CACHE_TIME = MMKV.mmkvWithID("http_cache_time");
-
-    /**
-     * 生成缓存的 key
-     */
-    @NonNull
-    public static String generateCacheKey(@NonNull HttpRequest<?> httpRequest) {
-        IRequestApi requestApi = httpRequest.getRequestApi();
-        return "请替换成当前的用户 id" + "\n" + requestApi.getApi() + "\n" + GsonFactory.getSingletonGson().toJson(requestApi);
-    }
-
-    /**
-     * 读取缓存
-     */
-    public static String readHttpCache(@NonNull String cacheKey) {
-        String cacheValue = HTTP_CACHE_CONTENT.getString(cacheKey, null);
-        if (cacheValue == null || cacheValue.isEmpty() || "{}".equals(cacheValue)) {
-            return null;
-        }
-        return cacheValue;
-    }
-
-    /**
-     * 写入缓存
-     */
-    public static boolean writeHttpCache(String cacheKey, String cacheValue) {
-        return HTTP_CACHE_CONTENT.putString(cacheKey, cacheValue).commit();
-    }
-
-    /**
-     * 删除缓存
-     */
-    public static boolean deleteHttpCache(String cacheKey) {
-        return HTTP_CACHE_CONTENT.remove(cacheKey).commit();
-    }
-
-    /**
-     * 清理缓存
-     */
-    public static void clearCache() {
-        HTTP_CACHE_CONTENT.clearMemoryCache();
-        HTTP_CACHE_CONTENT.clearAll();
-
-        HTTP_CACHE_TIME.clearMemoryCache();
-        HTTP_CACHE_TIME.clearAll();
-    }
-
-    /**
-     * 获取 Http 写入缓存的时间
-     */
-    public static long getHttpCacheTime(String cacheKey) {
-        return HTTP_CACHE_TIME.getLong(cacheKey, 0);
-    }
-
-    /**
-     * 设置 Http 写入缓存的时间
-     */
-    public static boolean setHttpCacheTime(String cacheKey, long cacheTime) {
-        return HTTP_CACHE_TIME.putLong(cacheKey, cacheTime).commit();
-    }
-
-    /**
-     * 判断缓存是否过期
-     */
-    public static boolean isCacheInvalidate(String cacheKey, long maxCacheTime) {
-        if (maxCacheTime == Long.MAX_VALUE) {
-            // 表示缓存长期有效，永远不会过期
-            return false;
-        }
-        long httpCacheTime = getHttpCacheTime(cacheKey);
-        if (httpCacheTime == 0) {
-            // 表示不知道缓存的时间，这里默认当做已经过期了
-            return true;
-        }
-        return httpCacheTime + maxCacheTime < System.currentTimeMillis();
+    public void onCreate() {
+        super.onCreate();
+        
+        EasyConfig.with(okHttpClient)
+                ......
+                // 设置请求缓存
+                .setCacheStrategy(new HttpCacheStrategy())
+                ......
+                .into();
     }
 }
 ```
 
-* 最后记得在应用启动的时候初始化 MMKV
+* 如果你使用的是 MMKV 作为读写缓存实现，也不要忘记在应用启动的时候初始化 MMKV
 
 ```java
 public final class AppApplication extends Application {
