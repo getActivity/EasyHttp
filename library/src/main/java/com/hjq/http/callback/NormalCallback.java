@@ -48,7 +48,7 @@ public final class NormalCallback extends BaseCallback {
 
     @Override
     public void start() {
-        CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
+        CacheMode cacheMode = mHttpRequest.getRequestCacheConfig().getCacheMode();
         if (cacheMode != CacheMode.USE_CACHE_ONLY &&
                 cacheMode != CacheMode.USE_CACHE_FIRST) {
             super.start();
@@ -57,7 +57,7 @@ public final class NormalCallback extends BaseCallback {
 
         try {
             Object result = mHttpRequest.getHttpCacheStrategy().readCache(mHttpRequest,
-                    mReflectType, mHttpRequest.getRequestCache().getCacheTime());
+                    mReflectType, mHttpRequest.getRequestCacheConfig().getCacheTime());
             EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
 
             // 如果没有缓存，就请求网络
@@ -111,7 +111,7 @@ public final class NormalCallback extends BaseCallback {
         final Object result = mHttpRequest.getRequestHandler().requestSuccess(
                 mHttpRequest, response, mReflectType);
 
-        CacheMode cacheMode = mHttpRequest.getRequestCache().getCacheMode();
+        CacheMode cacheMode = mHttpRequest.getRequestCacheConfig().getCacheMode();
         if (cacheMode == CacheMode.USE_CACHE_ONLY ||
                 cacheMode == CacheMode.USE_CACHE_FIRST ||
                 cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
@@ -132,10 +132,10 @@ public final class NormalCallback extends BaseCallback {
         // 打印错误堆栈
         EasyLog.printThrowable(mHttpRequest, throwable);
         // 如果设置了只在网络请求失败才去读缓存
-        if (throwable instanceof IOException && mHttpRequest.getRequestCache().getCacheMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
+        if (throwable instanceof IOException && mHttpRequest.getRequestCacheConfig().getCacheMode() == CacheMode.USE_CACHE_AFTER_FAILURE) {
             try {
                 Object result = mHttpRequest.getHttpCacheStrategy().readCache(mHttpRequest,
-                        mReflectType, mHttpRequest.getRequestCache().getCacheTime());
+                        mReflectType, mHttpRequest.getRequestCacheConfig().getCacheTime());
                 EasyLog.printLog(mHttpRequest, "ReadCache result：" + result);
                 if (result != null) {
                     EasyUtils.runOnAssignThread(mHttpRequest.getThreadSchedulers(), () -> dispatchHttpSuccessCallback(result, true));

@@ -98,7 +98,7 @@ public final class DownloadCallback extends BaseCallback {
         if (response.code() == 416 && !TextUtils.isEmpty(response.request().header("Range"))) {
             Request request = response.request().newBuilder().removeHeader("Range").build();
             CallProxy callProxy = getCallProxy();
-            Call newCall = mHttpRequest.getRequestClient().getOkHttpClient().newCall(request);
+            Call newCall = mHttpRequest.getRequestHttpClient().getOkHttpClient().newCall(request);
             callProxy.setRealCall(newCall);
             Response newResponse = callProxy.execute();
             // 打印请求耗时时间

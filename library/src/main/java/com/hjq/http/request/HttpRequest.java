@@ -64,13 +64,13 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
     private IRequestHost mRequestHost = EasyConfig.getInstance().getServer();
     /** 提交参数类型 */
     @NonNull
-    private IRequestBodyType mRequestType = EasyConfig.getInstance().getServer();
+    private IRequestBodyType mRequestBodyType = EasyConfig.getInstance().getServer();
     /** 接口缓存方式 */
     @NonNull
-    private IRequestCacheConfig mRequestCache = EasyConfig.getInstance().getServer();
+    private IRequestCacheConfig mRequestCacheConfig = EasyConfig.getInstance().getServer();
     /** OkHttp 客户端 */
     @NonNull
-    private IRequestHttpClient mRequestClient = EasyConfig.getInstance().getServer();
+    private IRequestHttpClient mRequestHttpClient = EasyConfig.getInstance().getServer();
     /** 请求处理策略 */
     @NonNull
     private IRequestHandler mRequestHandler = EasyConfig.getInstance().getHandler();
@@ -121,13 +121,13 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             mRequestHost = (IRequestHost) api;
         }
         if (api instanceof IRequestHttpClient) {
-            mRequestClient = (IRequestHttpClient) api;
+            mRequestHttpClient = (IRequestHttpClient) api;
         }
         if (api instanceof IRequestBodyType) {
-            mRequestType = (IRequestBodyType) api;
+            mRequestBodyType = (IRequestBodyType) api;
         }
         if (api instanceof IRequestCacheConfig) {
-            mRequestCache = (IRequestCacheConfig) api;
+            mRequestCacheConfig = (IRequestCacheConfig) api;
         }
         if (api instanceof IRequestHandler) {
             mRequestHandler = (IRequestHandler) api;
@@ -160,9 +160,9 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      */
     public T server(IRequestServer server) {
         mRequestHost = server;
-        mRequestClient = server;
-        mRequestType = server;
-        mRequestCache = server;
+        mRequestHttpClient = server;
+        mRequestBodyType = server;
+        mRequestCacheConfig = server;
         return (T) this;
     }
 
@@ -229,7 +229,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      */
     @NonNull
     protected Call createCall() {
-        IHttpPostBodyStrategy requestBodyStrategy = mRequestType.getBodyType();
+        IHttpPostBodyStrategy requestBodyStrategy = mRequestBodyType.getBodyType();
 
         HttpParams params = new HttpParams();
         HttpHeaders headers = new HttpHeaders();
@@ -313,7 +313,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         if (mRequestInterceptor != null) {
             request = mRequestInterceptor.interceptRequest(this, request);
         }
-        return mRequestClient.getOkHttpClient().newCall(request);
+        return mRequestHttpClient.getOkHttpClient().newCall(request);
     }
 
     /**
@@ -378,11 +378,11 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         // 必须将 Call 对象创建放到这里来，否则无法显示请求日志
         mCallProxy = new CallProxy(createCall());
 
-        CacheMode cacheMode = getRequestCache().getCacheMode();
+        CacheMode cacheMode = getRequestCacheConfig().getCacheMode();
         if (cacheMode == CacheMode.USE_CACHE_ONLY ||
                 cacheMode == CacheMode.USE_CACHE_FIRST) {
             try {
-                Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCache.getCacheTime());
+                Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCacheConfig.getCacheTime());
                 EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                 if (cacheMode == CacheMode.USE_CACHE_FIRST) {
                     // 使用异步请求来刷新缓存
@@ -434,7 +434,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
             // 如果设置了只在网络请求失败才去读缓存
             if (throwable instanceof IOException && cacheMode == CacheMode.USE_CACHE_AFTER_FAILURE) {
                 try {
-                    Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCache.getCacheTime());
+                    Object cacheResult = mHttpCacheStrategy.readCache(this, reflectType, mRequestCacheConfig.getCacheTime());
                     EasyLog.printLog(this, "ReadCache result：" + cacheResult);
                     if (cacheResult != null) {
                         return (Bean) cacheResult;
@@ -499,24 +499,24 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
      * 获取参数提交方式
      */
     @NonNull
-    public IRequestBodyType getRequestType() {
-        return mRequestType;
+    public IRequestBodyType getRequestBodyType() {
+        return mRequestBodyType;
     }
 
     /**
      * 获取请求缓存策略
      */
     @NonNull
-    public IRequestCacheConfig getRequestCache() {
-        return mRequestCache;
+    public IRequestCacheConfig getRequestCacheConfig() {
+        return mRequestCacheConfig;
     }
 
     /**
      * 获取请求的 OkHttpClient 对象
      */
     @NonNull
-    public IRequestHttpClient getRequestClient() {
-        return mRequestClient;
+    public IRequestHttpClient getRequestHttpClient() {
+        return mRequestHttpClient;
     }
 
     /**
@@ -644,7 +644,7 @@ public abstract class HttpRequest<T extends HttpRequest<?>> {
         }
 
         // 如果设置了不缓存数据
-        if (mRequestCache.getCacheMode() == CacheMode.NO_CACHE) {
+        if (mRequestCacheConfig.getCacheMode() == CacheMode.NO_CACHE) {
             requestBuilder.cacheControl(new CacheControl.Builder().noCache().build());
         }
         return requestBuilder;
