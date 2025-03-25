@@ -9,8 +9,7 @@ import com.hjq.http.EasyLog;
 import com.hjq.http.EasyUtils;
 import com.hjq.http.callback.DownloadCallback;
 import com.hjq.http.config.IHttpPostBodyStrategy;
-import com.hjq.http.config.impl.SimpleDownloadRequestApi;
-import com.hjq.http.config.impl.SimpleRequestServer;
+import com.hjq.http.config.impl.SimpleRequestUrl;
 import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.listener.OnDownloadListener;
 import com.hjq.http.listener.OnHttpListener;
@@ -80,8 +79,7 @@ public final class DownloadRequest extends HttpRequest<DownloadRequest> {
      * 设置下载地址
      */
     public DownloadRequest url(String url) {
-        server(new SimpleRequestServer(url));
-        api(new SimpleDownloadRequestApi(""));
+        api(new SimpleRequestUrl(url));
         return this;
     }
 
