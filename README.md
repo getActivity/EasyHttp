@@ -89,14 +89,7 @@ dependencies {
 * EasyHttp 框架混淆规则
 
 ```text
-# EasyHttp 框架混淆规则
--keep class com.hjq.http.** {*;}
-```
-
-* 不混淆实现 OnHttpListener 接口的类
-
-```text
-# 必须要加上此规则，否则会导致泛型解析失败
+# 不混淆实现 OnHttpListener 接口的类，必须要加上此规则，否则会导致泛型解析失败
 -keep class * implements com.hjq.http.listener.OnHttpListener {
     *;
 }
