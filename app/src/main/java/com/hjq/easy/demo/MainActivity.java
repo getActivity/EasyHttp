@@ -31,13 +31,13 @@ import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.ResponseClass;
 import com.hjq.permissions.OnPermissionCallback;
-import com.hjq.permissions.Permission;
 import com.hjq.permissions.XXPermissions;
+import com.hjq.permissions.permission.PermissionLists;
+import com.hjq.permissions.permission.base.IPermission;
 import com.hjq.toast.Toaster;
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -46,7 +46,7 @@ import java.util.List;
  *    time   : 2019/05/19
  *    desc   : 网络请求示例
  */
-public final class MainActivity extends BaseActivity implements View.OnClickListener, OnPermissionCallback {
+public final class MainActivity extends BaseActivity implements View.OnClickListener {
 
     private ProgressBar mProgressBar;
 
@@ -78,34 +78,29 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
     private void requestPermission() {
         XXPermissions.with(this)
-                .permission(Permission.Group.STORAGE)
-                .request(this);
-    }
+            .permission(PermissionLists.getManageExternalStoragePermission())
+            .request(new OnPermissionCallback() {
 
-    /**
-     * {@link OnPermissionCallback}
-     */
+                @Override
+                public void onGranted(@NonNull List<IPermission> permissions, boolean allGranted) {}
 
-    @Override
-    public void onGranted(@NonNull List<String> permissions, boolean allGranted) {}
-
-    @Override
-    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
-        if (doNotAskAgain) {
-            Toaster.show("授权失败，请手动授予存储权限");
-            XXPermissions.startPermissionActivity(this, permissions);
-        } else {
-            Toaster.show("请先授予存储权限");
-            requestPermission();
-        }
+                @Override
+                public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
+                    if (doNotAskAgain) {
+                        Toaster.show("授权失败，请手动授予存储权限");
+                        XXPermissions.startPermissionActivity(MainActivity.this, permissions);
+                    } else {
+                        Toaster.show("请先授予存储权限");
+                        requestPermission();
+                    }
+                }
+            });
     }
 
     @Override
     protected void onRestart() {
         super.onRestart();
-        if (XXPermissions.isGranted(this, Permission.Group.STORAGE)) {
-            onGranted(new ArrayList<>(), true);
-        } else {
+        if (!XXPermissions.isGrantedPermission(this, PermissionLists.getManageExternalStoragePermission())) {
             requestPermission();
         }
     }
@@ -308,37 +303,38 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
      * 安装 Apk
      */
     private void installApk(final Context context, final File file) {
-        XXPermissions.with(MainActivity.this)
-                .permission(Permission.REQUEST_INSTALL_PACKAGES)
-                .request(new OnPermissionCallback() {
-                    @Override
-                    public void onGranted(@NonNull List<String> permissions, boolean allGranted) {
-                        if (!allGranted) {
-                            return;
-                        }
-                        Intent intent = new Intent(Intent.ACTION_VIEW);
-                        Uri uri;
-                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                            if (file instanceof FileContentResolver) {
-                                uri = ((FileContentResolver) file).getContentUri();
-                            } else {
-                                uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
-                            }
+        XXPermissions.with(this)
+            .permission(PermissionLists.getRequestInstallPackagesPermission())
+            .request(new OnPermissionCallback() {
+
+                @Override
+                public void onGranted(@NonNull List<IPermission> permissions, boolean allGranted) {
+                    if (!allGranted) {
+                        return;
+                    }
+                    Intent intent = new Intent(Intent.ACTION_VIEW);
+                    Uri uri;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                        if (file instanceof FileContentResolver) {
+                            uri = ((FileContentResolver) file).getContentUri();
                         } else {
-                            uri = Uri.fromFile(file);
+                            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
                         }
-
-                        intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        // 对目标应用临时授权该 Uri 读写权限
-                        intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                        context.startActivity(intent);
+                    } else {
+                        uri = Uri.fromFile(file);
                     }
 
-                    @Override
-                    public void onDenied(@NonNull List<String> permissions, boolean doNotAskAgain) {
-                        Toaster.show("安装 apk 失败，请正确授予安装权限");
-                    }
-                });
+                    intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    // 对目标应用临时授权该 Uri 读写权限
+                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                    context.startActivity(intent);
+                }
+
+                @Override
+                public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
+                    Toaster.show("安装 apk 失败，请正确授予安装权限");
+                }
+            });
     }
 }

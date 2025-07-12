@@ -13,6 +13,9 @@
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
+    <!-- 文件管理权限（特殊权限，Android 11 新增的权限）-->
+    <uses-permission android:name="android.permission.MANAGE_EXTERNAL_STORAGE" />
+
     <!-- 安装包的权限 -->
     <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 
