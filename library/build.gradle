@@ -1,12 +1,10 @@
 apply plugin: 'com.android.library'
+apply from : '../common.gradle'
 
 android {
-    compileSdkVersion 31
 
     defaultConfig {
-        minSdkVersion 16
-        versionCode 1300
-        versionName "13.0"
+        minSdk 16
     }
 
     // 使用 JDK 1.8
