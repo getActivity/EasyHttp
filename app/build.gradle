@@ -95,7 +95,7 @@ dependencies {
     implementation 'com.tencent.bugly:nativecrashreport:3.9.2'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
-    debugImplementation 'com.github.getActivity:Logcat:11.82'
+    debugImplementation 'com.github.getActivity:Logcat:12.3'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
     debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
