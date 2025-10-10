@@ -74,7 +74,7 @@ dependencies {
     implementation 'com.github.getActivity:TitleBar:10.6'
 
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
-    implementation ('com.github.getActivity:GsonFactory:10.0') {
+    implementation ('com.github.getActivity:GsonFactory:10.3') {
         exclude group: 'org.jetbrains.kotlin', module: 'kotlin-reflect'
     }
     // Json 解析框架：https://github.com/google/gson
