@@ -1,7 +1,7 @@
 package com.hjq.http.body;
 
-import com.hjq.http.EasyUtils;
 import com.hjq.http.model.ContentType;
+import java.io.Closeable;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -18,7 +18,7 @@ import okio.Source;
  *    time   : 2019/12/14
  *    desc   : 上传文件流
  */
-public class UpdateStreamRequestBody extends RequestBody {
+public class UpdateStreamRequestBody extends RequestBody implements Closeable {
 
     /** 上传源 */
     private final Source mSource;
@@ -63,11 +63,16 @@ public class UpdateStreamRequestBody extends RequestBody {
 
     @Override
     public void writeTo(BufferedSink sink) throws IOException {
-        try {
-            sink.writeAll(mSource);
-        } finally {
-            EasyUtils.closeStream(mSource);
-        }
+        sink.writeAll(mSource);
+    }
+
+    /**
+     * {@link Closeable}
+     */
+    @Override
+    public void close() throws IOException {
+        // 关闭文件流
+        mSource.close();
     }
 
     public String getKeyName() {

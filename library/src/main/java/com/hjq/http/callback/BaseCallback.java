@@ -8,10 +8,13 @@ import com.hjq.http.lifecycle.HttpLifecycleManager;
 import com.hjq.http.model.CallProxy;
 import com.hjq.http.model.ThreadSchedulers;
 import com.hjq.http.request.HttpRequest;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import okhttp3.Call;
 import okhttp3.Callback;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 import okhttp3.Response;
 
 /**
@@ -69,7 +72,9 @@ public abstract class BaseCallback implements Callback {
             // 回调失败
             onHttpFailure(throwable);
         } finally {
-            // 关闭响应
+            // 关闭请求体
+            closeRequest(response.request());
+            // 关闭响应体
             closeResponse(response);
         }
     }
@@ -119,7 +124,22 @@ public abstract class BaseCallback implements Callback {
     protected abstract void onHttpFailure(Throwable e);
 
     /**
-     * 关闭响应
+     * 关闭请求体
+     */
+    protected void closeRequest(Request request) {
+        RequestBody body = request.body();
+        if (body == null) {
+            return;
+        }
+        if (!(body instanceof Closeable)) {
+            return;
+        }
+        // 手动关闭文件流，避免内存泄漏
+        EasyUtils.closeStream(((Closeable) body));
+    }
+
+    /**
+     * 关闭响应体
      */
     protected void closeResponse(Response response) {
         EasyUtils.closeStream(response);
