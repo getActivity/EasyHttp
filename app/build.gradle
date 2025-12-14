@@ -14,6 +14,11 @@ android {
     defaultConfig {
         applicationId 'com.hjq.easy.demo'
         minSdk 23
+
+        // 仅保留 arm64-v8a 架构（需要注意的是 mmkv 库在 2.0 及之后的版本已经不支持在 32 位的机器上面运行）
+        ndk {
+            abiFilters 'arm64-v8a'
+        }
     }
 
     // 支持 JDK 1.8
