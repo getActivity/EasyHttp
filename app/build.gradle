@@ -97,5 +97,5 @@ dependencies {
     debugImplementation 'com.github.getActivity:Logcat:12.3'
 
     // 内存泄漏监测框架：https://github.com/square/leakcanary
-    debugImplementation 'com.squareup.leakcanary:leakcanary-android:2.12'
+    debugImplementation 'com.squareup.leakcanary:leakcanary-android:3.0-alpha-8'
 }
