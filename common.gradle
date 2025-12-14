@@ -4,12 +4,10 @@ android {
     // 编译源码版本
     compileSdk 34
     defaultConfig {
-        // 最低安装版本
-        minSdk 16
         // Android 版本适配指南：https://github.com/getActivity/AndroidVersionAdapter
         targetSdk 34
-        versionCode 1300
-        versionName "13.0"
+        versionCode 1350
+        versionName "13.5"
     }
 
     // 支持 Java JDK 8

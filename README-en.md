@@ -6,7 +6,7 @@
 
 * Blog address: [Network Requests, As Elegant As Silk](https://www.jianshu.com/p/93cd59dec002)
 
-* [Click here to download demo apk directly](https://github.com/getActivity/EasyHttp/releases/download/13.0/EasyHttp.apk)
+* [Click here to download demo apk directly](https://github.com/getActivity/EasyHttp/releases/download/13.5/EasyHttp.apk)
 
 ![](picture/en/demo_preview.jpg)
 
@@ -49,7 +49,7 @@ android {
 
 dependencies {
     // Network request framework: https://github.com/getActivity/EasyHttp
-    implementation 'com.github.getActivity:EasyHttp:13.0'
+    implementation 'com.github.getActivity:EasyHttp:13.5'
     // OkHttp framework: https://github.com/square/okhttp
     // noinspection GradleDependency
     implementation 'com.squareup.okhttp3:okhttp:5.3.0'
@@ -77,7 +77,7 @@ dependencies {
 
 |  Feature or Detail  | [EasyHttp](https://github.com/getActivity/EasyHttp) | [Retrofit](https://github.com/square/retrofit)  | [OkGo](https://github.com/jeasonlzy/okhttp-OkGo) |
 | :----: | :------: |  :-----: |  :-----: |
-|    Supported Version  |  13.0 |  2.9.0  |  3.0.4    |
+|    Supported Version  |  13.5 |  2.9.0  |  3.0.4    |
 |    Number of issues   |  [![](https://img.shields.io/github/issues/getActivity/EasyHttp.svg)](https://github.com/getActivity/EasyHttp/issues)  |  [![](https://img.shields.io/github/issues/square/retrofit.svg)](https://github.com/square/retrofit/issues)  |  [![](https://img.shields.io/github/issues/jeasonlzy/okhttp-OkGo.svg)](https://github.com/jeasonlzy/okhttp-OkGo/issues)  |
 |    **aar package size**  |  96 KB  | 123 KB  |  131 KB  |
 |    minSdk requirement  |  API 14+ |  API 21+  |  API 14+   |
