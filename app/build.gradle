@@ -65,7 +65,7 @@ dependencies {
     implementation 'com.squareup.okhttp3:okhttp:3.12.13'
 
     // 吐司框架：https://github.com/getActivity/Toaster
-    implementation 'com.github.getActivity:Toaster:13.0'
+    implementation 'com.github.getActivity:Toaster:13.8'
 
     // 权限请求框架：https://github.com/getActivity/XXPermissions
     implementation 'com.github.getActivity:XXPermissions:25.0'
