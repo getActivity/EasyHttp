@@ -30,10 +30,8 @@ import com.hjq.http.listener.OnUpdateListener;
 import com.hjq.http.model.FileContentResolver;
 import com.hjq.http.model.HttpMethod;
 import com.hjq.http.model.ResponseClass;
-import com.hjq.permissions.OnPermissionCallback;
 import com.hjq.permissions.XXPermissions;
 import com.hjq.permissions.permission.PermissionLists;
-import com.hjq.permissions.permission.base.IPermission;
 import com.hjq.toast.Toaster;
 import java.io.File;
 import java.io.IOException;
@@ -79,16 +77,14 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
     private void requestPermission() {
         XXPermissions.with(this)
             .permission(PermissionLists.getManageExternalStoragePermission())
-            .request(new OnPermissionCallback() {
-
-                @Override
-                public void onGranted(@NonNull List<IPermission> permissions, boolean allGranted) {}
-
-                @Override
-                public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
+            .request((grantedList, deniedList) -> {
+                boolean allGranted = deniedList.isEmpty();
+                if (!allGranted) {
+                    // 判断请求失败的权限是否被用户勾选了不再询问的选项
+                    boolean doNotAskAgain = XXPermissions.isDoNotAskAgainPermissions(MainActivity.this, deniedList);
                     if (doNotAskAgain) {
                         Toaster.show(getString(R.string.toast_permission_storage));
-                        XXPermissions.startPermissionActivity(MainActivity.this, permissions);
+                        XXPermissions.startPermissionActivity(MainActivity.this, deniedList);
                     } else {
                         Toaster.show(getString(R.string.toast_permission_request));
                         requestPermission();
@@ -305,36 +301,29 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
     private void installApk(final Context context, final File file) {
         XXPermissions.with(this)
             .permission(PermissionLists.getRequestInstallPackagesPermission())
-            .request(new OnPermissionCallback() {
-
-                @Override
-                public void onGranted(@NonNull List<IPermission> permissions, boolean allGranted) {
-                    if (!allGranted) {
-                        return;
-                    }
-                    Intent intent = new Intent(Intent.ACTION_VIEW);
-                    Uri uri;
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                        if (file instanceof FileContentResolver) {
-                            uri = ((FileContentResolver) file).getContentUri();
-                        } else {
-                            uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
-                        }
-                    } else {
-                        uri = Uri.fromFile(file);
-                    }
-
-                    intent.setDataAndType(uri, "application/vnd.android.package-archive");
-                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    // 对目标应用临时授权该 Uri 读写权限
-                    intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
-                    context.startActivity(intent);
-                }
-
-                @Override
-                public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
+            .request((grantedList, deniedList) -> {
+                boolean allGranted = deniedList.isEmpty();
+                if (!allGranted) {
                     Toaster.show(getString(R.string.toast_install_fail));
+                    return;
                 }
+                Intent intent = new Intent(Intent.ACTION_VIEW);
+                Uri uri;
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                    if (file instanceof FileContentResolver) {
+                        uri = ((FileContentResolver) file).getContentUri();
+                    } else {
+                        uri = FileProvider.getUriForFile(context, context.getPackageName() + ".provider", file);
+                    }
+                } else {
+                    uri = Uri.fromFile(file);
+                }
+
+                intent.setDataAndType(uri, "application/vnd.android.package-archive");
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                // 对目标应用临时授权该 Uri 读写权限
+                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION | Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                context.startActivity(intent);
             });
     }
 }
