@@ -88,7 +88,7 @@ dependencies {
         exclude group: 'com.google.errorprone', module: 'error_prone_annotations'
     }
     // Kotlin 反射库：用于反射 Kotlin data class 类对象
-    implementation 'org.jetbrains.kotlin:kotlin-reflect:1.6.21'
+    implementation 'org.jetbrains.kotlin:kotlin-reflect:2.2.21'
 
     // 腾讯 MMKV：https://github.com/Tencent/MMKV
     implementation ('com.tencent:mmkv-static:1.3.12') {
