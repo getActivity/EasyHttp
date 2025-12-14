@@ -3,6 +3,8 @@ apply from : '../common.gradle'
 
 android {
 
+    namespace 'com.hjq.http'
+
     defaultConfig {
         minSdk 21
 
@@ -29,14 +31,6 @@ android {
     }
 }
 
-afterEvaluate {
-    // 排除 BuildConfig.class 和 R.class
-    generateReleaseBuildConfig.enabled = false
-    generateDebugBuildConfig.enabled = false
-    generateReleaseResValues.enabled = false
-    generateDebugResValues.enabled = false
-}
-
 dependencies {
     // OkHttp 框架：https://github.com/square/okhttp
     implementation 'com.squareup.okhttp3:okhttp:5.3.0'
@@ -44,31 +38,4 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
     // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-runtime:2.1.0'
-}
-
-tasks.withType(Javadoc).configureEach {
-    options.addStringOption('Xdoclint:none', '-quiet')
-    options.addStringOption('encoding', 'UTF-8')
-    options.addStringOption('charSet', 'UTF-8')
-}
-
-tasks.register('sourcesJar', Jar) {
-    from android.sourceSets.main.java.srcDirs
-    classifier = 'sources'
-}
-
-tasks.register('javadoc', Javadoc) {
-    source = android.sourceSets.main.java.srcDirs
-    classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-}
-
-tasks.register('javadocJar', Jar) {
-    dependsOn javadoc
-    classifier = 'javadoc'
-    from javadoc.destinationDir
-}
-
-artifacts {
-    archives javadocJar
-    archives sourcesJar
 }

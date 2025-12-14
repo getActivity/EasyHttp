@@ -4,6 +4,13 @@ apply from : '../common.gradle'
 
 android {
 
+    namespace 'com.hjq.easy.demo'
+
+    buildFeatures {
+        // 是否生成 BuildConfig 类
+        buildConfig true
+    }
+
     defaultConfig {
         applicationId 'com.hjq.easy.demo'
         minSdk 21
