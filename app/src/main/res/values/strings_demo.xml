@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EasyHttp</string>
+
+    <string name="dialog_loading_hint">Loading&#8230;</string>
+
+    <string name="btn_get_request">Get Request</string>
+    <string name="btn_post_request">Post Request</string>
+    <string name="btn_sync_request">Sync Request</string>
+    <string name="btn_upload_file">Upload File</string>
+    <string name="btn_download_file">Download File</string>
+
+    <string name="toast_permission_storage">Authorization failed, please manually grant storage permission</string>
+    <string name="toast_permission_request">Please grant storage permission first</string>
+    <string name="toast_get_success">Get request successful, please check the log</string>
+    <string name="toast_post_success">Post request successful, please check the log</string>
+    <string name="toast_sync_success">Sync request successful, please check the log</string>
+    <string name="toast_upload_progress">Currently uploading or downloading, please wait for completion before proceeding</string>
+    <string name="toast_upload_success">Upload successful</string>
+    <string name="toast_upload_fail">Upload failed</string>
+    <string name="toast_download_success">Download successful: %s</string>
+    <string name="toast_download_fail">Download failed: %s</string>
+    <string name="toast_install_fail">APK installation failed, please grant installation permission correctly</string>
+</resources>

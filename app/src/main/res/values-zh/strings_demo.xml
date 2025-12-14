@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">EasyHttp</string>
+
+    <string name="dialog_loading_hint">加载中&#8230;</string>
+
+    <string name="btn_get_request">Get 请求</string>
+    <string name="btn_post_request">Post 请求</string>
+    <string name="btn_sync_request">同步请求</string>
+    <string name="btn_upload_file">上传文件</string>
+    <string name="btn_download_file">下载文件</string>
+
+    <string name="toast_permission_storage">授权失败，请手动授予存储权限</string>
+    <string name="toast_permission_request">请先授予存储权限</string>
+    <string name="toast_get_success">Get 请求成功，请看日志</string>
+    <string name="toast_post_success">Post 请求成功，请看日志</string>
+    <string name="toast_sync_success">同步请求成功，请看日志</string>
+    <string name="toast_upload_progress">当前正在上传或者下载，请等待完成之后再进行操作</string>
+    <string name="toast_upload_success">上传成功</string>
+    <string name="toast_upload_fail">上传失败</string>
+    <string name="toast_download_success">下载成功：%s</string>
+    <string name="toast_download_fail">下载失败：%s</string>
+    <string name="toast_install_fail">安装 apk 失败，请正确授予安装权限</string>
+</resources>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <string name="app_name">EasyHttp</string>
-
-    <string name="dialog_loading_hint">加载中&#8230;</string>
-
-</resources>

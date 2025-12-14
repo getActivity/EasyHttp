@@ -87,10 +87,10 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                 @Override
                 public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
                     if (doNotAskAgain) {
-                        Toaster.show("授权失败，请手动授予存储权限");
+                        Toaster.show(getString(R.string.toast_permission_storage));
                         XXPermissions.startPermissionActivity(MainActivity.this, permissions);
                     } else {
-                        Toaster.show("请先授予存储权限");
+                        Toaster.show(getString(R.string.toast_permission_request));
                         requestPermission();
                     }
                 }
@@ -117,7 +117,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onHttpSuccess(@NonNull HttpData<List<SearchAuthorApi.Bean>> result) {
-                            Toaster.show("Get 请求成功，请看日志");
+                            Toaster.show(getString(R.string.toast_get_success));
                         }
                     });
 
@@ -130,7 +130,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onHttpSuccess(@NonNull HttpData<SearchBlogsApi.Bean> result) {
-                            Toaster.show("Post 请求成功，请看日志");
+                            Toaster.show(getString(R.string.toast_post_success));
                         }
                     });
 
@@ -144,7 +144,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
                             .api(new SearchBlogsApi()
                                     .setKeyword("搬砖不再有"))
                             .execute(new ResponseClass<HttpData<SearchBlogsApi.Bean>>() {});
-                    Toaster.show("同步请求成功，请看日志");
+                    Toaster.show(getString(R.string.toast_sync_success));
                 } catch (Throwable throwable) {
                     Toaster.show(throwable.getMessage());
                 }
@@ -154,7 +154,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
         } else if (viewId == R.id.btn_main_update) {
 
             if (mProgressBar.getVisibility() == View.VISIBLE) {
-                Toaster.show("当前正在上传或者下载，请等待完成之后再进行操作");
+                Toaster.show(getString(R.string.toast_upload_progress));
                 return;
             }
 
@@ -177,7 +177,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             */
 
             // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
-            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "我是测试专用的图片.png");
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), "test_image.png");
 
             if (!file.exists()) {
                 // 生成图片到本地
@@ -211,12 +211,12 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onUpdateSuccess(@NonNull Void result) {
-                            Toaster.show("上传成功");
+                            Toaster.show(getString(R.string.toast_upload_success));
                         }
 
                         @Override
                         public void onUpdateFail(@NonNull Throwable throwable) {
-                            Toaster.show("上传失败");
+                            Toaster.show(getString(R.string.toast_upload_fail));
                         }
 
                         @Override
@@ -255,7 +255,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
             */
 
             // 如果是放到外部存储的应用专属目录则不需要适配分区存储特性
-            File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "微信 8.0.15.apk");
+            File file = new File(getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS), "wechat_8.0.15.apk");
 
             EasyHttp.download(this)
                     .method(HttpMethod.GET)
@@ -280,13 +280,13 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                         @Override
                         public void onDownloadSuccess(@NonNull File file) {
-                            Toaster.show("下载成功：" + file.getPath());
+                            Toaster.show(getString(R.string.toast_download_success, file.getPath()));
                             installApk(MainActivity.this, file);
                         }
 
                         @Override
                         public void onDownloadFail(@NonNull File file, @NonNull Throwable throwable) {
-                            Toaster.show("下载失败：" + throwable.getMessage());
+                            Toaster.show(getString(R.string.toast_download_fail, throwable.getMessage()));
                             file.delete();
                         }
 
@@ -333,7 +333,7 @@ public final class MainActivity extends BaseActivity implements View.OnClickList
 
                 @Override
                 public void onDenied(@NonNull List<IPermission> permissions, boolean doNotAskAgain) {
-                    Toaster.show("安装 apk 失败，请正确授予安装权限");
+                    Toaster.show(getString(R.string.toast_install_fail));
                 }
             });
     }

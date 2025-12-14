@@ -1,3 +1,5 @@
+# [English Doc](README-en.md)
+
 # 简单易用的网络框架
 
 * 项目地址：[Github](https://github.com/getActivity/EasyHttp)
@@ -22,9 +24,9 @@
 
 * [OkHttp 精讲：CallServerInterceptor](https://www.jianshu.com/p/aa77af6251ff)
 
-![](picture/demo_preview.jpg)
+![](picture/zh/demo_preview.jpg)
 
-![](picture/resumable_transfer.gif)
+![](picture/zh/resumable_transfer.gif)
 
 #### 集成步骤
 
@@ -234,7 +236,7 @@ public final class HttpLifecycleManager implements LifecycleEventObserver {
 
 * 框架会在日志打印中输出在网络请求的代码位置，这样开发者可以直接通过点击 Log 来定位是在哪个类哪行代码，这样可以极大提升我们排查问题的效率，特别是在请求一多且业务复杂的情况下，我相信没有一个人会拒绝这样的功能。
 
-![](picture/request_code.png)
+![](picture/zh/request_code.jpg)
 
 #### 延迟发起请求功能介绍
 
@@ -268,6 +270,8 @@ EasyHttp.post(this)
 * 标题栏框架：[TitleBar](https://github.com/getActivity/TitleBar) ![](https://img.shields.io/github/stars/getActivity/TitleBar.svg) ![](https://img.shields.io/github/forks/getActivity/TitleBar.svg)
 
 * 悬浮窗框架：[EasyWindow](https://github.com/getActivity/EasyWindow) ![](https://img.shields.io/github/stars/getActivity/EasyWindow.svg) ![](https://img.shields.io/github/forks/getActivity/EasyWindow.svg)
+
+* 设备兼容框架：[DeviceCompat](https://github.com/getActivity/DeviceCompat) ![](https://img.shields.io/github/stars/getActivity/DeviceCompat.svg) ![](https://img.shields.io/github/forks/getActivity/DeviceCompat.svg)
 
 * ShapeView 框架：[ShapeView](https://github.com/getActivity/ShapeView) ![](https://img.shields.io/github/stars/getActivity/ShapeView.svg) ![](https://img.shields.io/github/forks/getActivity/ShapeView.svg)
 

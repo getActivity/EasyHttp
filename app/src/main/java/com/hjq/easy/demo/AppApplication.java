@@ -43,17 +43,17 @@ public final class AppApplication extends Application {
 
             @Override
             public void onParseObjectException(TypeToken<?> typeToken, String fieldName, JsonToken jsonToken) {
-                handlerGsonParseException("解析对象析异常：" + typeToken + "#" + fieldName + "，后台返回的类型为：" + jsonToken);
+                handlerGsonParseException("Object parsing exception: " + typeToken + "#" + fieldName + ", backend return type: " + jsonToken);
             }
 
             @Override
             public void onParseListItemException(TypeToken<?> typeToken, String fieldName, JsonToken listItemJsonToken) {
-                handlerGsonParseException("解析 List 异常：" + typeToken + "#" + fieldName + "，后台返回的条目类型为：" + listItemJsonToken);
+                handlerGsonParseException("List parsing exception: " + typeToken + "#" + fieldName + ", backend return item type: " + listItemJsonToken);
             }
 
             @Override
             public void onParseMapItemException(TypeToken<?> typeToken, String fieldName, String mapItemKey, JsonToken mapItemJsonToken) {
-                handlerGsonParseException("解析 Map 异常：" + typeToken + "#" + fieldName + "，mapItemKey = " + mapItemKey + "，后台返回的条目类型为：" + mapItemJsonToken);
+                handlerGsonParseException("Map parsing exception: " + typeToken + "#" + fieldName + ", mapItemKey = " + mapItemKey + ", backend return item type: " + mapItemJsonToken);
             }
 
             private void handlerGsonParseException(String message) {
