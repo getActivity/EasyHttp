@@ -71,7 +71,7 @@ dependencies {
     implementation 'com.github.getActivity:XXPermissions:25.0'
 
     // 标题栏框架：https://github.com/getActivity/TitleBar
-    implementation 'com.github.getActivity:TitleBar:10.6'
+    implementation 'com.github.getActivity:TitleBar:10.8'
 
     // Gson 解析容错：https://github.com/getActivity/GsonFactory
     implementation ('com.github.getActivity:GsonFactory:10.3') {
