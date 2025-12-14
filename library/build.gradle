@@ -5,6 +5,9 @@ android {
 
     defaultConfig {
         minSdk 16
+
+        // 框架的混淆配置
+        consumerProguardFiles 'proguard-http.pro'
     }
 
     // 使用 JDK 1.8

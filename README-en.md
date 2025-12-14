@@ -60,30 +60,6 @@ dependencies {
 
 #### ProGuard Rules
 
-* OkHttp3 framework ProGuard rules:
-
-```text
-# OkHttp3 framework ProGuard rules
--keepattributes Signature
--keepattributes *Annotation*
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-```
-
-* EasyHttp framework ProGuard rules:
-
-```text
-# Do not obfuscate classes implementing the OnHttpListener interface. You must add this rule, otherwise generic parsing will fail.
--keep class * implements com.hjq.http.listener.OnHttpListener {
-    *;
-}
--keep class * extends com.hjq.http.model.ResponseClass {
-    *;
-}
-```
-
 * Do not obfuscate Bean classes under a certain package:
 
 ```text

@@ -74,31 +74,7 @@ dependencies {
 
 * 需要注意的是：由于使用了 Lifecycle 特性，目前框架只支持 AndroidX 的项目集成
 
-#### 框架混淆规则
-
-* OkHttp3 框架混淆规则
-
-```text
-# OkHttp3 框架混淆规则
--keepattributes Signature
--keepattributes *Annotation*
--keep class okhttp3.** { *; }
--keep interface okhttp3.** { *; }
--dontwarn okhttp3.**
--dontwarn okio.**
-```
-
-* EasyHttp 框架混淆规则
-
-```text
-# 不混淆实现 OnHttpListener 接口的类，必须要加上此规则，否则会导致泛型解析失败
--keep class * implements com.hjq.http.listener.OnHttpListener {
-    *;
-}
--keep class * extends com.hjq.http.model.ResponseClass {
-    *;
-}
-```
+#### 混淆规则
 
 * 不混淆某个包下的 Bean 类
 
