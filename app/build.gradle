@@ -61,7 +61,7 @@ dependencies {
     // OkHttp 框架：https://github.com/square/okhttp
     // 升级注意事项：https://www.jianshu.com/p/d12d0f536f55
     // noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.squareup.okhttp3:okhttp:5.3.0'
 
     // 吐司框架：https://github.com/getActivity/Toaster
     implementation 'com.github.getActivity:Toaster:13.8'

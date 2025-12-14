@@ -1,7 +1,10 @@
 package com.hjq.http.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import java.io.IOException;
+import kotlin.jvm.functions.Function0;
+import kotlin.reflect.KClass;
 import okhttp3.Call;
 import okhttp3.Callback;
 import okhttp3.Request;
@@ -72,6 +75,30 @@ public final class CallProxy implements Call {
     @Override
     public Call clone() {
         return mRealCall.clone();
+    }
+
+    @Nullable
+    @Override
+    public <T> T tag(@NonNull KClass<T> type) {
+        return mRealCall.tag(type);
+    }
+
+    @Nullable
+    @Override
+    public <T> T tag(@NonNull Class<? extends T> type) {
+        return mRealCall.tag(type);
+    }
+
+    @NonNull
+    @Override
+    public <T> T tag(@NonNull KClass<T> type, @NonNull Function0<? extends T> computeIfAbsent) {
+        return mRealCall.tag(type, computeIfAbsent);
+    }
+
+    @NonNull
+    @Override
+    public <T> T tag(@NonNull Class<T> type, @NonNull Function0<? extends T> computeIfAbsent) {
+        return mRealCall.tag(type, computeIfAbsent);
     }
 
     public interface Factory {

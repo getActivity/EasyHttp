@@ -52,7 +52,7 @@ dependencies {
     implementation 'com.github.getActivity:EasyHttp:13.0'
     // OkHttp framework: https://github.com/square/okhttp
     // noinspection GradleDependency
-    implementation 'com.squareup.okhttp3:okhttp:3.12.13'
+    implementation 'com.squareup.okhttp3:okhttp:5.3.0'
 }
 ```
 
