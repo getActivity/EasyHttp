@@ -34,6 +34,8 @@ public final class AppApplication extends Application {
     public void onCreate() {
         super.onCreate();
         Toaster.init(this);
+
+        // MMKV 初始化
         MMKV.initialize(this);
 
         // 初始化 Bugly 异常捕捉
