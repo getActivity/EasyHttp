@@ -17,7 +17,8 @@ import com.hjq.http.model.HttpHeaders;
 import com.hjq.http.model.HttpParams;
 import com.hjq.http.request.HttpRequest;
 import com.hjq.toast.Toaster;
-import com.tencent.bugly.crashreport.CrashReport;
+import com.tencent.bugly.library.Bugly;
+import com.tencent.bugly.library.BuglyBuilder;
 import com.tencent.mmkv.MMKV;
 import okhttp3.OkHttpClient;
 
@@ -35,8 +36,10 @@ public final class AppApplication extends Application {
         Toaster.init(this);
         MMKV.initialize(this);
 
-        // Bugly 异常捕捉
-        CrashReport.initCrashReport(this, "8ca94a2408", BuildConfig.DEBUG);
+        // 初始化 Bugly 异常捕捉
+        BuglyBuilder builder = new BuglyBuilder("8ca94a2408", "554da4f0-795b-4d69-ba8d-00aea7d6ca01");
+        builder.debugMode = BuildConfig.DEBUG;
+        Bugly.init(this, builder);
 
         // 设置 Json 解析容错监听
         GsonFactory.setParseExceptionCallback(new ParseExceptionCallback() {
@@ -57,10 +60,12 @@ public final class AppApplication extends Application {
             }
 
             private void handlerGsonParseException(String message) {
+                IllegalArgumentException exception = new IllegalArgumentException(message);
                 if (BuildConfig.DEBUG) {
-                    throw new IllegalArgumentException(message);
-                }  else {
-                    CrashReport.postCatchedException(new IllegalArgumentException(message));
+                    throw exception;
+                } else {
+                    // 上报到 Bugly 错误列表中
+                    Bugly.handleCatchException(Thread.currentThread(), exception, exception.getMessage(), null, true);
                 }
             }
         });

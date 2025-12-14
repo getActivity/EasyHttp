@@ -90,9 +90,8 @@ dependencies {
         exclude group: 'androidx.annotation', module: 'annotation'
     }
 
-    // Bugly 异常捕捉：https://bugly.qq.com/docs/user-guide/instruction-manual-android/?v=20190418140644
-    implementation 'com.tencent.bugly:crashreport:4.1.9.3'
-    implementation 'com.tencent.bugly:nativecrashreport:3.9.2'
+    // Bugly 异常捕捉：https://bugly.tds.qq.com/docs/sdk/android/
+    implementation 'com.tencent.bugly_16kb:bugly-pro:4.4.7.3'
 
     // 日志调试框架：https://github.com/getActivity/Logcat
     debugImplementation 'com.github.getActivity:Logcat:12.3'
