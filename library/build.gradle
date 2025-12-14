@@ -1,4 +1,5 @@
 apply plugin: 'com.android.library'
+apply plugin: 'maven-publish'
 apply from : '../common.gradle'
 
 android {
@@ -22,13 +23,6 @@ android {
         // 剔除这个包下的所有文件（不会移除签名信息）
         exclude 'META-INF/*******'
     }
-
-    android.libraryVariants.configureEach { variant ->
-        // aar 输出文件名配置
-        variant.outputs.configureEach { output ->
-            outputFileName = "${rootProject.name}-${android.defaultConfig.versionName}.aar"
-        }
-    }
 }
 
 dependencies {
@@ -38,4 +32,32 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-common:2.1.0'
     // noinspection GradleDependency
     implementation 'androidx.lifecycle:lifecycle-runtime:2.1.0'
+}
+
+publishing {
+    publications {
+        release(MavenPublication) {
+            groupId = 'com.github.getActivity'
+            artifactId = 'EasyHttp'
+            version = android.defaultConfig.versionName
+            // 指定 aar 文件的确切路径：https://cloud.tencent.com/developer/ask/sof/106381154
+            afterEvaluate {
+                artifact(bundleReleaseAar)
+            }
+
+            // 修正 Maven 插件在生成的 pom 文件没有携带 dependencies 信息的问题
+            // 用于测试 Gradle 命令：./gradlew publishToMavenLocal
+            // 相关 Github 地址：https://github.com/getActivity/XXPermissions/issues/371#issuecomment-3018735968
+            pom.withXml {
+                def dependencies = asNode().appendNode('dependencies')
+                configurations.implementation.allDependencies.each {
+                    def dependency = dependencies.appendNode('dependency')
+                    dependency.appendNode('groupId', it.group)
+                    dependency.appendNode('artifactId', it.name)
+                    dependency.appendNode('version', it.version)
+                    dependency.appendNode('scope', 'runtime')
+                }
+            }
+        }
+    }
 }
